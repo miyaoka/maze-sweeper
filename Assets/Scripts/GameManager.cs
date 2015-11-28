@@ -9,6 +9,7 @@ public class GameManager : MonoBehaviour {
 	const int N = 1 << 1;
 	const int W = 1 << 2;
 	const int S = 1 << 3;
+	const int BOMB = 1 << 4;
 	const int ALLDIR = N | E | W | S;
 
 	[SerializeField] GameObject floorPrefab;
@@ -16,12 +17,13 @@ public class GameManager : MonoBehaviour {
 	[SerializeField] GameObject wallPrefab;
 	[SerializeField] GameObject blockPrefab;
 	[SerializeField] GameObject playerPrefab;
+	[SerializeField] GameObject cellPrefab;
 	[SerializeField] Transform gridContainer;
 	[SerializeField] Transform camera;
 
 	GameObject player;
-	int gridWidth = 30;
-	int gridHeight = 30;
+	int gridWidth = 20;
+	int gridHeight = 20;
 	float cellScale = 2;
 	List<List<int>> grid = new List<List<int>> ();
 	List<Rect> rects = new List<Rect> ();
@@ -48,31 +50,6 @@ public class GameManager : MonoBehaviour {
 			.UpdateAsObservable ();
 
 		update
-			.Select (_ => player.transform.position)
-			.Subscribe (pos => camera.position = new Vector3(pos.x, camera.position.y, pos.z))
-			.AddTo (this);
-
-//		displayMaze (grid);
-
-		update
-			.Where (up => Input.GetKey (KeyCode.Space))
-			.Subscribe (_ => {
-
-				//				div(rects);
-				while(div(rects)){
-				}
-				displayMaze (grid);
-			})
-			.AddTo (this);
-		update
-			.Where (up => Input.GetKey (KeyCode.R))
-			.Subscribe (_ => {
-
-				addRoom(new Rect(Random.Range(0, gridWidth-10),Random.Range(0,gridHeight-10),Random.Range(3,10),Random.Range(3,10)));
-				displayMaze (grid);
-			})
-			.AddTo (this);
-		update
 			.Where (up => Input.GetKeyDown (KeyCode.Backspace))
 			.Subscribe (_ => {
 				rects.Clear();
@@ -84,10 +61,36 @@ public class GameManager : MonoBehaviour {
 						cell |= x == gridWidth - 1 ? E : 0;
 						cell |= y == 0 ? S : 0;
 						cell |= y == gridHeight - 1 ? N : 0;
+						cell |= Random.value < .1f ? BOMB : 0;
 						grid[y][x] = cell;
 					}
 				}
 				rects.Add(new Rect(new Vector2(0,0), new Vector2(gridWidth, gridHeight)));
+				displayMaze (grid);
+			})
+			.AddTo (this);
+		
+		update
+			.Select (_ => player.transform.position)
+			.Subscribe (pos => camera.position = new Vector3(pos.x, camera.position.y, pos.z))
+			.AddTo (this);
+
+//		displayMaze (grid);
+
+		update
+			.Where (up => Input.GetKeyDown (KeyCode.Space))
+			.Subscribe (_ => {
+
+//				div(rects);
+				while(div(rects)){}
+				displayMaze (grid);
+			})
+			.AddTo (this);
+		update
+			.Where (up => Input.GetKey (KeyCode.R))
+			.Subscribe (_ => {
+
+				addRoom(new Rect(Random.Range(0, gridWidth-10),Random.Range(0,gridHeight-10),Random.Range(3,10),Random.Range(3,10)));
 				displayMaze (grid);
 			})
 			.AddTo (this);
@@ -136,10 +139,19 @@ public class GameManager : MonoBehaviour {
 	}
 	void movePlayer(float x, float y, float rot)
 	{
-		player.transform.position += new Vector3 (x * cellScale * .5f, 0, y * cellScale * .5f);
+		player.transform.position += new Vector3 (x * cellScale * .1f, 0, y * cellScale * .1f);
 		player.transform.rotation = Quaternion.Euler (0, rot, 0);
 	}
-
+	int bitCount(int bit){
+		int count;
+		for (count = 0; bit != 0; bit >>= 1) {
+			Debug.Log ("bit:" + bit);
+			if ((bit & 1) != 0) {
+				count++;
+			}
+		}
+		return count;
+	}
 	void displayMaze(List<List<int>> grid){
 		foreach (Transform t in gridContainer) {
 			Destroy (t.gameObject);
@@ -148,6 +160,15 @@ public class GameManager : MonoBehaviour {
 			var row = grid [y];
 			for(var x = 0; x < row.Count; x++){
 				var cell = row [x];
+
+				var obj = Instantiate (cellPrefab, new Vector3 (x * cellScale, 1, y * cellScale), Quaternion.identity) as GameObject;
+				obj.transform.SetParent (gridContainer, true);
+				obj.transform.localScale *= cellScale;
+				var cp = obj.GetComponent<CellPresenter> ();
+				cp.wallBit.Value = cell;
+				cp.envBomb.Value = Random.Range (0, 9);
+
+				/*
 
 				if (cell == ALLDIR) {
 					gridParent (Instantiate (blockPrefab, new Vector3 (x * cellScale, 1, y * cellScale), Quaternion.identity));
@@ -166,17 +187,21 @@ public class GameManager : MonoBehaviour {
 					if( (cell & N) != 0){
 						gridParent (Instantiate (wallPrefab, new Vector3 (x * cellScale, 1, (y+.5f) * cellScale), Quaternion.Euler(0, 90, 0)));
 					}
+					if( (cell & BOMB) != 0){
+//						gridParent (Instantiate (floorDivPrefab, new Vector3 (x * cellScale, 1, y * cellScale), Quaternion.identity));
+					}
 
 				}
+				*/
 
 			}
 		}
 		for(var i = 0; i < rects.Count; i++) {
 			var r = rects [i];
 //			var o = gridParent (Instantiate (floorPrefab, new Vector3 (r.xMin * cellScale, 0, r.yMin * cellScale), Quaternion.identity));
-			for (int ry = (int)r.yMin; ry < (int)r.yMax; ry++) {
-				for (int rx = (int)r.xMin; rx < (int)r.xMax; rx++) {
-				gridParent (Instantiate (floorDivPrefab, new Vector3 (rx * cellScale, 1, ry * cellScale), Quaternion.identity));
+			for (int y = (int)r.yMin; y < (int)r.yMax; y++) {
+				for (int x = (int)r.xMin; x < (int)r.xMax; x++) {
+					gridParent (Instantiate (floorDivPrefab, new Vector3 (x * cellScale, 1, y * cellScale), Quaternion.identity));
 						
 				}
 			}
@@ -200,7 +225,17 @@ public class GameManager : MonoBehaviour {
 			rects.RemoveAt (0);
 
 			var minSize = Random.Range(1,2);
-			if (rect.width <=  Random.Range(1,5) && rect.height <=  Random.Range(1,5)) {
+			if (rect.width <=  Random.Range(1,3) && rect.height <=  Random.Range(1,3)) {
+				/*
+				if (Random.value < .3f) {
+					for (int y = (int)rect.yMin; y < (int)rect.yMax; y++) {
+						for (int x = (int)rect.xMin; x < (int)rect.xMax; x++) {
+							grid [y] [x] |= ROOM;
+						}
+					}
+
+				}
+				*/
 //			return;
 			} else {
 				break;
@@ -220,6 +255,12 @@ public class GameManager : MonoBehaviour {
 			var px = (int)Random.Range (rect.xMin, rect.xMax);
 			passWall (px, wallY, N);
 			passWall (px, wallY+1, S);
+			if (rect.width > 5) {
+				px = (px +(int)Random.Range (2, rect.width - 1)) % (int)rect.width;
+				passWall (px, wallY, N);
+				passWall (px, wallY+1, S);
+			}
+
 			rect1.yMax = wallY + 1;
 			rect2.yMin = wallY + 1;
 		} else {
@@ -231,6 +272,11 @@ public class GameManager : MonoBehaviour {
 			var py = (int)Random.Range (rect.yMin, rect.yMax);
 			passWall (wallX, py, E);
 			passWall (wallX+1, py, W);
+			if (rect.height > 5) {
+				py = (py +(int)Random.Range (2, rect.height - 1)) % (int)rect.height;
+				passWall (wallX, py, E);
+				passWall (wallX+1, py, W);
+			}
 			rect1.xMax = wallX + 1;
 			rect2.xMin = wallX + 1;
 		}
@@ -241,7 +287,7 @@ public class GameManager : MonoBehaviour {
 
 	void passWall(int x, int y, int dir)
 	{
-		grid[y][x] &= (ALLDIR ^ dir);
+		grid[y][x] &= ((ALLDIR | BOMB) ^ dir);
 	}
 
 
