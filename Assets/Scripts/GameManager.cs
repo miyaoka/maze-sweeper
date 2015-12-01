@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UniRx;
 using UniRx.Triggers;
+using UnityEngine.UI;
 public class GameManager : MonoBehaviour {
 
 	[SerializeField] GameObject floorPrefab;
@@ -13,14 +14,16 @@ public class GameManager : MonoBehaviour {
 	[SerializeField] GameObject cellPrefab;
 	[SerializeField] Transform gridContainer;
 	[SerializeField] Transform camera;
+	[SerializeField] Slider slider;
+	[SerializeField] RectTransform gridContainer2;
 
 	GameObject player;
 	int gridWidth = 20;
 	int gridHeight = 10;
 	int playerX;
 	int playerY;
-	float cellScale = 5;
-	float cellSpan = .5f;
+	float cellScale = 1;
+	float cellSpan = .2f;
 	List<List<CellPresenter>> grid = new List<List<CellPresenter>> ();
 	List<Rect> rects = new List<Rect> ();
 
@@ -33,8 +36,17 @@ public class GameManager : MonoBehaviour {
 		initGrid ();
 					
 
+
+
 		var update = this
 			.UpdateAsObservable ();
+
+		update
+			.Select (_ => slider.value)
+			.Subscribe (v => {
+				gridContainer2.localScale = new Vector3(v, v, 1);
+		})
+			.AddTo (this);
 
 		update
 			.Where (up => Input.GetKeyDown (KeyCode.Backspace))
