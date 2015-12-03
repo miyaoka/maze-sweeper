@@ -9,6 +9,7 @@ public class NodePresenter : MonoBehaviour {
 	[SerializeField] GameObject view;
 	[SerializeField] Image floor;
 	[SerializeField] Image wall;
+	[SerializeField] GameObject tile;
 	[SerializeField] Text alertNum;
 	[SerializeField] Text bombNum;
 
@@ -47,11 +48,14 @@ public class NodePresenter : MonoBehaviour {
 
 							*/
 
+		var floorColor = new Color (Random.Range (.7f, .9f), Random.Range (.7f, .9f),Random.Range (.7f, .9f));
+		floorColor = new Color(.8f,.8f,.8f);
 
 		onHere
 			.Subscribe (b => {
-				floor.color = b ? Color.white : new Color(.2f,.2f,.2f);
+				floor.color = b ? floorColor : new Color(.2f,.2f,.2f);
 				wall.gameObject.SetActive(b);
+				tile.gameObject.SetActive(b);
 			})
 			.AddTo (this);
 
@@ -59,7 +63,9 @@ public class NodePresenter : MonoBehaviour {
 			.Where (b => b)
 			.DistinctUntilChanged()
 //			.Select (c => neighborBombCount())
-			.Subscribe (c => watchEnvs())
+			.Subscribe (c => {
+				watchEnvs();
+			})
 			.AddTo (this);
 		
 

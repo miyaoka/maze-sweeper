@@ -126,8 +126,11 @@ public class GameManager : SingletonMonoBehaviour<GameManager>{
 				node.transform.SetParent (gridNodeContainer, false);
 				var np = node.GetComponent<NodePresenter> ();
 				np.bombCount.Value = Random.value < .1f ? Random.Range(1,5) : 0;
-//				np.visited.Value = true;
 				np.coords.Value = new IntVector2 (x, y);
+
+				//for debug		
+//				np.visited.Value = true;
+
 				nodes [x, y] = np;
 			}
 		}
@@ -161,7 +164,7 @@ public class GameManager : SingletonMonoBehaviour<GameManager>{
 			}
 		}
 		currentCoords.Value = new IntVector2 ((int)(gridWidth * .5f), (int)(gridHeight * .5f));
-		movePos (IntVector2.Zero);
+		movePos (currentCoords.Value);
 
 		rects.Clear();
 		rects.Add(new Rect(new Vector2(0,0), new Vector2(gridWidth, gridHeight)));
@@ -170,22 +173,24 @@ public class GameManager : SingletonMonoBehaviour<GameManager>{
 
 		for (var y = 0; y < gridHeight; y++) {
 			for (var x = 0; x < gridWidth; x++) {
-				nodes [x, y].visited.Value = true;
+//				nodes [x, y].visited.Value = true;
 			}
 		}
-		/*
+
+		//行き止まりのnodeを削除する
 		for (var y = 0; y < gridHeight; y++) {
 			for (var x = 0; x < gridWidth; x++) {
 				var c = edgeCount (x, y);
 				if (c <= 1) {
 //					nodes [x, y].hide ();
 					for (var d = 0; d < 2; d++) {
-//						edges [x, y, d].type.Value = EdgeType.wall;
+						edges [x, y, d].type.Value = EdgeType.wall;
+						nodes [x, y].bombCount.Value = 0;
 					}
 				}
 			}
 		}
-		*/
+
 			
 	}
 	EdgeType getEdge(int x, int y, Dirs dir){
