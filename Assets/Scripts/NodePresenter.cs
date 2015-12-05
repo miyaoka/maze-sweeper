@@ -27,9 +27,8 @@ public class NodePresenter : MonoBehaviour {
 		
 	}
 	void Start () {
-		var gm = GameManager.Instance;
 		onHere = 
-			gm.currentCoords
+			GridManager.Instance.currentCoords
 				.CombineLatest(coords, (l,r) => l == r)
 				.DistinctUntilChanged ()
 				.ToReactiveProperty ();
@@ -123,7 +122,7 @@ public class NodePresenter : MonoBehaviour {
 					for (var nx = cd.x - 1; nx <= cd.x + 1; nx++) {
 						NodePresenter neignbor;
 						try {
-							neignbor = GameManager.Instance.nodes [nx, ny];
+							neignbor = GridManager.Instance.nodes [nx, ny];
 						} catch {
 							continue;
 						}
