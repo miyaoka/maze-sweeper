@@ -10,10 +10,10 @@ public class NodePresenter : MonoBehaviour {
 	[SerializeField] Image floor;
 	[SerializeField] Image wall;
 	[SerializeField] GameObject tile;
-	[SerializeField] Text alertNum;
-	[SerializeField] Text bombNum;
+	[SerializeField] Text alertCountText;
+	[SerializeField] Text enemyCountText;
 
-	public ReactiveProperty<int> bombCount = new ReactiveProperty<int> ();
+	public ReactiveProperty<int> enemyCount = new ReactiveProperty<int> ();
 	public ReactiveProperty<int> alertCount = new ReactiveProperty<int> ();
 	public ReactiveProperty<bool> visited = new ReactiveProperty<bool> ();
 	public ReactiveProperty<bool> onHere = new ReactiveProperty<bool> ();
@@ -27,18 +27,19 @@ public class NodePresenter : MonoBehaviour {
 		
 	}
 	void Start () {
+		var gm = GameManager.Instance;
 		onHere = 
-			GameManager.Instance.currentCoords
+			gm.currentCoords
 				.CombineLatest(coords, (l,r) => l == r)
 				.DistinctUntilChanged ()
 				.ToReactiveProperty ();
 		alertCount
 			.DistinctUntilChanged()
-			.Subscribe (b => alertNum.text = b == 0 ? "" : b.ToString())
+			.Subscribe (c => alertCountText.text = c == 0 ? "" : c.ToString())
 			.AddTo (this);
-		bombCount
+		enemyCount
 			.DistinctUntilChanged()
-			.Subscribe (b => bombNum.text = b == 0 ? "" : b.ToString())
+			.Subscribe (c => enemyCountText.text = c == 0 ? "" : c.ToString())
 			.AddTo (this);
 
 		/*
@@ -64,7 +65,7 @@ public class NodePresenter : MonoBehaviour {
 			.DistinctUntilChanged()
 //			.Select (c => neighborBombCount())
 			.Subscribe (c => {
-				watchEnvs();
+//				watchEnvs();
 			})
 			.AddTo (this);
 		
@@ -78,17 +79,25 @@ public class NodePresenter : MonoBehaviour {
 
 
 	}
-
+	public int scanEnemies(){
+		var ns = Neighbors;
+		var count = 0;
+		foreach (var n in ns) {
+			count += n.enemyCount.Value;
+		}
+		alertCount.Value = count;
+		return count;
+	}
 	void watchEnvs(){
 		envResources.Clear ();
 
-		var bombs = new List<ReactiveProperty<int>> {};
+		var enemies = new List<ReactiveProperty<int>> {};
 		foreach (var c in Neighbors) {
-			bombs.Add (c.bombCount);
+			enemies.Add (c.enemyCount);
 		}
 
 		Observable
-			.CombineLatest (bombs.ToArray ())
+			.CombineLatest (enemies.ToArray ())
 			.Select (list => list.Sum())
 			.Subscribe (v => alertCount.Value = v)
 			.AddTo (envResources);
@@ -98,17 +107,14 @@ public class NodePresenter : MonoBehaviour {
 		var count = 0;
 		Debug.Log ("n:" + coords.Value.x + "," + coords.Value.y + " - " + ns.Count);
 		foreach (var n in ns) {
-			count += n.bombCount.Value;
-			Debug.Log (n.bombCount.Value);
+			count += n.enemyCount.Value;
+			Debug.Log (n.enemyCount.Value);
 		}
 		return count;
 	}
 
-	public void hide(){
-		floor.color = new Color (.1f, .1f, .1f);
-	}
 	private List<NodePresenter> neighbors;
-	List<NodePresenter> Neighbors {
+	public List<NodePresenter> Neighbors {
 		get {
 			if (neighbors == null) {
 				neighbors = new List<NodePresenter> ();

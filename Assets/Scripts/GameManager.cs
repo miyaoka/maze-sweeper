@@ -20,6 +20,8 @@ public class GameManager : SingletonMonoBehaviour<GameManager>{
 	[SerializeField] float gridUnit = 320;
 
 	public ReactiveProperty<IntVector2> currentCoords = new ReactiveProperty<IntVector2> ();
+	public ReactiveProperty<int> alertCount = new ReactiveProperty<int>();
+	public ReactiveProperty<int> enemyCount = new ReactiveProperty<int>();
 	public NodePresenter[,] nodes;
 	public EdgePresenter[,,] edges;
 	List<Rect> rects = new List<Rect> ();
@@ -39,6 +41,7 @@ public class GameManager : SingletonMonoBehaviour<GameManager>{
 		nodes = new NodePresenter[gridWidth, gridHeight];
 		edges = new EdgePresenter[gridWidth, gridHeight, 2];
 		initGrid ();
+
 
 		var update = this
 			.UpdateAsObservable ();
@@ -105,10 +108,29 @@ public class GameManager : SingletonMonoBehaviour<GameManager>{
 		//表示位置を変える
 		gridPos.localPosition = new Vector3 (-currentCoords.Value.x * gridUnit, -currentCoords.Value.y * gridUnit, 0);
 
-		if (node.bombCount.Value > 0) {
-			Debug.Log ("bomb:" + node.bombCount.Value);
-			node.bombCount.Value--;
-		}
+		if (node.enemyCount.Value > 0) {
+			Debug.Log ("bomb:" + node.enemyCount.Value);
+			var ec = node.enemyCount.Value;
+
+			foreach (var n in node.Neighbors) {
+				if (n == node) {
+					continue;
+				}
+				//TODO:未探索nodeだとマイナスになる
+				//0に補正するか0以下は表示しないか
+				n.alertCount.Value = Mathf.Max(0, n.alertCount.Value - ec);
+			}
+			node.enemyCount.Value = 0;
+//			ec -= 1;
+
+			//ランダム位置にワープ
+			//TODO: 同じ位置に飛ばないようにする
+			if (0 < ec) {
+				nodes [(int)Random.Range (0, gridWidth), (int)Random.Range (0, gridHeight)].enemyCount.Value += ec;
+			}
+
+		} 
+			alertCount.Value = node.scanEnemies ();
 	}
 	void initGrid(){
 		foreach (Transform t in gridEdgeContainer) {
@@ -125,7 +147,7 @@ public class GameManager : SingletonMonoBehaviour<GameManager>{
 				var node = Instantiate (gridNodePrefab, pos, Quaternion.identity) as GameObject;
 				node.transform.SetParent (gridNodeContainer, false);
 				var np = node.GetComponent<NodePresenter> ();
-				np.bombCount.Value = Random.value < .1f ? Random.Range(1,5) : 0;
+				np.enemyCount.Value = Random.value < .1f ? Random.Range(1,5) : 0;
 				np.coords.Value = new IntVector2 (x, y);
 
 				//for debug		
@@ -185,7 +207,7 @@ public class GameManager : SingletonMonoBehaviour<GameManager>{
 //					nodes [x, y].hide ();
 					for (var d = 0; d < 2; d++) {
 						edges [x, y, d].type.Value = EdgeType.wall;
-						nodes [x, y].bombCount.Value = 0;
+						nodes [x, y].enemyCount.Value = 0;
 					}
 				}
 			}
@@ -235,6 +257,7 @@ public class GameManager : SingletonMonoBehaviour<GameManager>{
 		catch{
 		}		
 	}
+
 	int edgeCount(int x, int y){
 		int count = 0;
 		for (var i = 0; i < 4; i++) {
