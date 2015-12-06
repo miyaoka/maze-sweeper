@@ -4,10 +4,11 @@ using System.Collections;
 using System.Collections.Generic;
 using UniRx;
 using System.Linq;
+using DG.Tweening;
 
 public class NodePresenter : MonoBehaviour {
 	[SerializeField] GameObject view;
-	[SerializeField] Image floor;
+	[SerializeField] public Image floor;
 	[SerializeField] Image wall;
 	[SerializeField] GameObject tile;
 	[SerializeField] Text alertCountText;
@@ -30,8 +31,9 @@ public class NodePresenter : MonoBehaviour {
 	}
 	void Start () {
 		onHere = 
-			GridManager.Instance.currentCoords
-				.CombineLatest(coords, (l,r) => l == r)
+			GridManager.Instance
+				.currentNode
+				.Select(n => n == this)
 				.DistinctUntilChanged ()
 				.ToReactiveProperty ();
 		alertCount
@@ -50,13 +52,15 @@ public class NodePresenter : MonoBehaviour {
 
 							*/
 
-		var floorColor = new Color (Random.Range (.7f, .9f), Random.Range (.7f, .9f),Random.Range (.7f, .9f));
-		floorColor = new Color(.8f,.8f,.8f);
+		var activeFloorColor = new Color (Random.Range (.7f, .9f), Random.Range (.7f, .9f),Random.Range (.7f, .9f));
+		var visitedFloorColor = new Color (.2f, .2f, .2f);
+		activeFloorColor = new Color(.8f,.8f,.8f);
 
 		onHere
 			.Subscribe (b => {
-				floor.color = b ? floorColor : new Color(.2f,.2f,.2f);
-				wall.gameObject.SetActive(b);
+				floor.DOColor(b ? activeFloorColor : visitedFloorColor, .3f).SetEase(Ease.OutQuad);
+				wall.DOFade(b ? 1 : 0, .3f).SetEase(Ease.OutQuad);
+//				wall.gameObject.SetActive(b);
 				tile.gameObject.SetActive(b);
 			})
 			.AddTo (this);

@@ -41,15 +41,7 @@ public class GameManager : SingletonMonoBehaviour<GameManager>{
 
 		//move control
 		update
-			.Where (up => Input.GetKeyDown (KeyCode.W))
-			.Subscribe (_ => state = State.EnterLevel)
-			.AddTo (this);
-		update
-			.Where (down => Input.GetKeyDown (KeyCode.S))
-			.Subscribe (_ => state = State.OnLevel)
-			.AddTo (this);
-		update
-			.Where (right => Input.GetKeyDown (KeyCode.D))
+			.Where (right => Input.GetKeyDown (KeyCode.Space))
 			.Subscribe (_ => waitingInput.Value = false)
 			.AddTo (this);
 		update

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UniRx;
 using UniRx.Triggers;
 using UnityEngine.UI;
+using DG.Tweening;
 
 public enum Dirs { North, East, South, West};
 
@@ -150,35 +151,44 @@ public class GridManager : SingletonMonoBehaviour<GridManager> {
 		catch{
 			return;
 		}
-		currentCoords.Value = dest;
 		node.visited.Value = true;
 
+
 		//表示位置を変える
-		gridPos.localPosition = new Vector3 (-currentCoords.Value.x * gridUnit, -currentCoords.Value.y * gridUnit, 0);
+		gridPos
+			.DOLocalMove (new Vector3 (-dest.x * gridUnit, -dest.y * gridUnit, 0), .2f)
+			.SetEase (Ease.OutQuad)
+			.OnComplete (() => {
+				currentCoords.Value = dest;
+				currentNode.Value = node;
 
-		if (node.enemyCount.Value > 0) {
-			Debug.Log ("bomb:" + node.enemyCount.Value);
-			var ec = node.enemyCount.Value;
+				if (node.enemyCount.Value > 0) {
+					Debug.Log ("bomb:" + node.enemyCount.Value);
+					var ec = node.enemyCount.Value;
 
-			foreach (var n in node.Neighbors) {
-				if (n == node) {
-					continue;
-				}
-				//TODO:未探索nodeだとマイナスになる
-				//0に補正するか0以下は表示しないか
-				n.alertCount.Value = Mathf.Max(0, n.alertCount.Value - ec);
-			}
-			node.enemyCount.Value = 0;
-			//			ec -= 1;
+					foreach (var n in node.Neighbors) {
+						if (n == node) {
+							continue;
+						}
+						//TODO:未探索nodeだとマイナスになる
+						//0に補正するか0以下は表示しないか
+						n.alertCount.Value = Mathf.Max(0, n.alertCount.Value - ec);
+					}
+					node.enemyCount.Value = 0;
+					//			ec -= 1;
 
-			//ランダム位置にワープ
-			//TODO: 同じ位置に飛ばないようにする
-			if (0 < ec) {
-				nodes [(int)Random.Range (0, gridWidth), (int)Random.Range (0, gridHeight)].enemyCount.Value += ec;
-			}
+					//ランダム位置にワープ
+					//TODO: 同じ位置に飛ばないようにする
+					if (0 < ec) {
+						nodes [(int)Random.Range (0, gridWidth), (int)Random.Range (0, gridHeight)].enemyCount.Value += ec;
+					}
 
-		} 
-		gm.alertCount.Value = node.scanEnemies ();
+				} 
+				gm.alertCount.Value = node.scanEnemies ();
+		});
+//		gridPos.localPosition = new Vector3 (-currentCoords.Value.x * gridUnit, -currentCoords.Value.y * gridUnit, 0);
+
+
 	}
 
 	EdgeType getEdge(int x, int y, Dirs dir){
