@@ -20,6 +20,7 @@ public class GridManager : SingletonMonoBehaviour<GridManager> {
 	[SerializeField] Transform gridPos;
 
 	public ReactiveProperty<IntVector2> currentCoords = new ReactiveProperty<IntVector2> ();
+	public ReactiveProperty<NodePresenter> currentNode = new ReactiveProperty<NodePresenter> ();
 	public NodePresenter[,] nodes;
 	public EdgePresenter[,,] edges;
 	List<Rect> rects = new List<Rect> ();
@@ -40,26 +41,7 @@ public class GridManager : SingletonMonoBehaviour<GridManager> {
 		edges = new EdgePresenter[gridWidth, gridHeight, 2];
 		gm = GameManager.Instance;
 
-		var update = this
-			.UpdateAsObservable ();
 
-		//move control
-		update
-			.Where (up => Input.GetKeyDown (KeyCode.W))
-			.Subscribe (_ => moveDir (Dirs.North))
-			.AddTo (this);
-		update
-			.Where (down => Input.GetKeyDown (KeyCode.S))
-			.Subscribe (_ => moveDir (Dirs.South))
-			.AddTo (this);
-		update
-			.Where (right => Input.GetKeyDown (KeyCode.D))
-			.Subscribe (_ => moveDir (Dirs.East))
-			.AddTo (this);
-		update
-			.Where (left => Input.GetKeyDown (KeyCode.A))
-			.Subscribe (_ => moveDir (Dirs.West))
-			.AddTo (this);
 
 		currentCoords
 			.Subscribe (p => {

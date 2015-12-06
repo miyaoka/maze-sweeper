@@ -20,6 +20,8 @@ public class NodePresenter : MonoBehaviour {
 	public ReactiveProperty<IntVector2> coords = new ReactiveProperty<IntVector2>();
 //	public ReactiveProperty<List<NodePresenter>> neighborNodes = new ReactiveProperty<List<NodePresenter>>( new List<NodePresenter>() );
 
+	List<CharacterPresenter> survivers = new List<CharacterPresenter> ();
+	List<CharacterPresenter> enemies = new List<CharacterPresenter> ();
 
 	CompositeDisposable envResources = new CompositeDisposable();
 
