@@ -20,7 +20,7 @@ public class ZoomPresenter : MonoBehaviour {
 
 		onZoomIn
 			.Subscribe (b => {
-				var scale = b ? 1f : .2f;
+				var scale = b ? 1f : .1f;
 				GridManager.Instance.scale(scale);
 				btnText.text = b ? "map" : "return";
 			}).AddTo (this);

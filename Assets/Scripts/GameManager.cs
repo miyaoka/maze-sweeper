@@ -36,13 +36,17 @@ public class GameManager : SingletonMonoBehaviour<GameManager>{
 
 		removeDialog ();
 
+		var rects = new List<Rect> ();
+		rects.Add(new Rect(new Vector2(0,0), new Vector2(3, 4)));
+
+
 		var update = this
 			.UpdateAsObservable ();
 
 		//move control
 		update
 			.Where (right => Input.GetKeyDown (KeyCode.Space))
-			.Subscribe (_ => waitingInput.Value = false)
+			.Subscribe (_ => rects = gridManager.createPass(rects))
 			.AddTo (this);
 		update
 			.Where (left => Input.GetKeyDown (KeyCode.A))
@@ -69,14 +73,14 @@ public class GameManager : SingletonMonoBehaviour<GameManager>{
 	}
 	IEnumerator gameLoop(){
 		Debug.Log ("enter");
-		yield return StartCoroutine (enterLevel ());
+//		yield return StartCoroutine (enterLevel ());
 		Debug.Log ("on");
 		yield return StartCoroutine (onLevel ());
 		Debug.Log ("exit");
 		yield return StartCoroutine (exitLevel ());
 
 
-		StartCoroutine (gameLoop());
+//		StartCoroutine (gameLoop());
 		//		yield return null;
 	}
 	IEnumerator enterLevel(){

@@ -14,18 +14,74 @@ public class NodePresenter : MonoBehaviour {
 	[SerializeField] Text alertCountText;
 	[SerializeField] Text enemyCountText;
 
-	public ReactiveProperty<int> enemyCount = new ReactiveProperty<int> ();
-	public ReactiveProperty<int> alertCount = new ReactiveProperty<int> ();
-	public ReactiveProperty<bool> visited = new ReactiveProperty<bool> ();
-	public ReactiveProperty<bool> onHere = new ReactiveProperty<bool> ();
-	public ReactiveProperty<IntVector2> coords = new ReactiveProperty<IntVector2>();
+//	public ReactiveProperty<int> enemyCount = new ReactiveProperty<int> (0);
+//	public ReactiveProperty<int> alertCount = new ReactiveProperty<int> (0);
+//	public ReactiveProperty<bool> visited = new ReactiveProperty<bool> ();
+//	public ReactiveProperty<bool> onHere = new ReactiveProperty<bool> ();
+//	public ReactiveProperty<IntVector2> coords = new ReactiveProperty<IntVector2>();
 //	public ReactiveProperty<List<NodePresenter>> neighborNodes = new ReactiveProperty<List<NodePresenter>>( new List<NodePresenter>() );
 
-	List<CharacterPresenter> survivers = new List<CharacterPresenter> ();
-	List<CharacterPresenter> enemies = new List<CharacterPresenter> ();
+//	List<CharacterPresenter> survivers = new List<CharacterPresenter> ();
+//	List<CharacterPresenter> enemies = new List<CharacterPresenter> ();
 
-	CompositeDisposable envResources = new CompositeDisposable();
+//	CompositeDisposable envResources = new CompositeDisposable();
 
+
+	CompositeDisposable modelResources = new CompositeDisposable();
+
+	private NodeModel model;
+	public NodeModel Model
+	{
+		set { 
+			this.model = value; 
+
+			modelResources.Clear ();
+
+			model.alertCount
+				.DistinctUntilChanged()
+				.Subscribe (c => alertCountText.text = c == 0 ? "" : c.ToString())
+				.AddTo (this);
+			model.enemyCount
+				.DistinctUntilChanged()
+				.Subscribe (c => enemyCountText.text = c == 0 ? "" : c.ToString())
+				.AddTo (this);
+
+			var activeFloorColor = new Color (Random.Range (.7f, .9f), Random.Range (.7f, .9f),Random.Range (.7f, .9f));
+			var visitedFloorColor = new Color (.2f, .2f, .2f);
+			activeFloorColor = new Color(.8f,.8f,.8f);
+
+
+			model.onHere
+				.Subscribe (b => {
+					floor.DOColor(b ? activeFloorColor : visitedFloorColor, .3f).SetEase(Ease.OutQuad);
+					wall.DOFade(b ? 1 : 0, .3f).SetEase(Ease.OutQuad);
+//									wall.gameObject.SetActive(b);
+					tile.gameObject.SetActive(b);
+				})
+				.AddTo (this);
+
+			model.visited
+				.Where (b => b)
+				.DistinctUntilChanged()
+				//			.Select (c => neighborBombCount())
+				.Subscribe (c => {
+					//				watchEnvs();
+				})
+				.AddTo (this);
+
+
+			model.visited
+				.DistinctUntilChanged()
+				.Subscribe (b =>  {
+					view.SetActive (b);
+				})
+				.AddTo (this);
+
+
+		}
+		get { return this.model; }
+	}
+	/*
 	void Awake(){
 		
 	}
@@ -45,12 +101,6 @@ public class NodePresenter : MonoBehaviour {
 			.Subscribe (c => enemyCountText.text = c == 0 ? "" : c.ToString())
 			.AddTo (this);
 
-		/*
-		neighborCells
-			.Subscribe (elist => watchEnvs())
-			.AddTo (this);
-
-							*/
 
 		var activeFloorColor = new Color (Random.Range (.7f, .9f), Random.Range (.7f, .9f),Random.Range (.7f, .9f));
 		var visitedFloorColor = new Color (.2f, .2f, .2f);
@@ -144,4 +194,5 @@ public class NodePresenter : MonoBehaviour {
 	{
 		envResources.Dispose ();
 	}
+*/
 }
