@@ -22,7 +22,6 @@ public class GridManager : SingletonMonoBehaviour<GridManager> {
 	[SerializeField] bool showAll;
 
 	public ReactiveProperty<IntVector2> currentCoords = new ReactiveProperty<IntVector2> ();
-	public ReactiveProperty<NodeModel> currentNode = new ReactiveProperty<NodeModel> ();
 
 	public List<NodeModel> nodeList = new List<NodeModel> ();
 	public List<EdgeModel> edgeList = new List<EdgeModel> ();
@@ -30,8 +29,11 @@ public class GridManager : SingletonMonoBehaviour<GridManager> {
 
 	GameManager gm;
 
-	int divideMargin = 1;
-	float passPerLong = 4f;
+	[SerializeField] int divideMargin = 1;
+	[SerializeField] float passPerLong = 4f;
+	[SerializeField] float deadEndReduceProb = .5f;
+	[SerializeField] float enemyDeployProb = .1f;
+	[SerializeField] int maxEnemyCount = 5;
 
 
 	void Awake ()
@@ -46,11 +48,6 @@ public class GridManager : SingletonMonoBehaviour<GridManager> {
 		gm = GameManager.Instance;
 
 
-
-		currentCoords
-			.Subscribe (p => {
-			}
-			).AddTo (this);
 
 	}
 	public void scale(float s){
@@ -96,7 +93,7 @@ public class GridManager : SingletonMonoBehaviour<GridManager> {
 		var rects = new List<Rect>();
 		rects.Add(new Rect(new Vector2(0,0), new Vector2(gridWidth, gridHeight)));
 		do {
-			rects = createPass (rects);
+			rects = createPassage (rects);
 		} while (rects.Count > 0);
 			
 		//行き止まりのnodeを削除する
@@ -105,7 +102,7 @@ public class GridManager : SingletonMonoBehaviour<GridManager> {
 				var coords = new IntVector2 (x, y);
 				var el = getAllEdgesFromNode (coords);
 				if (el.Count <= 1) {
-					if (Random.value < .5f) {
+					if (Random.value < deadEndReduceProb) {
 						removeNode (getNodeModel (coords));
 						foreach(var e in el){
 							removeEdge (e);
@@ -116,7 +113,7 @@ public class GridManager : SingletonMonoBehaviour<GridManager> {
 		}
 		//create Enemies
 		foreach (var n in nodeList) {
-			n.enemyCount.Value = Random.value < .1f ? Random.Range(1,5) : 0;
+			n.enemyCount.Value = Random.value < enemyDeployProb ? Random.Range(1,maxEnemyCount) : 0;
 		}
 
 		//set init player position
@@ -225,10 +222,9 @@ public class GridManager : SingletonMonoBehaviour<GridManager> {
 			.SetEase (Ease.OutQuad)
 			.OnComplete (() => {
 				currentCoords.Value = dest;
-				currentNode.Value = node;
 
 				if (node.enemyCount.Value > 0) {
-					Debug.Log ("bomb:" + node.enemyCount.Value);
+					Debug.Log ("enemy:" + node.enemyCount.Value);
 					var ec = node.enemyCount.Value;
 
 					foreach (var n in node.Neighbors) {
@@ -248,14 +244,14 @@ public class GridManager : SingletonMonoBehaviour<GridManager> {
 						nodeList[Random.Range(0, nodeList.Count)].enemyCount.Value += ec;
 					}
 
-				} 
-				gm.alertCount.Value = node.scanEnemies ();
+				}
+				gm.alertCount.Value = node.alertCount.Value = node.scanEnemies ();
 			});
 
 
 	}
 
-	public List<Rect> createPass(List<Rect> rects){
+	public List<Rect> createPassage(List<Rect> rects){
 		Rect rect, divRect1, divRect2;
 		float area;
 
@@ -275,8 +271,8 @@ public class GridManager : SingletonMonoBehaviour<GridManager> {
 		var shortSide = Mathf.Min ((int)rect.width, (int)rect.height);
 
 		//min divide span
-		divideMargin = Mathf.Min( Mathf.FloorToInt(longSide *.5f) - 1, divideMargin);
-		var divPt = Random.Range (divideMargin, longSide - 1 - divideMargin);
+		var margin = Mathf.Min( Mathf.FloorToInt(longSide *.5f) - 1, divideMargin);
+		var divPt = Random.Range (margin, longSide - 1 - margin);
 
 		//list passable points
 		var passPts = new List<int>();

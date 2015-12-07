@@ -17,8 +17,8 @@ public class NodeModel {
 
 		onHere = 
 			GridManager.Instance
-				.currentNode
-				.Select(n => n == this)
+				.currentCoords
+				.Select(n => n == coords)
 				.DistinctUntilChanged ()
 				.ToReactiveProperty ();
 	}
@@ -29,7 +29,7 @@ public class NodeModel {
 		foreach (var n in ns) {
 			count += n.enemyCount.Value;
 		}
-		alertCount.Value = count;
+//		alertCount.Value = count;
 		return count;
 	}
 
