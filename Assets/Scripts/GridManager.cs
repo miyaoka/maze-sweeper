@@ -53,58 +53,42 @@ public class GridManager : SingletonMonoBehaviour<GridManager> {
 	public void initGrid(){
 		nodeList.Clear ();
 		edgeList.Clear ();
+		clearView ();
 
-		foreach (Transform t in gridEdgeContainer) {
-			Destroy (t.gameObject);
-		}
-		foreach (Transform t in gridNodeContainer) {
-			Destroy (t.gameObject);
-		}
-
-		//build nodes
+		//models
+		//
+		//create nodes
 		for (var y = 0; y < gridHeight; y++) {
 			for (var x = 0; x < gridWidth; x++) {
-				//create model
-				var model = new NodeModel (new IntVector2(x,y));
-				model.enemyCount.Value = 0;
-
-				//create go
-				var pos = new Vector3 (x * gridUnit, y * gridUnit, 0);
-				var go = Instantiate (gridNodePrefab, pos, Quaternion.identity) as GameObject;
-				go.transform.SetParent (gridNodeContainer, false);
-
-				//assign model to presenter
-				go.GetComponent<NodePresenter> ().Model = model;
-
-				//for debug		
-				//				np.visited.Value = true;
-
-//				nodes [x, y] = np;
-
-				nodeList.Add (model);
+				createNode(new IntVector2(x,y));
 			}
 		}
-
-		//create maze
+		//create edges (maze)
 		var rects = new List<Rect>();
 		rects.Add(new Rect(new Vector2(0,0), new Vector2(gridWidth, gridHeight)));
 		do {
 			rects = divideRect (rects);
 		} while (rects.Count > 0);
 			
-		//remove deadend node
-		var nodeListClone = new List<NodeModel>(nodeList);
-		foreach(var n in nodeListClone){
+		//remove dead-end node
+		for (var i = nodeList.Count - 1; i >= 0; i--) {
+			var n = nodeList [i];
 			var el = getAllEdgesFromNode (n.coords);
-			if (el.Count <= 1) {
-				if (Random.value < deadEndReduceProb) {
-					foreach(var e in el){
-						removeEdge (e);
-					}
-					removeNode (n);
-				}
+			//remove non-connected node
+			if (el.Count == 0) {
+				nodeList.RemoveAt (i);
+				continue;
+			}
+			//deadend node
+			if(el.Count == 1 && Random.value < deadEndReduceProb) {
+				edgeList.Remove (el [0]);
+				nodeList.RemoveAt (i);
 			}
 		}
+
+		//build view by models
+		createView();
+
 		//create Enemies
 		foreach (var n in nodeList) {
 			n.enemyCount.Value = Random.value < enemyDeployProb ? Random.Range(1,maxEnemyCount) : 0;
@@ -154,6 +138,9 @@ public class GridManager : SingletonMonoBehaviour<GridManager> {
 		movePos (currentCoords.Value + dirCoords[(int)dir]);
 	}
 
+	/*
+	 * create maze by adding passage edges to rects
+	 */ 
 	public List<Rect> divideRect(List<Rect> rects){
 		Rect rect, divRect1, divRect2;
 		float area;
@@ -267,23 +254,38 @@ public class GridManager : SingletonMonoBehaviour<GridManager> {
 
 	}
 
+	void createNode(IntVector2 coords){
+		var model = new NodeModel (coords);
+		nodeList.Add (model);
+	}
 	void createEdge(IntVector2 coords, Dirs dir){
-		var pos = new Vector3 (coords.x * gridUnit, coords.y * gridUnit, 0);
-
-		//create model
-		var model = new EdgeModel(getNodeModel(coords), getNodeModel(coords + dirCoords[dir == 0 ? (int)Dirs.North : (int)Dirs.East]));
-
-		//create go
-		var go = Instantiate (gridEdgePrefab, pos, Quaternion.Euler(new Vector3(0,0, (int)dir *-90))) as GameObject;
-		go.transform.SetParent (gridEdgeContainer, false);
-
-		//assign model to presenter
-		go.GetComponent<EdgePresenter>().Model = model;
-		model.go = go;
-
+		var model = new EdgeModel(getNodeModel(coords), getNodeModel(coords + dirCoords[dir == 0 ? (int)Dirs.North : (int)Dirs.East]), dir);
 		edgeList.Add (model);
 	}
-	void removeEdge(EdgeModel model){
+	void createView(){
+		foreach (var node in nodeList) {
+			var go = Instantiate (gridNodePrefab, coordsToVec3(node.coords), Quaternion.identity) as GameObject;
+			go.transform.SetParent (gridNodeContainer, false);
+			go.GetComponent<NodePresenter> ().Model = node;
+		}
+		foreach (var edge in edgeList) {
+			var go = Instantiate (gridEdgePrefab, coordsToVec3(edge.nodes[0].coords), Quaternion.Euler(new Vector3(0,0, (int)edge.dir *-90))) as GameObject;
+			go.transform.SetParent (gridEdgeContainer, false);
+			go.GetComponent<EdgePresenter>().Model = edge;
+		}
+	}
+	void clearView(){
+		foreach (Transform t in gridEdgeContainer) {
+			Destroy (t.gameObject);
+		}
+		foreach (Transform t in gridNodeContainer) {
+			Destroy (t.gameObject);
+		}
+	}
+	Vector3 coordsToVec3(IntVector2 coords){
+		return new Vector3 (coords.x * gridUnit, coords.y * gridUnit, 0);
+	}
+	void removeEdgeWithView(EdgeModel model){
 		//destory presenter
 		foreach (var p in gridEdgeContainer.GetComponentsInChildren<EdgePresenter> ()) {
 			if (p.Model == model) {
@@ -293,7 +295,7 @@ public class GridManager : SingletonMonoBehaviour<GridManager> {
 		//remove model
 		edgeList.Remove (model);
 	}
-	void removeNode(NodeModel model){
+	void removeNodeWithView(NodeModel model){
 		//destory presenter
 		foreach (var p in gridNodeContainer.GetComponentsInChildren<NodePresenter> ()) {
 			if (p.Model == model) {
