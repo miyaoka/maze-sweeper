@@ -9,53 +9,10 @@ public class EdgePresenter : MonoBehaviour{
 	[SerializeField] GameObject view;
 
 
-//	public ReactiveProperty<EdgeModel> model = new ReactiveProperty<EdgeModel> ();
-
-	CompositeDisposable nodeResources = new CompositeDisposable();
 	CompositeDisposable typeResources = new CompositeDisposable();
 	CompositeDisposable modelResources = new CompositeDisposable();
 
-	/*
-	public ReactiveProperty<EdgeModel> edgeModel = new ReactiveProperty<EdgeModel> ();
 
-
-	void Start(){
-		edgeModel
-			.Subscribe (model => {
-			Debug.Log(model);
-			modelResources.Clear ();
-
-			//change image by edgetype
-			model.type
-			.Where (t => t != null)
-			.Subscribe (t => {
-				typeResources.Clear ();
-				t.isPassable
-					.Subscribe (p => edgeImage.gameObject.SetActive (p))
-					.AddTo (typeResources);
-			})
-					.AddTo (modelResources);	
-
-
-			//player is on the one of nodes
-			model.nodes [0].onHere
-			.CombineLatest (model.nodes [1].onHere, (l, r) => l | r)
-			.Subscribe (b => {
-				edgeImage.color = b ? new Color (.8f, .8f, .8f) : new Color (.4f, .4f, .4f);
-			})
-			.AddTo (modelResources);
-
-			//visited one of nodes
-			model.nodes [0].visited
-			.CombineLatest (model.nodes [1].visited, (l, r) => l | r)
-			.Subscribe (b => {
-				view.SetActive (b);
-			})
-			.AddTo (modelResources);
-		}).AddTo (this);
-		
-	}
-	*/
 	private EdgeModel model;
 	public EdgeModel Model
 	{

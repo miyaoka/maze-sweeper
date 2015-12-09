@@ -46,11 +46,13 @@ public class GameManager : SingletonMonoBehaviour<GameManager>{
 		//move control
 		update
 			.Where (right => Input.GetKeyDown (KeyCode.Space))
-			.Subscribe (_ => rects = gridManager.createPassage(rects))
+			.Subscribe (_ => rects = gridManager.divideRect(rects))
 			.AddTo (this);
 		update
 			.Where (left => Input.GetKeyDown (KeyCode.A))
-			.Subscribe (_ => createDialog())
+			.Subscribe (_ => {
+	//			createDialog();
+			})
 			.AddTo (this);
 
 		Debug.Log ("--start");
