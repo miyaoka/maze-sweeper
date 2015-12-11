@@ -17,7 +17,6 @@ public class GameManager : SingletonMonoBehaviour<GameManager>{
 
 
 	GridManager gridManager;
-	MoveControler mc;
 
 	enum State {Init, EnterLevel, OnLevel, ExitLevel};
 	State state = State.Init;
@@ -32,7 +31,6 @@ public class GameManager : SingletonMonoBehaviour<GameManager>{
 	}
 	void Start(){
 		gridManager = GetComponent<GridManager> ();
-		mc = GetComponent<MoveControler> ();
 
 		removeDialog ();
 
@@ -86,7 +84,6 @@ public class GameManager : SingletonMonoBehaviour<GameManager>{
 		//		yield return null;
 	}
 	IEnumerator enterLevel(){
-		mc.enabled = false;
 		while (waitingInput.Value) {
 			yield return null;
 		}
@@ -94,7 +91,6 @@ public class GameManager : SingletonMonoBehaviour<GameManager>{
 	}
 	IEnumerator onLevel(){
 		gridManager.initGrid ();
-		mc.enabled = true;
 		while (state == State.OnLevel) {
 			yield return null;
 		}

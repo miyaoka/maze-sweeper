@@ -6,7 +6,7 @@ using UniRx.Triggers;
 using UnityEngine.UI;
 using DG.Tweening;
 
-public enum Dirs { North, East, South, West};
+public enum Dirs { North, East, South, West, Null};
 
 public class GridManager : SingletonMonoBehaviour<GridManager> {
 	[SerializeField] Transform gridNodeContainer;

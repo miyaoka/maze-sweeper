@@ -23,27 +23,8 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>{
 //		sq = DOTween.Sequence ();
 
 
-		var update = this
-			.UpdateAsObservable ();
 		movePos (new IntVector2 (3, 3));
 
-		//move control
-		update
-			.Where (up => Input.GetKeyDown (KeyCode.W))
-			.Subscribe (_ => moveDir (Dirs.North))
-			.AddTo (this);
-		update
-			.Where (down => Input.GetKeyDown (KeyCode.S))
-			.Subscribe (_ => moveDir (Dirs.South))
-			.AddTo (this);
-		update
-			.Where (right => Input.GetKeyDown (KeyCode.D))
-			.Subscribe (_ => moveDir (Dirs.East))
-			.AddTo (this);
-		update
-			.Where (left => Input.GetKeyDown (KeyCode.A))
-			.Subscribe (_ => moveDir (Dirs.West))
-			.AddTo (this);
 	}
     public void moveDir(Dirs dir)
     {
