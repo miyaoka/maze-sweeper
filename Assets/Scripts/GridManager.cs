@@ -21,11 +21,11 @@ public class GridManager : SingletonMonoBehaviour<GridManager> {
 	[SerializeField] Transform gridPos;
 	[SerializeField] bool showAll;
 
-	public ReactiveProperty<IntVector2> currentCoords = new ReactiveProperty<IntVector2> ();
 
 	public List<NodeModel> nodeList = new List<NodeModel> ();
 	public List<EdgeModel> edgeList = new List<EdgeModel> ();
-	IntVector2[] dirCoords = {new IntVector2(0,1), new IntVector2(1,0), new IntVector2(0,-1), new IntVector2(-1,0)};
+	public List<MoverModel> enemyList = new List<MoverModel> ();
+	public static readonly IntVector2[] dirCoords = {new IntVector2(0,1), new IntVector2(1,0), new IntVector2(0,-1), new IntVector2(-1,0)};
 
 	GameManager gm;
 
@@ -91,7 +91,12 @@ public class GridManager : SingletonMonoBehaviour<GridManager> {
 
 		//create Enemies
 		foreach (var n in nodeList) {
-			n.enemyCount.Value = Random.value < enemyDeployProb ? Random.Range(1,maxEnemyCount) : 0;
+			var enemyCount = Random.value < enemyDeployProb ? Random.Range(1,maxEnemyCount) : 0;
+			n.enemyCount.Value = enemyCount;
+			while (enemyCount-- > 0) {
+				var e = new MoverModel (n.coords);
+				enemyList.Add (e);
+			}
 		}
 
 		//set init player position
@@ -100,8 +105,8 @@ public class GridManager : SingletonMonoBehaviour<GridManager> {
 			initNode = getNodeModel(new IntVector2 (Random.Range(0,gridWidth), Random.Range(0,gridHeight)));
 		} while (initNode == null || initNode.enemyCount.Value > 0 || initNode.scanEnemies() > 0);
 
-		currentCoords.Value = initNode.coords;
-		movePos (currentCoords.Value);
+//		currentCoords.Value = initNode.coords;
+//		movePos (currentCoords.Value);
 
 		//for debug
 		if (showAll) {
@@ -111,6 +116,8 @@ public class GridManager : SingletonMonoBehaviour<GridManager> {
 		}
 
 
+	}
+	public void moveEnemy(MoverModel e, IntVector2 c1, IntVector2 c2){
 	}
 
 	public NodeModel getNodeModel(IntVector2 coords){
@@ -124,19 +131,6 @@ public class GridManager : SingletonMonoBehaviour<GridManager> {
 	}
 
 
-	public void moveDir(Dirs dir)
-	{
-		
-		var edge = getEdgeModelByDir (currentCoords.Value, dir);
-		if (edge == null) {
-			return;
-		}
-//		if (!edge.type.Value.isPassable.Value) {
-//			breachEdge(currentCoords.Value.x, currentCoords.Value.y, dir);
-//			return;
-//		}
-		movePos (currentCoords.Value + dirCoords[(int)dir]);
-	}
 
 	/*
 	 * create maze by adding passage edges to rects
@@ -212,51 +206,16 @@ public class GridManager : SingletonMonoBehaviour<GridManager> {
 		}
 		return list;
 	}
-	void movePos(IntVector2 dest){
-		var node = getNodeModel(dest);
-		if (node == null) {
-			return;
-		}
-		node.visited.Value = true;
 
-		//表示位置を変える
-		gridPos
-			.DOLocalMove (new Vector3 (-dest.x * gridUnit, -dest.y * gridUnit, 0), .2f)
-			.SetEase (Ease.OutQuad)
-			.OnComplete (() => {
-				currentCoords.Value = dest;
-
-				if (node.enemyCount.Value > 0) {
-					Debug.Log ("enemy:" + node.enemyCount.Value);
-					var ec = node.enemyCount.Value;
-
-					foreach (var n in node.Neighbors) {
-						if (n == node) {
-							continue;
-						}
-						//TODO:未探索nodeだとマイナスになる
-						//0に補正するか0以下は表示しないか
-						n.alertCount.Value = Mathf.Max(0, n.alertCount.Value - ec);
-					}
-					node.enemyCount.Value = 0;
-					//			ec -= 1;
-
-					//ランダム位置にワープ
-					//TODO: 同じ位置に飛ばないようにする
-					if (0 < ec) {
-						nodeList[Random.Range(0, nodeList.Count)].enemyCount.Value += ec;
-					}
-
-				}
-				gm.alertCount.Value = node.alertCount.Value = node.scanEnemies ();
-			});
-
-
-	}
 
 	void createNode(IntVector2 coords){
 		var model = new NodeModel (coords);
+//		model.enemyList.Value.Add(new EnemyModel());
+//		model.enemyList.Value.Add(new EnemyModel());
+//		model.enemyList2.Add(new EnemyModel());
 		nodeList.Add (model);
+
+//		Debug.Log (model.getHealth());
 	}
 	void createEdge(IntVector2 coords, Dirs dir){
 		var model = new EdgeModel(getNodeModel(coords), getNodeModel(coords + dirCoords[dir == 0 ? (int)Dirs.North : (int)Dirs.East]), dir);
@@ -282,7 +241,7 @@ public class GridManager : SingletonMonoBehaviour<GridManager> {
 			Destroy (t.gameObject);
 		}
 	}
-	Vector3 coordsToVec3(IntVector2 coords){
+	public Vector3 coordsToVec3(IntVector2 coords){
 		return new Vector3 (coords.x * gridUnit, coords.y * gridUnit, 0);
 	}
 	void removeEdgeWithView(EdgeModel model){
