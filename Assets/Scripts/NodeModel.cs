@@ -12,6 +12,7 @@ public class NodeModel {
 	public ReactiveProperty<int> alertCount = new ReactiveProperty<int> (0);
 	public ReactiveProperty<bool> visited = new ReactiveProperty<bool> ();
 	public ReactiveProperty<bool> onHere = new ReactiveProperty<bool> ();
+	public ReactiveProperty<bool> onDest = new ReactiveProperty<bool> ();
 /*
 	public List<MoverModel> enemyList = new List<MoverModel>();
 	public List<MoverModel> EnemyList{
@@ -26,6 +27,12 @@ public class NodeModel {
 		onHere = 
 			PlayerManager.Instance
 				.currentCoords
+				.Select(n => n == coords)
+				.DistinctUntilChanged ()
+				.ToReactiveProperty ();
+		onDest = 
+			PlayerManager.Instance
+				.destCoords
 				.Select(n => n == coords)
 				.DistinctUntilChanged ()
 				.ToReactiveProperty ();

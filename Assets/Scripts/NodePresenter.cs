@@ -7,10 +7,10 @@ using System.Linq;
 using DG.Tweening;
 
 public class NodePresenter : MonoBehaviour {
-	[SerializeField] GameObject view;
+	[SerializeField] CanvasGroup cg;
 	[SerializeField] public Image floor;
 	[SerializeField] Image wall;
-	[SerializeField] GameObject tile;
+	[SerializeField] CanvasGroup tile;
 	[SerializeField] Text alertCountText;
 	[SerializeField] Text enemyCountText;
 
@@ -28,12 +28,16 @@ public class NodePresenter : MonoBehaviour {
 
 
 	CompositeDisposable modelResources = new CompositeDisposable();
-
+	float fadeIn = .5f;
+	float fadeOut = .2f;
 	private NodeModel model;
+	Sequence sq;
+	Sequence wallSq;
 	public NodeModel Model
 	{
 		set { 
 			this.model = value; 
+			sq = DOTween.Sequence ();
 
 			modelResources.Clear ();
 
@@ -50,16 +54,37 @@ public class NodePresenter : MonoBehaviour {
 			var visitedFloorColor = new Color (.2f, .2f, .2f);
 			activeFloorColor = new Color(.8f,.8f,.8f);
 
-
 			model.onHere
 				.Subscribe (b => {
-					floor.DOColor(b ? activeFloorColor : visitedFloorColor, .3f).SetEase(Ease.OutQuad);
-					wall.DOFade(b ? 1 : 0, .3f).SetEase(Ease.OutQuad);
+					var fade = b ? fadeIn : fadeOut;
+
+					sq.Kill ();
+					sq = DOTween.Sequence();
+					if(b) {
+//						sq.PrependInterval(.5f);
+					}
+					sq.Append(floor.DOColor(b ? activeFloorColor : visitedFloorColor, fade ).SetEase(Ease.OutQuad));
+//					sq.Join(wall.DOColor(b ? new Color(.8f, .8f, .8f) : new Color(.2f, .2f, .2f), fade).SetEase(Ease.OutQuad));
+//					sq.Join(wall.DOFade(b ? 1 : 0, fade).SetEase(Ease.OutQuad));
+					sq.Join(tile.DOFade(b ? 1 : 0, fade).SetEase(Ease.OutQuad));
 //									wall.gameObject.SetActive(b);
-					tile.gameObject.SetActive(b);
 				})
 				.AddTo (this);
-
+			model.onDest
+				.Subscribe (b => {
+					if(b){
+						wall.color = new Color(.2f, .2f, .2f, 0);
+					}
+					if(wallSq != null){
+						wallSq.Kill();
+					}
+					wallSq = DOTween.Sequence();
+					wallSq.Append(wall.DOFade(b ? 1 : 0, b ? .8f : 0).SetEase(Ease.OutQuad));
+					wallSq.Append(wall.DOColor(b ? new Color(.8f, .8f, .8f, 1) : new Color(.2f, .2f, .2f, 0), b ? .5f : .2f).SetEase(Ease.OutQuad));
+					return;
+					wall.DOFade(b ? 1: 0, 1f).SetEase(Ease.OutQuad);
+				})
+				.AddTo (this);
 			model.visited
 				.Where (b => b)
 				.DistinctUntilChanged()
@@ -73,7 +98,7 @@ public class NodePresenter : MonoBehaviour {
 			model.visited
 				.DistinctUntilChanged()
 				.Subscribe (b =>  {
-					view.SetActive (b);
+					cg.DOFade(b ? 1 : 0, b ? 1 : 0).SetEase(Ease.OutQuad);
 				})
 				.AddTo (this);
 

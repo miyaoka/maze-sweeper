@@ -4,21 +4,22 @@ using System.Collections;
 using System.Collections.Generic;
 using UniRx;
 using System.Linq;
+using DG.Tweening;
 public class EdgePresenter : MonoBehaviour{
 	[SerializeField] Image edgeImage;
-	[SerializeField] GameObject view;
+	[SerializeField] CanvasGroup cg;
 
 
 	CompositeDisposable typeResources = new CompositeDisposable();
 	CompositeDisposable modelResources = new CompositeDisposable();
-
+	Tweener t;
 
 	private EdgeModel model;
 	public EdgeModel Model
 	{
 		set { 
 			this.model = value; 
-	
+
 			modelResources.Clear ();
 
 			//change image by edgetype
@@ -37,7 +38,11 @@ public class EdgePresenter : MonoBehaviour{
 			model.nodes[0].onHere
 				.CombineLatest(model.nodes[1].onHere, (l,r) => l | r)
 				.Subscribe(b => {
-					edgeImage.color = b ? new Color(.8f, .8f, .8f) : new Color(.4f, .4f, .4f);
+					if(t != null){
+						t.Kill();
+					}
+					t = edgeImage.DOColor(b ? new Color(.8f, .8f, .8f) : new Color(.4f, .4f, .4f), b ? 1f : .2f).SetEase(Ease.OutQuad);
+
 				})
 				.AddTo(this);
 
@@ -45,7 +50,7 @@ public class EdgePresenter : MonoBehaviour{
 			model.nodes[0].visited
 				.CombineLatest(model.nodes[1].visited, (l,r) => l | r)
 				.Subscribe(b => {
-					view.SetActive(b);
+					cg.DOFade(b ? 1 : 0, b ? 1 : 0).SetEase(Ease.OutQuad);
 				})
 				.AddTo(this);
 

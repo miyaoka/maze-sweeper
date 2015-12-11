@@ -14,11 +14,9 @@ public class GridManager : SingletonMonoBehaviour<GridManager> {
 	[SerializeField] int gridWidth = 3;
 	[SerializeField] int gridHeight = 3;
 	//1グリッドの大きさ
-	[SerializeField] float gridUnit = 320;
+	[SerializeField] public float gridUnit = 320;
 	[SerializeField] GameObject gridNodePrefab;
 	[SerializeField] GameObject gridEdgePrefab;
-	[SerializeField] public Transform gridScale;
-	[SerializeField] Transform gridPos;
 	[SerializeField] bool showAll;
 
 
@@ -48,7 +46,7 @@ public class GridManager : SingletonMonoBehaviour<GridManager> {
 		gm = GameManager.Instance;
 	}
 	public void scale(float s){
-		gridScale.localScale = new Vector3(s, s, 1);
+//		gridScale.localScale = new Vector3(s, s, 1);
 	}
 	public void initGrid(){
 		nodeList.Clear ();
@@ -105,7 +103,7 @@ public class GridManager : SingletonMonoBehaviour<GridManager> {
 			initNode = getNodeModel(new IntVector2 (Random.Range(0,gridWidth), Random.Range(0,gridHeight)));
 		} while (initNode == null || initNode.enemyCount.Value > 0 || initNode.scanEnemies() > 0);
 
-//		currentCoords.Value = initNode.coords;
+		PlayerManager.Instance.currentCoords.Value = initNode.coords;
 //		movePos (currentCoords.Value);
 
 		//for debug

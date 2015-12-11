@@ -2,10 +2,14 @@
 using System.Collections;
 using UniRx;
 using UniRx.Triggers;
+using DG.Tweening;
 public class PlayerManager : SingletonMonoBehaviour<PlayerManager>{
-
+	[SerializeField] GameObject player;
     public ReactiveProperty<IntVector2> currentCoords = new ReactiveProperty<IntVector2> ();
+	public ReactiveProperty<IntVector2> destCoords = new ReactiveProperty<IntVector2> ();
 	GridManager gm;
+	Sequence sq;
+
     void Awake ()
     {
         if (this != Instance) {
@@ -16,9 +20,12 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>{
     }
 	void Start () {
 		gm = GridManager.Instance;
+//		sq = DOTween.Sequence ();
+
 
 		var update = this
 			.UpdateAsObservable ();
+		movePos (new IntVector2 (3, 3));
 
 		//move control
 		update
@@ -40,6 +47,11 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>{
 	}
     public void moveDir(Dirs dir)
     {
+		if (sq != null){
+			if (sq.IsPlaying ()) {
+				currentCoords.Value = destCoords.Value;
+			}
+		}
 
         var edge = gm.getEdgeModelByDir (currentCoords.Value, dir);
         if (edge == null) {
@@ -56,15 +68,29 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>{
         if (node == null) {
             return;
         }
-        node.visited.Value = true;
+		destCoords.Value = dest;
 
-		/*
-        //表示位置を変える
-        gridPos
-            .DOLocalMove (new Vector3 (-dest.x * gridUnit, -dest.y * gridUnit, 0), .2f)
-            .SetEase (Ease.OutQuad)
-            .OnComplete (() => {
-                currentCoords.Value = dest;
+		if (sq != null){
+			if (sq.IsPlaying ()) {
+//				return;
+			}
+		}
+
+		node.visited.Value = true;
+
+		CameraManager.Instance.movePos (dest);
+
+		if (sq != null) {
+			sq.Kill ();
+		}
+		sq = DOTween.Sequence();
+
+		sq.Append (player.transform
+            .DOLocalMove (new Vector3 (dest.x * gm.gridUnit, dest.y * gm.gridUnit, 0), .8f)
+			.SetEase (Ease.OutQuad)
+		);
+		sq.OnKill (() => {
+			currentCoords.Value = dest;
 
                 if (node.enemyCount.Value > 0) {
                     Debug.Log ("enemy:" + node.enemyCount.Value);
@@ -89,9 +115,8 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>{
                     }
 
                 }
-                gm.alertCount.Value = node.alertCount.Value = node.scanEnemies ();
+				GameManager.Instance.alertCount.Value = node.alertCount.Value = node.scanEnemies ();
             });
-		*/
 
 
     }
