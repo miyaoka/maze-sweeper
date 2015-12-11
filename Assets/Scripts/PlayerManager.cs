@@ -7,7 +7,6 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>{
 	[SerializeField] GameObject player;
     public ReactiveProperty<IntVector2> currentCoords = new ReactiveProperty<IntVector2> ();
 	public ReactiveProperty<IntVector2> destCoords = new ReactiveProperty<IntVector2> ();
-	GridManager gm;
 	Sequence sq;
 
     void Awake ()
@@ -19,11 +18,9 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>{
         DontDestroyOnLoad (this.gameObject);
     }
 	void Start () {
-		gm = GridManager.Instance;
 //		sq = DOTween.Sequence ();
-
-
-		movePos (new IntVector2 (3, 3));
+//		movePos (currentCoords.Value);
+//		movePos (new IntVector2 (3, 3));
 
 	}
     public void moveDir(Dirs dir)
@@ -33,6 +30,7 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>{
 				currentCoords.Value = destCoords.Value;
 			}
 		}
+		var gm = GridManager.Instance;
 
         var edge = gm.getEdgeModelByDir (currentCoords.Value, dir);
         if (edge == null) {
@@ -44,8 +42,9 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>{
         //      }
 		movePos (currentCoords.Value + GridManager.dirCoords[(int)dir]);
     }	
-    void movePos(IntVector2 dest){
-        var node = gm.getNodeModel(dest);
+    public void movePos(IntVector2 dest){
+		var gm = GridManager.Instance;
+		var node = gm.getNodeModel(dest);
         if (node == null) {
             return;
         }
@@ -65,6 +64,11 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>{
 			sq.Kill ();
 		}
 		sq = DOTween.Sequence();
+
+		AudioManager.door.Play ();
+		AudioManager.walk.PlayDelayed (.4f);
+//		AudioManager.enemyDetect.Play ();
+
 
 		sq.Append (player.transform
             .DOLocalMove (new Vector3 (dest.x * gm.gridUnit, dest.y * gm.gridUnit, 0), .8f)

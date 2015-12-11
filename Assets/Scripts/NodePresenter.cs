@@ -29,7 +29,7 @@ public class NodePresenter : MonoBehaviour {
 
 	CompositeDisposable modelResources = new CompositeDisposable();
 	float fadeIn = .5f;
-	float fadeOut = .2f;
+	float fadeOut = .1f;
 	private NodeModel model;
 	Sequence sq;
 	Sequence wallSq;
@@ -79,7 +79,7 @@ public class NodePresenter : MonoBehaviour {
 						wallSq.Kill();
 					}
 					wallSq = DOTween.Sequence();
-					wallSq.Append(wall.DOFade(b ? 1 : 0, b ? .8f : 0).SetEase(Ease.OutQuad));
+					wallSq.Append(wall.DOFade(b ? 1 : 0, b ? .8f : .5f).SetEase(Ease.OutQuad));
 					wallSq.Append(wall.DOColor(b ? new Color(.8f, .8f, .8f, 1) : new Color(.2f, .2f, .2f, 0), b ? .5f : .2f).SetEase(Ease.OutQuad));
 					return;
 					wall.DOFade(b ? 1: 0, 1f).SetEase(Ease.OutQuad);

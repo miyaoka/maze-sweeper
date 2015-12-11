@@ -103,8 +103,9 @@ public class GridManager : SingletonMonoBehaviour<GridManager> {
 			initNode = getNodeModel(new IntVector2 (Random.Range(0,gridWidth), Random.Range(0,gridHeight)));
 		} while (initNode == null || initNode.enemyCount.Value > 0 || initNode.scanEnemies() > 0);
 
-		PlayerManager.Instance.currentCoords.Value = initNode.coords;
-//		movePos (currentCoords.Value);
+
+//		PlayerManager.Instance.currentCoords.Value = initNode.coords;
+		PlayerManager.Instance.movePos (initNode.coords);
 
 		//for debug
 		if (showAll) {
