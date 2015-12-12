@@ -71,6 +71,9 @@ public class GameManager : SingletonMonoBehaviour<GameManager>{
 			Destroy(t.gameObject);
 		}
 	}
+	public void restart(){
+		gridManager.initGrid ();
+	}
 	IEnumerator gameLoop(){
 		Debug.Log ("enter");
 //		yield return StartCoroutine (enterLevel ());
