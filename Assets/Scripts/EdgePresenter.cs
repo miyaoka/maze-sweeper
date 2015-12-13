@@ -6,104 +6,104 @@ using UniRx;
 using System.Linq;
 using DG.Tweening;
 public class EdgePresenter : MonoBehaviour{
-	[SerializeField] Image edgeImage;
-	[SerializeField] CanvasGroup cg;
+  [SerializeField] Image edgeImage;
+  [SerializeField] CanvasGroup cg;
 
 
-	CompositeDisposable typeResources = new CompositeDisposable();
-	CompositeDisposable modelResources = new CompositeDisposable();
-	Tweener t;
+  CompositeDisposable typeResources = new CompositeDisposable();
+  CompositeDisposable modelResources = new CompositeDisposable();
+  Tweener t;
 
-	private EdgeModel model;
-	public EdgeModel Model
-	{
-		set { 
-			this.model = value; 
+  private EdgeModel model;
+  public EdgeModel Model
+  {
+    set { 
+      this.model = value; 
 
-			modelResources.Clear ();
+      modelResources.Clear ();
 
-			//change image by edgetype
-			model.type
-				.Where(t => t != null)
-				.Subscribe(t => {
-					typeResources.Clear();
-					t.isPassable
-						.Subscribe(p => edgeImage.gameObject.SetActive(p))
-						.AddTo(typeResources);
-				})
-				.AddTo(this);	
+      //change image by edgetype
+      model.type
+        .Where(t => t != null)
+        .Subscribe(t => {
+          typeResources.Clear();
+          t.isPassable
+            .Subscribe(p => edgeImage.gameObject.SetActive(p))
+            .AddTo(typeResources);
+        })
+        .AddTo(this); 
 
 
-			//player is on the one of nodes
-			model.nodes[0].onHere
-				.CombineLatest(model.nodes[1].onHere, (l,r) => l | r)
-				.Subscribe(b => {
-					if(t != null){
-						t.Kill();
-					}
-					t = edgeImage.DOColor(b ? new Color(.8f, .8f, .8f) : new Color(.4f, .4f, .4f), b ? 1f : .2f).SetEase(Ease.OutQuad);
+      //player is on the one of nodes
+      model.nodes[0].onHere
+        .CombineLatest(model.nodes[1].onHere, (l,r) => l | r)
+        .Subscribe(b => {
+          if(t != null){
+            t.Kill();
+          }
+          t = edgeImage.DOColor(b ? new Color(.8f, .8f, .8f) : new Color(.4f, .4f, .4f), b ? 1f : .2f).SetEase(Ease.OutQuad);
 
-				})
-				.AddTo(this);
+        })
+        .AddTo(this);
 
-			//visited one of nodes
-			model.nodes[0].visited
-				.CombineLatest(model.nodes[1].visited, (l,r) => l | r)
-				.Subscribe(b => {
-					cg.DOFade(b ? 1 : 0, b ? 1 : 0).SetEase(Ease.OutQuad);
-				})
-				.AddTo(this);
+      //visited one of nodes
+      model.nodes[0].visited
+        .CombineLatest(model.nodes[1].visited, (l,r) => l | r)
+        .Subscribe(b => {
+          cg.DOFade(b ? 1 : 0, b ? 1 : 0).SetEase(Ease.OutQuad);
+        })
+        .AddTo(this);
 
-		}
-		get { return this.model; }
-	}
-	/*
-	void Start () {
-//		view.SetActive (false);
+    }
+    get { return this.model; }
+  }
+  /*
+  void Start () {
+//    view.SetActive (false);
 
-		//両端nodeが設定されている場合
-		Observable
-			.CombineLatest<NodePresenter> (nodeFrom, nodeTo)
-			.Subscribe (nlist => {
-				nodeResources.Clear ();
-				if(nlist.Contains(null)){
-					view.SetActive(false);
-					return;
-				}
-				//接nodeに居る場合はハイライト
-				nodeFrom.Value.onHere
-					.CombineLatest(nodeTo.Value.onHere, (l,r) => l || r)
-					.Subscribe(h => {
-						edgeImage.color = h ? new Color(.8f, .8f, .8f) : new Color(.4f, .4f, .4f);
-					})
-					.AddTo(nodeResources);
-				//接node未探訪の場合は非表示
-				nodeFrom.Value.visited
-					.CombineLatest(nodeTo.Value.visited, (l,r) => l || r)
-					.Subscribe(v => {
-						view.SetActive(v);
-					})
-					.AddTo(nodeResources);
-		}).AddTo (this);
-		
-		type
-			.Where(t => t != null)
-			.Subscribe(t => {
-				typeResources.Clear();
-				t.isPassable
-					.Subscribe(p => edgeImage.gameObject.SetActive(p))
-					.AddTo(typeResources);
-			})
-			.AddTo(this);	
-	}
-	public void breach(){
-		var t = type.Value;
-		t.breach ();
-		type.Value = type.Value.breach ();
-	}
-		*/
-	void OnDestroy()
-	{
-		typeResources.Dispose ();
-	}
+    //両端nodeが設定されている場合
+    Observable
+      .CombineLatest<NodePresenter> (nodeFrom, nodeTo)
+      .Subscribe (nlist => {
+        nodeResources.Clear ();
+        if(nlist.Contains(null)){
+          view.SetActive(false);
+          return;
+        }
+        //接nodeに居る場合はハイライト
+        nodeFrom.Value.onHere
+          .CombineLatest(nodeTo.Value.onHere, (l,r) => l || r)
+          .Subscribe(h => {
+            edgeImage.color = h ? new Color(.8f, .8f, .8f) : new Color(.4f, .4f, .4f);
+          })
+          .AddTo(nodeResources);
+        //接node未探訪の場合は非表示
+        nodeFrom.Value.visited
+          .CombineLatest(nodeTo.Value.visited, (l,r) => l || r)
+          .Subscribe(v => {
+            view.SetActive(v);
+          })
+          .AddTo(nodeResources);
+    }).AddTo (this);
+    
+    type
+      .Where(t => t != null)
+      .Subscribe(t => {
+        typeResources.Clear();
+        t.isPassable
+          .Subscribe(p => edgeImage.gameObject.SetActive(p))
+          .AddTo(typeResources);
+      })
+      .AddTo(this); 
+  }
+  public void breach(){
+    var t = type.Value;
+    t.breach ();
+    type.Value = type.Value.breach ();
+  }
+    */
+  void OnDestroy()
+  {
+    typeResources.Dispose ();
+  }
 }
