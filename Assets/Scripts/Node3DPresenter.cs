@@ -73,7 +73,7 @@ public class Node3DPresenter : MonoBehaviour {
 
             light.enabled = true;
             lightTw.Kill();
-            lightTw = light.DOIntensity (1.2f, Random.Range(.3f, .8f)).SetEase (Ease.InBounce);
+            lightTw = light.DOIntensity (1.2f, Random.Range(.8f, .8f)).SetEase (Ease.InQuad);
           }
           else{
             lightTw.Kill();
