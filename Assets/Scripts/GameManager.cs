@@ -8,7 +8,7 @@ public class GameManager : SingletonMonoBehaviour<GameManager>{
   [SerializeField] GameObject playerPrefab;
   [SerializeField] GameObject dialogPrefab;
   [SerializeField] Transform dialogContainer;
-  [SerializeField] Slider slider;
+  [SerializeField] SkyCameraPresenter skycam;
 
 
   public ReactiveProperty<int> alertCount = new ReactiveProperty<int>();
@@ -73,6 +73,7 @@ public class GameManager : SingletonMonoBehaviour<GameManager>{
   }
   public void restart(){
     gridManager.initGrid ();
+    skycam.randomRotate ();
   }
   IEnumerator gameLoop(){
     Debug.Log ("enter");
