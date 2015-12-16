@@ -20,8 +20,8 @@ public class ZoomPresenter : MonoBehaviour {
       })
       .AddTo(this); 
 
-    var scales = new float[]{1, .2f, 2};
-    var texts = new string[]{ "normal", "map", "zoom" };
+    var scales = new float[]{1, 2, .2f};
+    var texts = new string[]{ "normal", "zoom", "map" };
     zoomLevel
       .Subscribe (i => {
         CameraManager.Instance.Scale(scales[i]);

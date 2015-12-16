@@ -11,12 +11,15 @@ public enum Dirs { North, East, South, West, Null};
 public class GridManager : SingletonMonoBehaviour<GridManager> {
   [SerializeField] Transform gridNodeContainer;
   [SerializeField] Transform gridEdgeContainer;
+  [SerializeField] Transform viewContainer;
   [SerializeField] int gridWidth = 3;
   [SerializeField] int gridHeight = 3;
   //1グリッドの大きさ
   [SerializeField] public float gridUnit = 320;
   [SerializeField] GameObject gridNodePrefab;
   [SerializeField] GameObject gridEdgePrefab;
+  [SerializeField] GameObject gridNode3DPrefab;
+  [SerializeField] GameObject gridEdge3DPrefab;
   [SerializeField] bool showAll;
 
 
@@ -85,7 +88,7 @@ public class GridManager : SingletonMonoBehaviour<GridManager> {
     }
 
     //build view by models
-    createView();
+//    createView();
 
     //create Enemies
     foreach (var n in nodeList) {
@@ -193,7 +196,7 @@ public class GridManager : SingletonMonoBehaviour<GridManager> {
     return rects;
   }
 
-  List<EdgeModel> getAllEdgesFromNode(IntVector2 coords){
+  public List<EdgeModel> getAllEdgesFromNode(IntVector2 coords){
     var list = new List<EdgeModel> ();
     foreach (var d in dirCoords)
     {
@@ -222,6 +225,12 @@ public class GridManager : SingletonMonoBehaviour<GridManager> {
   }
   void createView(){
     foreach (var node in nodeList) {
+      var go = Instantiate (gridNode3DPrefab, coordsToVec3(node.coords), Quaternion.identity) as GameObject;
+      go.transform.SetParent (viewContainer, false);
+      go.GetComponent<Node3DPresenter> ().Model = node;
+    }
+    return;
+    foreach (var node in nodeList) {
       var go = Instantiate (gridNodePrefab, coordsToVec3(node.coords), Quaternion.identity) as GameObject;
       go.transform.SetParent (gridNodeContainer, false);
       go.GetComponent<NodePresenter> ().Model = node;
@@ -232,11 +241,24 @@ public class GridManager : SingletonMonoBehaviour<GridManager> {
       go.GetComponent<EdgePresenter>().Model = edge;
     }
   }
+  public void createNodeView(NodeModel node){
+    var go = Instantiate (gridNode3DPrefab, coordsToVec3(node.coords), Quaternion.identity) as GameObject;
+    go.transform.SetParent (viewContainer, false);
+    go.GetComponent<Node3DPresenter> ().Model = node;
+  }
+  public void createEdgeView(EdgeModel edge){
+    var go = Instantiate (gridEdge3DPrefab, (coordsToVec3(edge.nodes[0].coords) + coordsToVec3(edge.nodes[1].coords)) / 2, Quaternion.Euler(new Vector3(0,0, ((int)edge.dir -1) *-90))) as GameObject;
+    go.transform.SetParent (viewContainer, false);
+//    go.GetComponent<Edge3DPresenter> ().Model = node;
+  }
   void clearView(){
     foreach (Transform t in gridEdgeContainer) {
       Destroy (t.gameObject);
     }
     foreach (Transform t in gridNodeContainer) {
+      Destroy (t.gameObject);
+    }
+    foreach (Transform t in viewContainer) {
       Destroy (t.gameObject);
     }
   }

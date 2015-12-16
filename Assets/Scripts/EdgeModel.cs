@@ -7,6 +7,7 @@ public class EdgeModel {
 
   public List<NodeModel> nodes;
   public Dirs dir;
+  public bool visited = false;
   public ReactiveProperty<EdgeType> type = new ReactiveProperty<EdgeType> (EdgeType.passage);
   public EdgeModel(NodeModel node1, NodeModel node2, Dirs dir){
     nodes = new List<NodeModel>(){node1, node2};

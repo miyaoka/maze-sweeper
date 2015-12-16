@@ -56,7 +56,18 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>{
       }
     }
 
-    node.visited.Value = true;
+    if (!node.visited.Value) {
+      gm.createNodeView (node);
+      node.visited.Value = true;
+
+      var edges = gm.getAllEdgesFromNode (node.coords);
+      foreach (var e in edges) {
+        if (!e.visited) {
+          e.visited = true;
+          gm.createEdgeView (e);
+        }
+      }
+    }
 
     CameraManager.Instance.movePos (dest);
 
@@ -69,6 +80,7 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>{
     AudioManager.walk.PlayDelayed (.4f);
     //    AudioManager.enemyDetect.Play ();
 
+    player.GetComponentInChildren<Animator> ().SetBool("isWalking", true);
 
     sq.Append (player.transform
       .DOLocalMove (new Vector3 (dest.x * gm.gridUnit, dest.y * gm.gridUnit, 0), .8f)
@@ -76,6 +88,9 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>{
     );
     sq.OnKill (() => {
       currentCoords.Value = dest;
+
+      player.GetComponentInChildren<Animator> ().SetBool("isWalking", false);
+
 
       if (node.enemyCount.Value > 0) {
         Debug.Log ("enemy:" + node.enemyCount.Value);
