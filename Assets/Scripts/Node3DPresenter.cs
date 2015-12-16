@@ -6,13 +6,10 @@ using System.Linq;
 using DG.Tweening;
 
 public class Node3DPresenter : MonoBehaviour {
-  [SerializeField] GameObject wallN;
-  [SerializeField] GameObject wallE;
-  [SerializeField] GameObject wallW;
-  [SerializeField] GameObject wallS;
+  [SerializeField] GameObject[] walls;
   [SerializeField] Light light;
   [SerializeField] GameObject alert;
-  [SerializeField] GameObject walls;
+  [SerializeField] GameObject wallContainer;
   [SerializeField] GameObject tiles;
 
   CompositeDisposable modelResources = new CompositeDisposable();
@@ -36,6 +33,7 @@ public class Node3DPresenter : MonoBehaviour {
   {
     set { 
       this.model = value; 
+      var gm = GridManager.Instance;
       sq = DOTween.Sequence ();
 
       modelResources.Clear ();
@@ -58,7 +56,7 @@ public class Node3DPresenter : MonoBehaviour {
 
       model.onHere
         .CombineLatest (model.onDest, (l, r) => l || r)
-        .Subscribe (b => walls.SetActive (b))
+        .Subscribe (b => wallContainer.SetActive (b))
         .AddTo (this);
       model.onHere
         .Subscribe (b => {
@@ -75,7 +73,7 @@ public class Node3DPresenter : MonoBehaviour {
 
             light.enabled = true;
             lightTw.Kill();
-            lightTw = light.DOIntensity (1.0f, Random.Range(.3f, .5f)).SetEase (Ease.InBounce);
+            lightTw = light.DOIntensity (1.2f, Random.Range(.3f, .8f)).SetEase (Ease.InBounce);
           }
           else{
             lightTw.Kill();
@@ -103,6 +101,9 @@ public class Node3DPresenter : MonoBehaviour {
         .Subscribe (b =>  {
         })
         .AddTo (this);
+
+
+
 
 
     }
