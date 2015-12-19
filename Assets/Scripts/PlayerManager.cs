@@ -15,7 +15,6 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>{
       Destroy (this);
       return;
     }
-    DontDestroyOnLoad (this.gameObject);
   }
   void Start () {
     //    sq = DOTween.Sequence ();

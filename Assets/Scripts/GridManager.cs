@@ -28,7 +28,6 @@ public class GridManager : SingletonMonoBehaviour<GridManager> {
   public List<MoverModel> enemyList = new List<MoverModel> ();
   public static readonly IntVector2[] dirCoords = {new IntVector2(0,1), new IntVector2(1,0), new IntVector2(0,-1), new IntVector2(-1,0)};
 
-  GameManager gm;
 
   [SerializeField] int divideMargin = 1;
   [SerializeField] float passPerLong = 4f;
@@ -43,13 +42,8 @@ public class GridManager : SingletonMonoBehaviour<GridManager> {
       Destroy (this);
       return;
     }
-    DontDestroyOnLoad (this.gameObject);
   }
   void Start(){
-    gm = GameManager.Instance;
-  }
-  public void scale(float s){
-    //    gridScale.localScale = new Vector3(s, s, 1);
   }
   public void initGrid(){
     nodeList.Clear ();
@@ -228,17 +222,6 @@ public class GridManager : SingletonMonoBehaviour<GridManager> {
       var go = Instantiate (gridNode3DPrefab, coordsToVec3(node.coords), Quaternion.identity) as GameObject;
       go.transform.SetParent (viewContainer, false);
       go.GetComponent<Node3DPresenter> ().Model = node;
-    }
-    return;
-    foreach (var node in nodeList) {
-      var go = Instantiate (gridNodePrefab, coordsToVec3(node.coords), Quaternion.identity) as GameObject;
-      go.transform.SetParent (gridNodeContainer, false);
-      go.GetComponent<NodePresenter> ().Model = node;
-    }
-    foreach (var edge in edgeList) {
-      var go = Instantiate (gridEdgePrefab, coordsToVec3(edge.nodes[0].coords), Quaternion.Euler(new Vector3(0,0, (int)edge.dir *-90))) as GameObject;
-      go.transform.SetParent (gridEdgeContainer, false);
-      go.GetComponent<EdgePresenter>().Model = edge;
     }
   }
   public void createNodeView(NodeModel node){

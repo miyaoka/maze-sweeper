@@ -7,24 +7,20 @@ using DG.Tweening;
 
 public class Node3DPresenter : MonoBehaviour {
   [SerializeField] GameObject[] walls;
-  [SerializeField] Light light;
+  [SerializeField] Light roomLight;
   [SerializeField] GameObject alert;
   [SerializeField] GameObject wallContainer;
   [SerializeField] GameObject tiles;
 
   CompositeDisposable modelResources = new CompositeDisposable();
-  float fadeIn = .5f;
-  float fadeOut = .1f;
   private NodeModel model;
-  Sequence sq;
-  Sequence wallSq;
   Tweener lightTw;
   TextMesh alertText;
   void Awake(){
     
-    light.intensity = 0;
-    lightTw = light.DOIntensity (0, 0);//.SetLoops (10, LoopType.Yoyo);
-    light.enabled = false;
+    roomLight.intensity = 0;
+    lightTw = roomLight.DOIntensity (0, 0);//.SetLoops (10, LoopType.Yoyo);
+    roomLight.enabled = false;
 
     tiles.SetActive (false);
     alertText = alert.GetComponent<TextMesh> ();
@@ -33,8 +29,6 @@ public class Node3DPresenter : MonoBehaviour {
   {
     set { 
       this.model = value; 
-      var gm = GridManager.Instance;
-      sq = DOTween.Sequence ();
 
       modelResources.Clear ();
 
@@ -50,9 +44,6 @@ public class Node3DPresenter : MonoBehaviour {
         })
         .AddTo (this);
 
-      var activeFloorColor = new Color (Random.Range (.7f, .9f), Random.Range (.7f, .9f),Random.Range (.7f, .9f));
-      var visitedFloorColor = new Color (.2f, .2f, .2f);
-      activeFloorColor = new Color(.8f,.8f,.8f);
 
       model.onHere
         .CombineLatest (model.onDest, (l, r) => l || r)
@@ -71,15 +62,15 @@ public class Node3DPresenter : MonoBehaviour {
           if(b){
             tiles.SetActive(b);
 
-            light.enabled = true;
+            roomLight.enabled = true;
             lightTw.Kill();
-            lightTw = light.DOIntensity (1.2f, Random.Range(.8f, .8f)).SetEase (Ease.InQuad);
+            lightTw = roomLight.DOIntensity (1.2f, Random.Range(.8f, .8f)).SetEase (Ease.InQuad);
           }
           else{
             lightTw.Kill();
-            lightTw = light.DOIntensity (0.0f, Random.Range(.3f, .5f)).SetEase (Ease.OutQuad).SetDelay(.5f)
+            lightTw = roomLight.DOIntensity (0.0f, Random.Range(.3f, .5f)).SetEase (Ease.OutQuad).SetDelay(.5f)
               .OnComplete(() =>{
-                light.enabled = false;
+                roomLight.enabled = false;
                 tiles.SetActive(b);
 
               });

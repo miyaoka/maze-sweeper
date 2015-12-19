@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UniRx;
 using UniRx.Triggers;
 using UnityEngine.UI;
+public enum ViewState {Move, Map, Battle};
 public class GameManager : SingletonMonoBehaviour<GameManager>{
   [SerializeField] GameObject playerPrefab;
   [SerializeField] GameObject dialogPrefab;
@@ -13,7 +14,7 @@ public class GameManager : SingletonMonoBehaviour<GameManager>{
 
   public ReactiveProperty<int> alertCount = new ReactiveProperty<int>();
   public ReactiveProperty<int> enemyCount = new ReactiveProperty<int>();
-  List<CharacterPresenter> players = new List<CharacterPresenter> ();
+  public ReactiveProperty<ViewState> viewState = new ReactiveProperty<ViewState> ();
 
 
   GridManager gridManager;
@@ -27,7 +28,6 @@ public class GameManager : SingletonMonoBehaviour<GameManager>{
       Destroy (this);
       return;
     }
-    DontDestroyOnLoad (this.gameObject);
   }
   void Start(){
     gridManager = GetComponent<GridManager> ();
@@ -111,6 +111,9 @@ public class GameManager : SingletonMonoBehaviour<GameManager>{
   }
   IEnumerator exitBattle(){
     yield return 1;
+  }
+  public void toggleMap(){
+    viewState.Value = viewState.Value == ViewState.Map ? ViewState.Move : ViewState.Map;
   }
 
 

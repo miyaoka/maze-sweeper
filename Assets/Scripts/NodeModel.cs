@@ -13,16 +13,9 @@ public class NodeModel {
   public ReactiveProperty<bool> visited = new ReactiveProperty<bool> ();
   public ReactiveProperty<bool> onHere = new ReactiveProperty<bool> ();
   public ReactiveProperty<bool> onDest = new ReactiveProperty<bool> ();
-  /*
-  public List<MoverModel> enemyList = new List<MoverModel>();
-  public List<MoverModel> EnemyList{
-    get { return new List<MoverModel>(enemyList); }
-  }
-*/
-  CompositeDisposable enemyResources = new CompositeDisposable();
+
   public NodeModel(IntVector2 coords){
     this.coords = coords;
-
 
     onHere = 
       PlayerManager.Instance
