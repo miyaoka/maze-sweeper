@@ -13,6 +13,12 @@ public class NodeModel {
   public ReactiveProperty<bool> visited = new ReactiveProperty<bool> ();
   public ReactiveProperty<bool> onHere = new ReactiveProperty<bool> ();
   public ReactiveProperty<bool> onDest = new ReactiveProperty<bool> ();
+  public ReactiveProperty<int> contents = new ReactiveProperty<int> ();
+
+  public bool isExit = false;
+
+  const int EXIT = 1 << 0;
+  const int LIFE = 1 << 1;
 
   public NodeModel(IntVector2 coords){
     this.coords = coords;

@@ -4,17 +4,36 @@ using UniRx;
 using UniRx.Triggers;
 using DG.Tweening;
 public class PlayerManager : SingletonMonoBehaviour<PlayerManager>{
-  [SerializeField] GameObject player;
+  [SerializeField] GameObject playerPrefab;
+  [SerializeField] GameObject survivorDeadPrefab;
+  [SerializeField] GameObject bloodPrefab;
   public ReactiveProperty<IntVector2> currentCoords = new ReactiveProperty<IntVector2> ();
   public ReactiveProperty<IntVector2> destCoords = new ReactiveProperty<IntVector2> ();
   Sequence sq;
+  public ReactiveProperty<int> health = new ReactiveProperty<int>(5);
 
+  GridManager gm;
+  [SerializeField] GameObject player;
+  /*
+  GameObject _player;
+  GameObject player {
+    get {
+      if (_player == null) {
+        _player = Instantiate (playerPrefab);
+        gm.addToViewContainer (_player);
+        _player.transform.rotation = Quaternion.Euler (new Vector3 (20, 0, 0));
+      }
+      return _player;
+    }
+  }
+  */
   void Awake ()
   {
     if (this != Instance) {
       Destroy (this);
       return;
     }
+    gm = GridManager.Instance;
   }
   void Start () {
     //    sq = DOTween.Sequence ();
@@ -29,20 +48,22 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>{
         currentCoords.Value = destCoords.Value;
       }
     }
-    var gm = GridManager.Instance;
+
+    var sr = player.GetComponentInChildren<SpriteRenderer> ();
+    sr.flipX = 
+      dir == Dirs.East 
+      ? true 
+      : dir == Dirs.West 
+      ? false
+      : sr.flipX;
 
     var edge = gm.getEdgeModelByDir (currentCoords.Value, dir);
     if (edge == null) {
       return;
     }
-    //      if (!edge.type.Value.isPassable.Value) {
-    //          breachEdge(currentCoords.Value.x, currentCoords.Value.y, dir);
-    //          return;
-    //      }
     movePos (currentCoords.Value + GridManager.dirCoords[(int)dir]);
   } 
   public void movePos(IntVector2 dest){
-    var gm = GridManager.Instance;
     var node = gm.getNodeModel(dest);
     if (node == null) {
       return;
@@ -82,7 +103,7 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>{
     player.GetComponentInChildren<Animator> ().SetBool("isWalking", true);
 
     sq.Append (player.transform
-      .DOLocalMove (new Vector3 (dest.x * gm.gridUnit, dest.y * gm.gridUnit, 0), .8f)
+      .DOLocalMove (gm.coordsToVec3(dest), .8f)
       .SetEase (Ease.OutQuad)
     );
     sq.OnKill (() => {
@@ -91,9 +112,10 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>{
       player.GetComponentInChildren<Animator> ().SetBool("isWalking", false);
 
 
-      if (node.enemyCount.Value > 0) {
-        Debug.Log ("enemy:" + node.enemyCount.Value);
-        var ec = node.enemyCount.Value;
+      var ec = node.enemyCount.Value;
+      if (ec > 0) {
+        Debug.Log ("enemy:" + ec);
+        health.Value -= ec;
 
         foreach (var n in node.Neighbors) {
           if (n == node) {
@@ -106,7 +128,6 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>{
 
         node.enemyCount.Value = 0;
         //          ec -= 1;
-        AudioManager.maleScream.Play();
 
         //ランダム位置にワープ
         //TODO: 同じ位置に飛ばないようにする
@@ -114,10 +135,31 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>{
           //                      nodeList[Random.Range(0, nodeList.Count)].enemyCount.Value += ec;
         }
 
+        AudioManager.maleScream.Play();
+        while(ec-- > 0){
+          createDead(dest);
+        }
+
+      }
+      if(node.isExit){
+        GameManager.Instance.onExit();
       }
       GameManager.Instance.alertCount.Value = node.alertCount.Value = node.scanEnemies ();
     });
 
 
+  }
+  void createDead(IntVector2 dest){
+//    var diff = Random.insideUnitCircle * 2f;
+    var range = 2f;
+    var dead = Instantiate(
+      survivorDeadPrefab, 
+      gm.coordsToVec3(dest) + new Vector3(Random.Range(-range, range), 0.1f, Random.Range(-range, range)),
+      Quaternion.Euler(new Vector3(20f, Random.Range(0,360f),0))
+    ) as GameObject;
+    gm.addToViewContainer(dead);
+    dead.transform.DOLocalRotate(
+      new Vector3(90, dead.transform.rotation.eulerAngles.y, 0), Random.Range(.3f,.6f)
+    ).SetEase(Ease.InCirc);
   }
 }

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UniRx;
 using System.Linq;
 using DG.Tweening;
+using UnityEngine.UI;
 
 public class Node3DPresenter : MonoBehaviour {
   [SerializeField] GameObject[] walls;
@@ -11,11 +12,14 @@ public class Node3DPresenter : MonoBehaviour {
   [SerializeField] GameObject alert;
   [SerializeField] GameObject wallContainer;
   [SerializeField] GameObject tiles;
+  [SerializeField] GameObject beacon;
 
   CompositeDisposable modelResources = new CompositeDisposable();
   private NodeModel model;
   Tweener lightTw;
-  TextMesh alertText;
+  Text alertText;
+  float lightMax = 1.0f;
+  float lightMin = 0f;
   void Awake(){
     
     roomLight.intensity = 0;
@@ -23,7 +27,7 @@ public class Node3DPresenter : MonoBehaviour {
     roomLight.enabled = false;
 
     tiles.SetActive (false);
-    alertText = alert.GetComponent<TextMesh> ();
+    alertText = alert.GetComponent<Text> ();
   }
   public NodeModel Model
   {
@@ -64,11 +68,11 @@ public class Node3DPresenter : MonoBehaviour {
 
             roomLight.enabled = true;
             lightTw.Kill();
-            lightTw = roomLight.DOIntensity (1.2f, Random.Range(.8f, .8f)).SetEase (Ease.InQuad);
+            lightTw = roomLight.DOIntensity (lightMax, Random.Range(.4f, .6f)).SetEase (Ease.InQuad);
           }
           else{
             lightTw.Kill();
-            lightTw = roomLight.DOIntensity (0.0f, Random.Range(.3f, .5f)).SetEase (Ease.OutQuad).SetDelay(.5f)
+            lightTw = roomLight.DOIntensity (lightMin, Random.Range(.3f, .5f)).SetEase (Ease.OutQuad).SetDelay(.5f)
               .OnComplete(() =>{
                 roomLight.enabled = false;
                 tiles.SetActive(b);
@@ -93,6 +97,7 @@ public class Node3DPresenter : MonoBehaviour {
         })
         .AddTo (this);
 
+      beacon.SetActive (model.isExit);
 
 
 

@@ -12,8 +12,8 @@ public class GridManager : SingletonMonoBehaviour<GridManager> {
   [SerializeField] Transform gridNodeContainer;
   [SerializeField] Transform gridEdgeContainer;
   [SerializeField] Transform viewContainer;
-  [SerializeField] int gridWidth = 3;
-  [SerializeField] int gridHeight = 3;
+//  [SerializeField] public int gridWidth = 5;
+//  [SerializeField] public int gridHeight = 5;
   //1グリッドの大きさ
   [SerializeField] public float gridUnit = 320;
   [SerializeField] GameObject gridNodePrefab;
@@ -45,7 +45,7 @@ public class GridManager : SingletonMonoBehaviour<GridManager> {
   }
   void Start(){
   }
-  public void initGrid(){
+  public void initGrid(int gridWidth, int gridHeight, float enemyRatio){
     nodeList.Clear ();
     edgeList.Clear ();
     clearView ();
@@ -81,18 +81,33 @@ public class GridManager : SingletonMonoBehaviour<GridManager> {
       }
     }
 
-    //build view by models
-//    createView();
+    var restEnemyCount = Mathf.FloorToInt (nodeList.Count * enemyRatio);
+    var nodeListRandom = new List<NodeModel> (nodeList);
+    nodeListRandom.Sort ((a, b) => Random.value < .5f ? -1 : 1);
 
     //create Enemies
-    foreach (var n in nodeList) {
-      var enemyCount = Random.value < enemyDeployProb ? Random.Range(1,maxEnemyCount) : 0;
+    foreach (var n in nodeListRandom) {
+      var enemyCount = Mathf.Min(restEnemyCount, Random.Range(1,maxEnemyCount));
       n.enemyCount.Value = enemyCount;
+      /*
       while (enemyCount-- > 0) {
         var e = new MoverModel (n.coords);
         enemyList.Add (e);
       }
+      */
+      restEnemyCount -= 1;//enemyCount;
+      if (restEnemyCount <= 0) {
+        break;
+      }
     }
+    //create exit
+    var exitNode = nodeList[Random.Range(0,nodeList.Count)];
+    exitNode.isExit = true;
+    exitNode.visited.Value = true;
+    createNodeView (exitNode);
+
+
+
 
     //set init player position
     NodeModel initNode;
@@ -230,7 +245,9 @@ public class GridManager : SingletonMonoBehaviour<GridManager> {
     go.GetComponent<Node3DPresenter> ().Model = node;
   }
   public void createEdgeView(EdgeModel edge){
-    var go = Instantiate (gridEdge3DPrefab, (coordsToVec3(edge.nodes[0].coords) + coordsToVec3(edge.nodes[1].coords)) / 2, Quaternion.Euler(new Vector3(0,0, ((int)edge.dir -1) *-90))) as GameObject;
+    var go = Instantiate (gridEdge3DPrefab, (
+      coordsToVec3(edge.nodes[0].coords) + coordsToVec3(edge.nodes[1].coords)) / 2,
+      Quaternion.Euler(new Vector3(0, (int)edge.dir * 90, 0))) as GameObject;
     go.transform.SetParent (viewContainer, false);
 //    go.GetComponent<Edge3DPresenter> ().Model = node;
   }
@@ -245,8 +262,11 @@ public class GridManager : SingletonMonoBehaviour<GridManager> {
       Destroy (t.gameObject);
     }
   }
+  public void addToViewContainer(GameObject go){
+    go.transform.SetParent (viewContainer, false);
+  }
   public Vector3 coordsToVec3(IntVector2 coords){
-    return new Vector3 (coords.x * gridUnit, coords.y * gridUnit, 0);
+    return new Vector3 (coords.x * gridUnit, 0, coords.y * gridUnit);
   }
   void removeEdgeWithView(EdgeModel model){
     //destory presenter

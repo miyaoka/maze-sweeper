@@ -3,21 +3,24 @@ using System.Collections;
 using UnityEngine.UI;
 using UniRx;
 using UniRx.Triggers;
+using DG.Tweening;
 
 public class ControlManager : MonoBehaviour {
-  [SerializeField] Button wBtn;
-  [SerializeField] Button aBtn;
-  [SerializeField] Button sBtn;
-  [SerializeField] Button dBtn;
 
   PlayerManager pm;
+  IConnectableObservable<Unit> update;
+  System.IDisposable connect;
+  [SerializeField] Transform gridPivot;
+  CompositeDisposable mapResources = new CompositeDisposable();
+
   void Awake() {
     pm = PlayerManager.Instance;
+    update = this
+      .UpdateAsObservable ()
+      .Publish ();
   }
   void Start () {
     var gm = GameManager.Instance;
-    var update = this
-      .UpdateAsObservable ();
 
     //move control
     update
@@ -45,36 +48,28 @@ public class ControlManager : MonoBehaviour {
       .Subscribe (pm.moveDir)
       .AddTo (this);
 
-    update
+    //toggle map
+    this
+      .UpdateAsObservable()
       .Where (_ => Input.GetKeyUp (KeyCode.M))
       .Subscribe (_ => gm.viewState.Value = gm.viewState.Value == ViewState.Map ? ViewState.Move : ViewState.Map)
-      .AddTo (this);
-        
-
-    wBtn
-      .OnClickAsObservable ()
-      .Subscribe (_ => move(Dirs.North) )
-      .AddTo (this);
-    aBtn
-      .OnClickAsObservable ()
-      .Subscribe (_ => move(Dirs.West) )
-      .AddTo (this);
-    sBtn
-      .OnClickAsObservable ()
-      .Subscribe (_ => move(Dirs.South))
-      .AddTo (this);
-    dBtn
-      .OnClickAsObservable ()
-      .Subscribe (_ => move(Dirs.East))
       .AddTo (this);
 
     gm.viewState
       .Subscribe (v => {
         if(gm.viewState.Value == ViewState.Map){
-          Lean.LeanTouch.OnFingerSwipe -= OnFingerSwipe;
+          this
+            .LateUpdateAsObservable()
+            .Subscribe(_ => {
+//              var d = Lean.LeanTouch.DragDelta;
+              //              gridPivot.localPosition += new Vector3(d.x, 0, d.y);
+              Lean.LeanTouch.MoveObject(gridPivot, Lean.LeanTouch.DragDelta);
+            })
+            .AddTo(mapResources);
         }
         else{
-          Lean.LeanTouch.OnFingerSwipe += OnFingerSwipe;
+          mapResources.Clear();
+          gridPivot.DOLocalMove(Vector3.zero, .2f).SetEase (Ease.OutQuad);
         }
       })
       .AddTo (this);
@@ -82,13 +77,13 @@ public class ControlManager : MonoBehaviour {
   }
   protected virtual void OnEnable()
   {
-    // Hook into the OnSwipe event
-//    Lean.LeanTouch.OnFingerSwipe += OnFingerSwipe;
+    connect = update.Connect ();
+    Lean.LeanTouch.OnFingerSwipe += OnFingerSwipe;
   }
 
   protected virtual void OnDisable()
   {
-    // Unhook into the OnSwipe event
+    connect.Dispose ();
     Lean.LeanTouch.OnFingerSwipe -= OnFingerSwipe;
   }
   public void OnFingerSwipe(Lean.LeanFinger finger)
