@@ -19,13 +19,13 @@ public class GameManager : SingletonMonoBehaviour<GameManager>{
   public ReactiveProperty<int> enemyCount = new ReactiveProperty<int>();
   public ReactiveProperty<ViewState> viewState = new ReactiveProperty<ViewState> ();
 
-  GridManager gridManager;
+  GraphManager gridManager;
 
   public State state = State.Init;
   ReactiveProperty<bool> waitingInput = new ReactiveProperty<bool> (true);
 
-  int col = 25;
-  int row = 25;
+  int col = 10;
+  int row = 10;
   float enemy = .08f;
   bool passExit = false;
   ControlManager cm;
@@ -39,7 +39,7 @@ public class GameManager : SingletonMonoBehaviour<GameManager>{
     cm = GetComponent<ControlManager> ();
   }
   void Start(){
-    gridManager = GetComponent<GridManager> ();
+    gridManager = GetComponent<GraphManager> ();
 
     viewState
       .Subscribe (v => {
@@ -74,7 +74,7 @@ public class GameManager : SingletonMonoBehaviour<GameManager>{
   }
   IEnumerator enterLevel(){
     PlayerManager.Instance.health.Value = 5;
-    GridManager.Instance.initGrid (col, row, enemy);
+    GraphManager.Instance.initGrid (col, row, enemy);
     yield return 0;
   }
   IEnumerator levelConfig(){

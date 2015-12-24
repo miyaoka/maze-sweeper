@@ -12,7 +12,7 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>{
   Sequence sq;
   public ReactiveProperty<int> health = new ReactiveProperty<int>(5);
 
-  GridManager gm;
+  GraphManager gm;
   [SerializeField] GameObject player;
   /*
   GameObject _player;
@@ -33,7 +33,7 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>{
       Destroy (this);
       return;
     }
-    gm = GridManager.Instance;
+    gm = GraphManager.Instance;
   }
   void Start () {
     //    sq = DOTween.Sequence ();
@@ -57,14 +57,16 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>{
       ? false
       : sr.flipX;
 
-    var edge = gm.getEdgeModelByDir (currentCoords.Value, dir);
+    /*
+    var edge = gm.graph.getNode(currentCoords.Value, dir);
     if (edge == null) {
       return;
     }
-    movePos (currentCoords.Value + GridManager.dirCoords[(int)dir]);
+    */
+    movePos (currentCoords.Value + GraphManager.dirCoords[(int)dir]);
   } 
   public void movePos(IntVector2 dest){
-    var node = gm.getNodeModel(dest);
+    var node = gm.graph.getNode(dest);
     if (node == null) {
       return;
     }
@@ -76,6 +78,7 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>{
       }
     }
 
+    /*
     if (!node.visited.Value) {
       gm.createNodeView (node);
       node.visited.Value = true;
@@ -88,6 +91,7 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>{
         }
       }
     }
+    */
 
     CameraManager.Instance.movePos (dest);
 
@@ -117,7 +121,7 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>{
         Debug.Log ("enemy:" + ec);
         health.Value -= ec;
 
-        foreach (var n in node.Neighbors) {
+        foreach (var n in gm.graph.neighbors(dest)) {
           if (n == node) {
             continue;
           }
@@ -144,7 +148,7 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>{
       if(node.isExit){
         GameManager.Instance.onExit();
       }
-      GameManager.Instance.alertCount.Value = node.alertCount.Value = node.scanEnemies ();
+      GameManager.Instance.alertCount.Value = node.alertCount.Value = gm.graph.scanEnemies (dest);
     });
 
 
@@ -157,7 +161,8 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>{
       gm.coordsToVec3(dest) + new Vector3(Random.Range(-range, range), 0.1f, Random.Range(-range, range)),
       Quaternion.Euler(new Vector3(20f, Random.Range(0,360f),0))
     ) as GameObject;
-    gm.addToViewContainer(dead);
+
+//    gm.addToViewContainer(dead);
     dead.transform.DOLocalRotate(
       new Vector3(90, dead.transform.rotation.eulerAngles.y, 0), Random.Range(.3f,.6f)
     ).SetEase(Ease.InCirc);

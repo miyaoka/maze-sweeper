@@ -8,8 +8,8 @@ public class CameraManager : SingletonMonoBehaviour<CameraManager>{
 
   [SerializeField] Transform cameraPivot;
   [SerializeField] Camera cam;
-  GridManager gm;
-  float[] heights = {25, 100, 0};
+  GraphManager gm;
+  float[] heights = {30, 120, 0};
   float baseRatio = 16f / 9f;
   ReactiveProperty<float> aspect = new ReactiveProperty<float> (1);
 
@@ -20,7 +20,7 @@ public class CameraManager : SingletonMonoBehaviour<CameraManager>{
       return;
     }
     DontDestroyOnLoad (this.gameObject);
-    gm = GridManager.Instance;
+    gm = GraphManager.Instance;
   }
   void Start(){
     var gm = GameManager.Instance;

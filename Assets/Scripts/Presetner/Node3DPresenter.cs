@@ -5,6 +5,8 @@ using UniRx;
 using System.Linq;
 using DG.Tweening;
 using UnityEngine.UI;
+using System;
+using Random = UnityEngine.Random;
 
 public class Node3DPresenter : MonoBehaviour {
   [SerializeField] GameObject[] walls;
@@ -15,7 +17,7 @@ public class Node3DPresenter : MonoBehaviour {
   [SerializeField] GameObject beacon;
 
   CompositeDisposable modelResources = new CompositeDisposable();
-  private NodeModel model;
+  private Node model;
   Tweener lightTw;
   Text alertText;
   float lightMax = 1.0f;
@@ -29,7 +31,7 @@ public class Node3DPresenter : MonoBehaviour {
     tiles.SetActive (false);
     alertText = alert.GetComponent<Text> ();
   }
-  public NodeModel Model
+  public Node Model
   {
     set { 
       this.model = value; 
@@ -100,9 +102,13 @@ public class Node3DPresenter : MonoBehaviour {
       beacon.SetActive (model.isExit);
 
 
-
-
+      model.OnDestroy += modelDestoryHandler;
     }
     get { return this.model; }
+  }
+  void modelDestoryHandler (object sender, EventArgs e)
+  {
+    model.OnDestroy -= modelDestoryHandler;
+    Destroy (gameObject);
   }
 }
