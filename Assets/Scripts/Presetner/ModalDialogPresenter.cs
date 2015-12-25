@@ -52,7 +52,7 @@ public class ModalDialogPresenter : DialogPresenterBase
       var btn = obj.GetComponent<Button>();
       btn.onClick.AddListener(option.Action);
       btn.onClick.AddListener(closePanel);
-      obj.transform.SetParent(container.transform);
+      obj.transform.SetParent(container.transform, false);
     }
 
     if(abortAction != null)
