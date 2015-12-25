@@ -82,7 +82,7 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
 
     sq.Append(player.transform
       .DOLocalMove(gm.CoordsToVec3(dest), .8f)
-      .SetEase(Ease.OutQuad)
+      .SetEase(Ease.InOutQuad)
     );
     sq.OnKill(() =>
     {
@@ -133,7 +133,7 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
       Quaternion.Euler(new Vector3(20f, Random.Range(0, 360f), 0))
     ) as GameObject;
 
-    //    gm.addToViewContainer(dead);
+    gm.AddToView(dead);
     dead.transform.DOLocalRotate(
       new Vector3(90, dead.transform.rotation.eulerAngles.y, 0), Random.Range(.3f, .6f)
     ).SetEase(Ease.InCirc);
