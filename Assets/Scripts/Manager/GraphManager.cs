@@ -9,9 +9,9 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
   [SerializeField]
   Transform viewContainer;
   [SerializeField]
-  GameObject gridNode3DPrefab;
+  GameObject gridNodePrefab;
   [SerializeField]
-  GameObject gridEdge3DPrefab;
+  GameObject gridEdgePrefab;
   [SerializeField]
   public float gridUnit = 320;
   [SerializeField]
@@ -246,9 +246,9 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
     if(node.HasView)
       return;
 
-    var go = Instantiate(gridNode3DPrefab, CoordsToVec3(node.Coords), Quaternion.identity) as GameObject;
+    var go = Instantiate(gridNodePrefab, CoordsToVec3(node.Coords), Quaternion.identity) as GameObject;
     go.transform.SetParent(viewContainer, false);
-    go.GetComponent<Node3DPresenter>().Model = node;
+    go.GetComponent<NodePresenter>().Model = node;
     go.name = "node_" + coordsToObjectName(node.Coords);
     node.HasView = true;
   }
@@ -256,7 +256,7 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
   {
     if(edge.HasView)
       return;
-    var go = Instantiate(gridEdge3DPrefab, CoordsToVec3(edge.Coords), Quaternion.Euler(new Vector3(0, edge.Deg, 0))) as GameObject;
+    var go = Instantiate(gridEdgePrefab, CoordsToVec3(edge.Coords), Quaternion.Euler(new Vector3(0, edge.Deg, 0))) as GameObject;
     go.transform.SetParent(viewContainer, false);
     go.GetComponent<EdgePresenter>().Model = edge;
     go.name = "edge_" + coordsToObjectName(edge.SourceNode.Coords) + "-" + coordsToObjectName(edge.TargetNode.Coords);

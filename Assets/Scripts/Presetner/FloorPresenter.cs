@@ -1,22 +1,31 @@
 ﻿using UnityEngine;
 using System.Collections;
+using UnityEngine.UI;
 
-public class Floor3DPresenter : MonoBehaviour
+public class FloorPresenter : MonoBehaviour
 {
   [SerializeField]
-  Renderer floorB_LT;
+  RawImage blackLT;
   [SerializeField]
-  Renderer floorB_RT;
+  RawImage blackRT;
   [SerializeField]
-  Renderer floorB_LB;
+  RawImage blackLB;
   [SerializeField]
-  Renderer floorB_RB;
+  RawImage blackRB;
+  [SerializeField]
+  RawImage whiteLT;
+  [SerializeField]
+  RawImage whiteRT;
+  [SerializeField]
+  RawImage whiteLB;
+  [SerializeField]
+  RawImage whiteRB;
 
-  const int DirT = 1 << 0;
-  const int DirR = 1 << 1;
-  const int DirB = 1 << 2;
-  const int DirL = 1 << 3;
-  const int DirAll = DirT | DirR | DirB | DirL;
+  const int DirNorth = 1 << 0;
+  const int DirEast = 1 << 1;
+  const int DirSouth = 1 << 2;
+  const int DirWest = 1 << 3;
+  const int DirAll = DirNorth | DirEast | DirSouth | DirWest;
 
   void Awake()
   {
@@ -25,51 +34,53 @@ public class Floor3DPresenter : MonoBehaviour
 
   void buildFloor()
   {
+
     var lb = floorTile(0, DirAll);
     int reqDir;
     int availableDir;
 
+
     reqDir = 0;
     availableDir = DirAll;
-    if((lb & DirR) != 0)
+    if((lb & DirEast) != 0)
     {
-      reqDir |= DirL;
+      reqDir |= DirWest;
     }
     else
     {
-      availableDir ^= DirL;
+      availableDir ^= DirWest;
     }
     var rb = floorTile(reqDir, availableDir);
 
     reqDir = 0;
     availableDir = DirAll;
-    if((lb & DirT) != 0)
+    if((lb & DirNorth) != 0)
     {
-      reqDir |= DirB;
+      reqDir |= DirSouth;
     }
     else
     {
-      availableDir ^= DirB;
+      availableDir ^= DirSouth;
     }
     var lt = floorTile(reqDir, availableDir);
 
     reqDir = 0;
     availableDir = DirAll;
-    if((rb & DirT) != 0)
+    if((rb & DirNorth) != 0)
     {
-      reqDir |= DirB;
+      reqDir |= DirSouth;
     }
     else
     {
-      availableDir ^= DirB;
+      availableDir ^= DirSouth;
     }
-    if((lt & DirR) != 0)
+    if((lt & DirEast) != 0)
     {
-      reqDir |= DirL;
+      reqDir |= DirWest;
     }
     else
     {
-      availableDir ^= DirL;
+      availableDir ^= DirWest;
     }
     var rt = floorTile(reqDir, availableDir);
 
@@ -84,10 +95,10 @@ public class Floor3DPresenter : MonoBehaviour
     var yDiff1 = Random.value;
     var xDiff2 = Random.value;
     var yDiff2 = Random.value;
-    floorB_LT.material.mainTextureOffset = offset(lt, xDiff1, yDiff1);
-    floorB_RT.material.mainTextureOffset = offset(rt, xDiff2, yDiff1);
-    floorB_LB.material.mainTextureOffset = offset(lb, xDiff1, yDiff2);
-    floorB_RB.material.mainTextureOffset = offset(rb, xDiff2, yDiff2);
+    blackLT.uvRect = whiteLT.uvRect = uvRect(lt, xDiff1, yDiff1);
+    blackRT.uvRect = whiteRT.uvRect = uvRect(rt, xDiff2, yDiff1);
+    blackLB.uvRect = whiteLB.uvRect = uvRect(lb, xDiff1, yDiff2);
+    blackRB.uvRect = whiteRB.uvRect = uvRect(rb, xDiff2, yDiff2);
   }
   Vector2 offset(int index, float xDiff, float yDiff)
   {
@@ -100,6 +111,21 @@ public class Floor3DPresenter : MonoBehaviour
     var x = index % 4 + .25f;
     var y = 3 - Mathf.Floor((float)index / 4f) + .25f;
     return new Vector2(x * sliceUnit + xDiff, y * sliceUnit + yDiff);
+  }
+  Rect uvRect(int index, float xDiff, float yDiff)
+  {
+    var sliceUnit = 1f / 4f;
+    var diffUnit = 1.2f / 16f;
+
+    xDiff = (xDiff - .5f) * diffUnit;
+    yDiff = (yDiff - .5f) * diffUnit;
+    var x = index % 4 + .25f;
+    var y = 3 - Mathf.Floor((float)index / 4f) + .25f;
+
+    return new Rect(
+      x * sliceUnit + xDiff, y * sliceUnit + yDiff,
+      .125f, .125f
+    );
   }
 
   int floorTile(int requireDir, int availableDir)

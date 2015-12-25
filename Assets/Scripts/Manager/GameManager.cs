@@ -9,12 +9,6 @@ public enum State { Init, EnterLevel, OnLevel, ExitLevel };
 public class GameManager : SingletonMonoBehaviour<GameManager>
 {
   [SerializeField]
-  GameObject playerPrefab;
-  [SerializeField]
-  GameObject dialogPrefab;
-  [SerializeField]
-  Transform dialogContainer;
-  [SerializeField]
   SkyCameraPresenter skycam;
 
   [SerializeField]
@@ -61,13 +55,6 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
     Debug.Log("--end");
   }
 
-  void removeDialog()
-  {
-    foreach(Transform t in dialogContainer)
-    {
-      Destroy(t.gameObject);
-    }
-  }
   public void Restart()
   {
     StartCoroutine(levelConfig());

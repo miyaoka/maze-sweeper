@@ -5,7 +5,7 @@ using UnityEngine.UI;
 using System;
 using Random = UnityEngine.Random;
 
-public class Node3DPresenter : MonoBehaviour
+public class NodePresenter : MonoBehaviour
 {
   [SerializeField]
   GameObject[] walls;
