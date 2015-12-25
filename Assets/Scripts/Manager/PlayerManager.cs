@@ -145,7 +145,7 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>{
         }
 
       }
-      if(node.isExit){
+      if(node.isExit.Value){
         GameManager.Instance.onExit();
       }
       GameManager.Instance.alertCount.Value = node.alertCount.Value = gm.graph.scanEnemies (dest);

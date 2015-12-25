@@ -14,8 +14,9 @@ public class Node {
   public ReactiveProperty<bool> visited = new ReactiveProperty<bool> ();
   public ReactiveProperty<bool> onHere = new ReactiveProperty<bool> ();
   public ReactiveProperty<bool> onDest = new ReactiveProperty<bool> ();
-  public ReactiveProperty<int> contents = new ReactiveProperty<int> ();
-  public bool isExit = false;
+  public ReactiveProperty<int> contents = new ReactiveProperty<int>();
+  public ReactiveProperty<bool> isExit = new ReactiveProperty<bool>();
+  public ReactiveProperty<bool> hasItem = new ReactiveProperty<bool>(false);
   public bool hasView = false;
 
 
@@ -39,7 +40,10 @@ public class Node {
 
   public event EventHandler OnDestroy;
   public void destroy(){
-    OnDestroy (this, EventArgs.Empty);
+    if (OnDestroy != null)
+    {
+      OnDestroy(this, EventArgs.Empty);
+    }
     degree.Dispose ();
   }
 

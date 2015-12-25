@@ -18,10 +18,10 @@ public class GraphModel {
     nodeList.Add (coords, n);
     return n;
   }
-  public Edge createEdge(IntVector2 coords0, IntVector2 coords1, Dirs dir){
+  public Edge createEdge(IntVector2 coords0, IntVector2 coords1){
     var n0 = createNode (coords0, true);
     var n1 = createNode (coords1, true);
-    var edge = new Edge (n0, n1, dir);
+    var edge = new Edge (n0, n1);
     return edge;
   }
   public Node getNode(IntVector2 coords){
@@ -49,11 +49,12 @@ public class GraphModel {
     }
   }
   public void clear(){
-    foreach (var n in nodeList.Values) {
-//      n.destroy ();
+    var nodes = nodeList.Values.ToArray<Node>();
+    foreach (var n in nodes) {
+      n.destroy ();
       removeNode(n.coords);
     }
-//    nodeList.Clear ();
+    nodeList.Clear ();
   }
 
   public int scanEnemies(IntVector2 coords){

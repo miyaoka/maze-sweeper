@@ -26,6 +26,7 @@ public class LevelConfigDialogPresenter : DialogPresenterBase {
   [SerializeField] Button submitBtn;
   void Awake(){
     panel.SetActive (false);
+    rowSlider.maxValue = 200;
   }
 
   void Start () {

@@ -15,6 +15,7 @@ public class Node3DPresenter : MonoBehaviour {
   [SerializeField] GameObject wallContainer;
   [SerializeField] GameObject tiles;
   [SerializeField] GameObject beacon;
+  [SerializeField] GameObject floor;
 
   CompositeDisposable modelResources = new CompositeDisposable();
   private Node model;
@@ -31,12 +32,15 @@ public class Node3DPresenter : MonoBehaviour {
     tiles.SetActive (false);
     alertText = alert.GetComponent<Text> ();
   }
+
   public Node Model
   {
     set { 
       this.model = value; 
 
       modelResources.Clear ();
+      var mt = floor.GetComponent<Renderer>().material;
+      mt.EnableKeyword("_EMISSION");
 
       model.alertCount
         .DistinctUntilChanged()
@@ -63,8 +67,34 @@ public class Node3DPresenter : MonoBehaviour {
             }
         })
         .AddTo (this);
+
+      var deadend = 
+      model.degree
+        .Select(d => d == 1)
+        .ToReactiveProperty();
+
+      var hasEnemy =
+        model.enemyCount
+        .Select(c => c > 0)
+        .ToReactiveProperty();
+
+      
+      deadend
+        .CombineLatest(model.hasItem, hasEnemy, model.alertCount, model.isExit, (d, i, e, a, x) => 
+      new Color(
+          e ? 1 : (a > 0 ? .1f : 0),
+          i ? 1 :( d ? 0f : 0),
+          x ? 1 : 0))
+        .Subscribe(c =>
+        {
+          mt.SetColor ("_EmissionColor", c);
+        })
+        .AddTo(this);
+        
+
       model.onDest
-        .Subscribe (b => {
+        .Subscribe(b =>
+        {
           if(b){
             tiles.SetActive(b);
 
@@ -99,8 +129,12 @@ public class Node3DPresenter : MonoBehaviour {
         })
         .AddTo (this);
 
-      beacon.SetActive (model.isExit);
-
+      model.isExit
+        .Subscribe(b =>
+        {
+          beacon.SetActive(b);
+        });
+ 
 
       model.OnDestroy += modelDestoryHandler;
     }
@@ -108,7 +142,13 @@ public class Node3DPresenter : MonoBehaviour {
   }
   void modelDestoryHandler (object sender, EventArgs e)
   {
-    model.OnDestroy -= modelDestoryHandler;
-    Destroy (gameObject);
+    Destroy(gameObject);
+  }
+  void OnDestroy()
+  {
+    if (model != null)
+    {
+      model.OnDestroy -= modelDestoryHandler;
+    }
   }
 }

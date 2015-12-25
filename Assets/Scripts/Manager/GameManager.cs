@@ -19,10 +19,9 @@ public class GameManager : SingletonMonoBehaviour<GameManager>{
   public ReactiveProperty<int> enemyCount = new ReactiveProperty<int>();
   public ReactiveProperty<ViewState> viewState = new ReactiveProperty<ViewState> ();
 
-  GraphManager gridManager;
 
   public State state = State.Init;
-  ReactiveProperty<bool> waitingInput = new ReactiveProperty<bool> (true);
+
 
   int col = 10;
   int row = 10;
@@ -39,7 +38,7 @@ public class GameManager : SingletonMonoBehaviour<GameManager>{
     cm = GetComponent<ControlManager> ();
   }
   void Start(){
-    gridManager = GetComponent<GraphManager> ();
+
 
     viewState
       .Subscribe (v => {
@@ -74,7 +73,7 @@ public class GameManager : SingletonMonoBehaviour<GameManager>{
   }
   IEnumerator enterLevel(){
     PlayerManager.Instance.health.Value = 5;
-    GraphManager.Instance.initGrid (col, row, enemy);
+    GraphManager.Instance.initGrid(col, row, enemy, () => { });
     yield return 0;
   }
   IEnumerator levelConfig(){
@@ -162,8 +161,4 @@ public class GameManager : SingletonMonoBehaviour<GameManager>{
   public void toggleMap(){
     viewState.Value = viewState.Value == ViewState.Map ? ViewState.Move : ViewState.Map;
   }
-
-
-
-
 }

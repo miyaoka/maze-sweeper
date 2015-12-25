@@ -63,12 +63,15 @@ public class EdgePresenter : MonoBehaviour{
   }
   void modelDestoryHandler (object sender, EventArgs e)
   {
-    model.OnDestroy -= modelDestoryHandler;
     Destroy (gameObject);
   }
 
   void OnDestroy()
   {
+    if (model != null)
+    {
+      model.OnDestroy -= modelDestoryHandler;
+    }
     typeResources.Dispose ();
   }
 }

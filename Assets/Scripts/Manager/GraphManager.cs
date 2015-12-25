@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine.Events;
 
 public enum Dirs { North, East, South, West, Null};
 public class GraphManager : SingletonMonoBehaviour<GraphManager>  {
@@ -11,6 +12,8 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>  {
   [SerializeField] GameObject gridEdge3DPrefab;
   [SerializeField] public float gridUnit = 320;
   [SerializeField] float deadEndReduceProb = .5f;
+  [SerializeField]
+  float itemProb = .3f;
 
   int divideMargin = 1;
   public static readonly IntVector2[] dirCoords = {new IntVector2(0,1), new IntVector2(1,0), new IntVector2(0,-1), new IntVector2(-1,0)};
@@ -24,35 +27,61 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>  {
       Destroy (this);
       return;
     }
+    foreach (Transform t in viewContainer)
+    {
+      Destroy(t.gameObject);
+    }
   }
   void Start () {
-    foreach (Transform t in viewContainer) {
-//      Destroy (t.gameObject);
-    }
 
   }
-  public void initGrid(int gridWidth, int gridHeight, float enemyRatio){
-//    graph.clear ();
-
+  public void initGrid(int gridWidth, int gridHeight, float enemyRatio, UnityAction callback){
+    graph.clear ();
 
     createMaze (new Rect (new Vector2 (0, 0), new Vector2 (gridWidth, gridHeight)));
-    removeDeadend (deadEndReduceProb);
 
+    deadEndReduceProb = .5f;
+    var count = 2;
+    while (count-- > 0)
+    {
+      removeDeadend(deadEndReduceProb);
+    }
     var list = graph.shuffledNodeList;
-    addEnemies (list, enemyRatio, 5);
-    createExit ();
+    addEnemies (list, enemyRatio, 2);
+    createExit();
+    createExit();
+    createExit();
+    addItems();
 
     setPlayerPos (list);
 
+
+    var t = System.DateTime.Now;
     foreach(var n in graph.nodeList.Values){
       addNodeView (n);
+      n.alertCount.Value = graph.scanEnemies(n.coords);
       foreach (var e in n.edgeList) {
         addEdgeView (e);
       }
     }
-    graph.clear ();
+    var t2 = System.DateTime.Now;
+    Debug.Log("Instantiate: " + (t2 - t));
   }
 
+
+  IEnumerator InstanceObjects(GameObject[] objects, Transform self, UnityAction<GameObject> callback)
+  {
+    self.gameObject.SetActive(false);
+
+    foreach (var obj in objects)
+    {
+      var item = (GameObject)GameObject.Instantiate(obj);
+      item.transform.parent = self;
+      callback(item);
+      yield return null;
+    }
+    self.gameObject.SetActive(true);
+  }
   void createMaze (Rect rect)
   {
     var rects = new List<Rect> { rect };
@@ -64,7 +93,6 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>  {
 
   void removeDeadend (float prob)
   {
-    prob = 1;
     var deadends = graph
       .deadendNodeList
       .Where (n => Random.value < prob);
@@ -95,11 +123,23 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>  {
   {
     var exitNode = graph.nodeList.Values.ToList()[ Random.Range (0, graph.nodeList.Count)];
     addNodeView (exitNode);
-    exitNode.isExit = true;
+    exitNode.isExit.Value = true;
     exitNode.visited.Value = true;
   }
 
-  void setPlayerPos (List<Node> list)
+  void addItems()
+  {
+    var deadends = graph
+      .deadendNodeList
+      .Where(n => Random.value < itemProb);
+
+    foreach (var n in deadends)
+    {
+      n.hasItem.Value = true;
+    }
+  }
+  
+  void setPlayerPos(List<Node> list)
   {
     Node n;
     for (var i = list.Count - 1; i >= 0; i--) {
@@ -140,7 +180,7 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>  {
     var divPt = Random.Range (margin, longSide - 1 - margin);
 
     //connect divided rects
-    connectNodeLine (
+    connectArea (
       (IntVector2)rect.min + (isVerticalDivide ? new IntVector2(divPt, 0) : new IntVector2(0, divPt)),
       shortSide,
       isVerticalDivide
@@ -167,7 +207,7 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>  {
 
 
 
-  public void connectNodeLine(IntVector2 baseCoords, int lineLength, bool isVerticalDivide){
+  public void connectArea(IntVector2 baseCoords, int lineLength, bool isVerticalDivide){
     //list patchable points
     var connectPointList = new List<int>();
     for (var i = 0; i < lineLength; i++) {
@@ -188,23 +228,14 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>  {
       var connectDir = isVerticalDivide ? Dirs.East : Dirs.North;
       var sourceCoords = baseCoords + connectCoords;
       var targetCoords = sourceCoords + dirCoords [(int)connectDir];
-      graph.createEdge (sourceCoords, targetCoords, connectDir);
+      graph.createEdge (sourceCoords, targetCoords);
     }
   }
-  /*
-  Node createNodeModel(IntVector2 coords){
-    return graph.createNode (coords);
-  }
-  public void removeNode(IntVector2 coords){
-    graph.removeNode (coords);
-  }
-  void createEdgeModel(IntVector2 coords, Dirs dir){
-    graph.createEdge (coords, coords + dirCoords [dir == 0 ? (int)Dirs.North : (int)Dirs.East]);
-  }
-  */
+
   public void addNodeView(Node node){
     if (node.hasView)
       return;
+
     var go = Instantiate (gridNode3DPrefab, coordsToVec3(node.coords), Quaternion.identity) as GameObject;
     go.transform.SetParent (viewContainer, false);
     go.GetComponent<Node3DPresenter> ().Model = node;
@@ -214,7 +245,7 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>  {
   public void addEdgeView(Edge edge){
     if (edge.hasView)
       return;
-    var go = Instantiate (gridEdge3DPrefab, coordsToVec3(edge.coords), Quaternion.Euler(new Vector3(0, (int)edge.dir * 90, 0)) ) as GameObject;
+    var go = Instantiate (gridEdge3DPrefab, coordsToVec3(edge.coords), Quaternion.Euler(new Vector3(0, edge.deg, 0)) ) as GameObject;
     go.transform.SetParent (viewContainer, false);
     go.GetComponent<EdgePresenter> ().Model = edge;
     go.name = "edge_" + coordsToObjectName(edge.sourceNode.coords) + "-" + coordsToObjectName(edge.targetNode.coords);

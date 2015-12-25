@@ -7,9 +7,14 @@ using UniRx.Triggers;
 public class CameraManager : SingletonMonoBehaviour<CameraManager>{
 
   [SerializeField] Transform cameraPivot;
-  [SerializeField] Camera cam;
+  [SerializeField]
+  Camera mainCam;
+  [SerializeField]
+  Camera skyCam;
+  [SerializeField]
+  Camera bgCam;
   GraphManager gm;
-  float[] heights = {30, 120, 0};
+  float[] heights = {30, 200, 0};
   float baseRatio = 16f / 9f;
   ReactiveProperty<float> aspect = new ReactiveProperty<float> (1);
 
@@ -24,7 +29,7 @@ public class CameraManager : SingletonMonoBehaviour<CameraManager>{
   }
   void Start(){
     var gm = GameManager.Instance;
-    aspect = cam
+    aspect = mainCam
       .ObserveEveryValueChanged (c => c.aspect)
       .ToReactiveProperty ();
 
@@ -34,11 +39,24 @@ public class CameraManager : SingletonMonoBehaviour<CameraManager>{
         moveDist(f);
       })
       .AddTo (this);
+
+    this
+      .UpdateAsObservable()
+      .Where(_ => Input.GetKeyUp(KeyCode.O))
+      .Subscribe(_ =>
+      {
+        skyCam.clearFlags = CameraClearFlags.Color;
+        bgCam.enabled = false;
+        mainCam.transform.DOLocalMoveY(500, .2f);
+        mainCam.transform.DOLocalRotate(new Vector3(90,0,0), .2f);
+
+      })
+      .AddTo(this);
   }
   //keep rot and go backward
   void moveDist(float dist){
-    var pos = cam.transform.forward * -dist;
-    cam.transform
+    var pos = mainCam.transform.forward * -dist;
+    mainCam.transform
       .DOLocalMove (pos, .2f)
       .SetEase (Ease.OutQuad);
 
