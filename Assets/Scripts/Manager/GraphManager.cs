@@ -13,16 +13,17 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
   [SerializeField]
   GameObject gridEdgePrefab;
   [SerializeField]
-  public float gridUnit = 320;
+  float GridUnit = 10;
   [SerializeField]
   float deadEndReduceProb = .5f;
   [SerializeField]
   float itemProb = .3f;
+  [SerializeField]
+  bool showAll;
 
   public static readonly IntVector2[] DirCoords = { new IntVector2(0, 1), new IntVector2(1, 0), new IntVector2(0, -1), new IntVector2(-1, 0) };
-  int divideMargin = 1;
-  float connectPerLength = .25f;
   public readonly GraphModel graph = new GraphModel();
+
   void Awake()
   {
     if(this != Instance)
@@ -39,73 +40,85 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
   {
 
   }
-  public void InitGrid(int gridWidth, int gridHeight, float enemyRatio, UnityAction callback)
+  public Node InitGrid(int gridWidth, int gridHeight, float enemyRatio)
   {
     graph.Clear();
+    graph.CreateMaze(new Rect(0, 0, gridWidth, gridHeight));
 
-    createMaze(new Rect(new Vector2(0, 0), new Vector2(gridWidth, gridHeight)));
-
-    deadEndReduceProb = .5f;
     var count = 2;
     while(count-- > 0)
     {
-      removeDeadend(deadEndReduceProb);
+      graph.RemoveDeadend(deadEndReduceProb);
     }
-    var list = graph.ShuffledNodeList;
+    var list = graph
+      .ShuffledNodeList
+      .Where(n => n.Coords.Y > 1)
+      .ToList<Node>();
     Debug.Log(list.Count);
     addEnemies(list, enemyRatio, 2);
     Debug.Log(list.Count);
-    createExit();
-    createExit();
-    createExit();
+
+    count = 3;
+    while(count-- > 0)
+    {
+      createExit();
+    }
     addItems();
 
-    setPlayerPos(list);
-
-
-    var t = System.DateTime.Now;
-    foreach(var n in graph.NodeList)
+    if(showAll)
     {
+      var t = System.DateTime.Now;
+      foreach(var n in graph.NodeList)
+      {
+        addNodeView(n);
+        n.AlertCount.Value = graph.ScanEnemies(n.Coords);
+        foreach(var e in n.EdgeList)
+        {
+          addEdgeView(e);
+        }
+      }
+      var t2 = System.DateTime.Now;
+      Debug.Log("Instantiate: " + (t2 - t));
+    }
+
+    return pickupPlayerPos(graph.NodeList.Where(n => n.Coords.Y == 0).ToList<Node>());
+  }
+
+  public Node VisitNode(IntVector2 coord)
+  {
+    var n = graph.GetNode(coord);
+    if(n == null)
+    {
+      return null;
+    }
+    if(!n.IsVisited.Value)
+    {
+      n.IsVisited.Value = true;
       addNodeView(n);
-      n.AlertCount.Value = graph.ScanEnemies(n.Coords);
+
       foreach(var e in n.EdgeList)
       {
         addEdgeView(e);
       }
     }
-    var t2 = System.DateTime.Now;
-    Debug.Log("Instantiate: " + (t2 - t));
+    return n;
   }
-
-  void createMaze(Rect rect)
+  public void ClearNodeEnemy(Node node)
   {
-    var rects = new List<Rect> { rect };
-    do
+    foreach(var n in graph.Neighbors(node.Coords))
     {
-      rects = divideRect(rects);
+      n.AlertCount.Value = Mathf.Max(0, n.AlertCount.Value - node.EnemyCount.Value);
     }
-    while(rects.Count > 0);
+    node.EnemyCount.Value = 0;
   }
 
-  void removeDeadend(float prob)
-  {
-    var deadends = graph
-      .DeadendNodeList
-      .Where(n => Random.value < prob);
-
-    foreach(var n in deadends)
-    {
-      graph.RemoveNode(n.Coords);
-    }
-  }
-
-  List<Node> addEnemies(List<Node> list, float enemyRatio, int maxEnemyCount)
+  void addEnemies(List<Node> list, float enemyRatio, int maxEnemyCount)
   {
     var restEnemyCount = Mathf.FloorToInt(graph.NodeCount * enemyRatio);
-    for(var i = list.Count - 1; i >= 0; i--)
+    var i = 0;
+    foreach(var n in list)
     {
-      var n = list[i];
-      list.RemoveAt(i);
+      i++;
       var enemyCount = Mathf.Min(restEnemyCount, Random.Range(1, maxEnemyCount));
       n.EnemyCount.Value = enemyCount;
       restEnemyCount -= 1;
@@ -115,7 +128,7 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
         break;
       }
     }
-    return list;
+    list.RemoveRange(0, i);
   }
 
   void createExit()
@@ -138,107 +151,16 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
     }
   }
 
-  void setPlayerPos(List<Node> list)
+  Node pickupPlayerPos(List<Node> list)
   {
-    Node n;
-    for(var i = list.Count - 1; i >= 0; i--)
+    foreach(Node n in list)
     {
-      n = list[i];
-      list.RemoveAt(i);
-      if(graph.ScanEnemies(n.Coords) > 0)
+      if(graph.ScanEnemies(n.Coords) == 0)
       {
-        continue;
+        return n;
       }
     }
-
-  }
-
-
-  /*
-   * create maze by adding passage edges to rects
-   */
-  List<Rect> divideRect(List<Rect> rects)
-  {
-    Rect rect, divRect1, divRect2;
-    float area;
-
-    //pickup dividable rect
-    do
-    {
-      if(rects.Count == 0)
-      {
-        return rects;
-      }
-      rect = rects[0];
-      rects.RemoveAt(0);
-
-      area = rect.width * rect.height;
-    } while(area < 2);
-
-    var isVerticalDivide = (int)rect.width == (int)rect.height ? Random.value < .5f : rect.width > rect.height;
-    var longSide = Mathf.Max((int)rect.width, (int)rect.height);
-    var shortSide = Mathf.Min((int)rect.width, (int)rect.height);
-
-    //min divide span
-    var margin = Mathf.Min(Mathf.FloorToInt(longSide * .5f) - 1, divideMargin);
-    var divPt = Random.Range(margin, longSide - 1 - margin);
-
-    //connect divided rects
-    connectArea(
-      (IntVector2)rect.min + (isVerticalDivide ? new IntVector2(divPt, 0) : new IntVector2(0, divPt)),
-      shortSide,
-      isVerticalDivide
-    );
-
-    //divide more if has enough area
-    if(area > 2)
-    {
-      divRect1 = divRect2 = rect;
-
-      divPt++;
-      if(isVerticalDivide)
-      {
-        divRect1.width = divPt;
-        divRect2.xMin += divPt;
-      }
-      else
-      {
-        divRect1.height = divPt;
-        divRect2.yMin += divPt;
-      }
-      rects.Insert(0, divRect1);
-      rects.Insert(0, divRect2);
-    }
-
-    return rects;
-  }
-
-  void connectArea(IntVector2 baseCoords, int lineLength, bool isVerticalDivide)
-  {
-    //list patchable points
-    var connectPointList = new List<int>();
-    for(var i = 0; i < lineLength; i++)
-    {
-      connectPointList.Add(i);
-    }
-
-    var connectCount = (float)lineLength * connectPerLength;
-
-    //create passage at random points
-    while(connectCount-- > 0 && connectPointList.Count > 0)
-    {
-      var i = Random.Range(0, connectPointList.Count);
-      var connectPoint = connectPointList[i];
-      connectPointList.RemoveAt(i);
-
-      var connectCoords = isVerticalDivide
-        ? new IntVector2(0, connectPoint)
-        : new IntVector2(connectPoint, 0);
-      var connectDir = isVerticalDivide ? Dirs.East : Dirs.North;
-      var sourceCoords = baseCoords + connectCoords;
-      var targetCoords = sourceCoords + DirCoords[(int)connectDir];
-      graph.CreateEdge(sourceCoords, targetCoords);
-    }
+    throw new UnityException("No deployable node.");
   }
 
   void addNodeView(Node node)
@@ -265,7 +187,7 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
 
   public Vector3 CoordsToVec3(Vector2 coords)
   {
-    return new Vector3(coords.x * gridUnit, 0, coords.y * gridUnit);
+    return new Vector3(coords.x * GridUnit, 0, coords.y * GridUnit);
   }
   string coordsToObjectName(IntVector2 coords)
   {

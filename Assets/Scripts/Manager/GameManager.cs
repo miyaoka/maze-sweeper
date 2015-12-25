@@ -19,16 +19,15 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
   public ReactiveProperty<int> alertCount = new ReactiveProperty<int>();
   public ReactiveProperty<int> enemyCount = new ReactiveProperty<int>();
   public ReactiveProperty<ViewState> viewState = new ReactiveProperty<ViewState>();
-
-
   public State state = State.Init;
 
 
   int col = 15;
-  int row = 15;
+  int row = 30;
   float enemy = .08f;
   bool passExit = false;
   ControlManager cm;
+  PlayerManager pm;
 
   void Awake()
   {
@@ -38,6 +37,7 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
       return;
     }
     cm = GetComponent<ControlManager>();
+    pm = PlayerManager.Instance;
   }
   void Start()
   {
@@ -55,7 +55,7 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
     Debug.Log("--end");
   }
 
-  public void Restart()
+  public void LevelConfig()
   {
     StartCoroutine(levelConfig());
   }
@@ -73,8 +73,11 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
   }
   IEnumerator enterLevel()
   {
-    PlayerManager.Instance.Health.Value = 5;
-    GraphManager.Instance.InitGrid(col, row, enemy, () => { });
+    var pn = GraphManager.Instance.InitGrid(col, row, enemy);
+    pm.Health.Value = 5;
+    Debug.Log(pn.Coords);
+    pm.SetPos(pn.Coords);
+
     yield return 0;
   }
   IEnumerator levelConfig()

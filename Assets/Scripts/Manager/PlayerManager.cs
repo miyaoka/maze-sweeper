@@ -76,37 +76,14 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
   }
   public void MovePos(IntVector2 dest)
   {
-    var node = gm.graph.GetNode(dest);
+    var node = gm.VisitNode(dest);
     if(node == null)
     {
       return;
     }
     DestCoords.Value = dest;
 
-    if(sq != null)
-    {
-      if(sq.IsPlaying())
-      {
-        //        return;
-      }
-    }
-
-    /*
-    if (!node.visited.Value) {
-      gm.createNodeView (node);
-      node.visited.Value = true;
-
-      var edges = gm.getAllEdgesFromNode (node.coords);
-      foreach (var e in edges) {
-        if (!e.visited) {
-          e.visited = true;
-          gm.createEdgeView (e);
-        }
-      }
-    }
-    */
-
-    CameraManager.Instance.movePos(dest);
+    CameraManager.Instance.MovePos(dest);
 
     if(sq != null)
     {
@@ -136,27 +113,7 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
       {
         Debug.Log("enemy:" + ec);
         Health.Value -= ec;
-
-        foreach(var n in gm.graph.Neighbors(dest))
-        {
-          if(n == node)
-          {
-            continue;
-          }
-          //TODO:未探索nodeだとマイナスになる
-          //0に補正するか0以下は表示しないか
-          n.AlertCount.Value = Mathf.Max(0, n.AlertCount.Value - ec);
-        }
-
-        node.EnemyCount.Value = 0;
-        //          ec -= 1;
-
-        //ランダム位置にワープ
-        //TODO: 同じ位置に飛ばないようにする
-        if(0 < ec)
-        {
-          //                      nodeList[Random.Range(0, nodeList.Count)].enemyCount.Value += ec;
-        }
+        gm.ClearNodeEnemy(node);
 
         AudioManager.maleScream.Play();
         while(ec-- > 0)
@@ -173,6 +130,14 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
     });
 
 
+  }
+
+  public void SetPos(IntVector2 dest)
+  {
+    DestCoords.Value = dest;
+    CurrentCoords.Value = dest;
+    CameraManager.Instance.MovePos(dest);
+    player.transform.localPosition = gm.CoordsToVec3(dest);
   }
   void createDead(IntVector2 dest)
   {

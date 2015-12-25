@@ -128,23 +128,6 @@ public class NodePresenter : MonoBehaviour
           }
         })
         .AddTo(this);
-      model.IsVisited
-        .Where(b => b)
-        .DistinctUntilChanged()
-        //      .Select (c => neighborBombCount())
-        .Subscribe(c =>
-        {
-          //        watchEnvs();
-        })
-        .AddTo(this);
-
-
-      model.IsVisited
-        .DistinctUntilChanged()
-        .Subscribe(b =>
-        {
-        })
-        .AddTo(this);
 
       model.isExit
         .Subscribe(b =>

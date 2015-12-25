@@ -66,14 +66,12 @@ public class CameraManager : SingletonMonoBehaviour<CameraManager>
       .SetEase(Ease.OutQuad);
 
   }
-  public void movePos(IntVector2 dest)
+  public void MovePos(IntVector2 dest)
   {
+    var pos = gm.CoordsToVec3(dest);
     cameraPivot.transform
-      .DOLocalMove(new Vector3(dest.X * gm.gridUnit, cameraPivot.transform.localPosition.y, dest.Y * gm.gridUnit), .2f)
+      .DOLocalMove(pos, .2f)
       .SetEase(Ease.OutQuad);
-  }
-  public void moveMap()
-  {
   }
 }
 

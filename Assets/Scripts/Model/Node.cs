@@ -23,6 +23,19 @@ public class Node
   public Node(IntVector2 coords)
   {
     this.Coords = coords;
+
+    OnHere =
+      PlayerManager.Instance
+        .CurrentCoords
+        .Select(n => n == coords)
+        .DistinctUntilChanged()
+        .ToReactiveProperty();
+    OnDest =
+      PlayerManager.Instance
+        .DestCoords
+        .Select(n => n == coords)
+        .DistinctUntilChanged()
+        .ToReactiveProperty();
   }
 
   public void AddEdge(Edge e)
