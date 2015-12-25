@@ -5,56 +5,56 @@ using UniRx;
 
 public class Edge
 {
-  public readonly Node sourceNode;
-  public readonly Node targetNode;
-  public readonly Vector2 coords;
-  public readonly IntVector2 vector;
-  public readonly float deg;
-  public ReactiveProperty<EdgeType> type = new ReactiveProperty<EdgeType>(EdgeType.passage);
-  public bool hasView = false;
+  public readonly Node SourceNode;
+  public readonly Node TargetNode;
+  public readonly Vector2 Coords;
+  public readonly IntVector2 Vector;
+  public readonly float Deg;
+  public ReactiveProperty<EdgeType> Type = new ReactiveProperty<EdgeType>(EdgeType.passage);
+  public bool HasView = false;
   public Edge(Node sourceNode, Node targetNode)
   {
-    this.sourceNode = sourceNode;
-    this.targetNode = targetNode;
-    sourceNode.addEdge(this);
-    targetNode.addEdge(this);
-    vector = targetNode.coords - sourceNode.coords;
-    coords = (Vector2)(sourceNode.coords + targetNode.coords) * .5f;
-    deg = Mathf.Atan2(vector.y, vector.x) * Mathf.Rad2Deg;
+    this.SourceNode = sourceNode;
+    this.TargetNode = targetNode;
+    sourceNode.AddEdge(this);
+    targetNode.AddEdge(this);
+    Vector = targetNode.Coords - sourceNode.Coords;
+    Coords = (Vector2)(sourceNode.Coords + targetNode.Coords) * .5f;
+    Deg = Mathf.Atan2(Vector.Y, Vector.X) * Mathf.Rad2Deg;
 
     sourceNode.OnDestroy += nodeDestoryHandler;
     targetNode.OnDestroy += nodeDestoryHandler;
   }
   //undirected node
-  public Node oppositeNode(Node node)
+  public Node OppositeNode(Node node)
   {
-    if (node == sourceNode)
+    if (node == SourceNode)
     {
-      return targetNode;
+      return TargetNode;
     }
-    else if (node == targetNode)
+    else if (node == TargetNode)
     {
-      return sourceNode;
+      return SourceNode;
     }
     else
     {
       throw new UnityException("Illegal node");
     }
   }
-  void nodeDestoryHandler(object sender, EventArgs e)
-  {
-    destroy(sender);
-  }
   public event EventHandler OnDestroy;
-  public void destroy(object sender)
+  public void Destroy(object sender)
   {
     if (OnDestroy != null)
     {
       OnDestroy(sender, EventArgs.Empty);
     }
-    sourceNode.removeEdge(this);
-    targetNode.removeEdge(this);
-    sourceNode.OnDestroy -= nodeDestoryHandler;
-    targetNode.OnDestroy -= nodeDestoryHandler;
+    SourceNode.RemoveEdge(this);
+    TargetNode.RemoveEdge(this);
+    SourceNode.OnDestroy -= nodeDestoryHandler;
+    TargetNode.OnDestroy -= nodeDestoryHandler;
+  }
+  void nodeDestoryHandler(object sender, EventArgs e)
+  {
+    Destroy(sender);
   }
 }

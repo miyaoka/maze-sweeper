@@ -3,8 +3,8 @@ using System.Collections;
 
 public struct IntVector2
 {
-  public int x;
-  public int y;
+  public int X;
+  public int Y;
 
   public static IntVector2 Zero
   {
@@ -18,8 +18,8 @@ public struct IntVector2
   /// <param name="y">Initial value for the y component of the vector.</param>
   public IntVector2(int x, int y)
   {
-    this.x = x;
-    this.y = y;
+    this.X = x;
+    this.Y = y;
   }
 
   /// <summary>
@@ -28,40 +28,40 @@ public struct IntVector2
   /// <param name="value">Value to initialise both components to.</param>
   public IntVector2(int value)
   {
-    x = value;
-    y = value;
+    X = value;
+    Y = value;
   }
 
   public override string ToString()
   {
-    return "X: " + x + ", Y: " + y;
+    return "X: " + X + ", Y: " + Y;
   }
 
   #region Operators
 
   public static IntVector2 operator +(IntVector2 a, IntVector2 b)
   {
-    return new IntVector2(a.x + b.x, a.y + b.y);
+    return new IntVector2(a.X + b.X, a.Y + b.Y);
   }
 
   public static IntVector2 operator -(IntVector2 a, IntVector2 b)
   {
-    return new IntVector2(a.x - b.x, a.y - b.y);
+    return new IntVector2(a.X - b.X, a.Y - b.Y);
   }
 
   public static IntVector2 operator *(IntVector2 a, int n)
   {
-    return new IntVector2(a.x * n, a.y * n);
+    return new IntVector2(a.X * n, a.Y * n);
   }
 
   public static IntVector2 operator /(IntVector2 a, int n)
   {
-    return new IntVector2(a.x / n, a.y / n);
+    return new IntVector2(a.X / n, a.Y / n);
   }
 
   public static bool operator ==(IntVector2 a, IntVector2 b)
   {
-    return (a.x == b.x) && (a.y == b.y);
+    return (a.X == b.X) && (a.Y == b.Y);
   }
 
   public static bool operator !=(IntVector2 a, IntVector2 b)
@@ -71,12 +71,12 @@ public struct IntVector2
 
   public static bool operator <=(IntVector2 a, IntVector2 b)
   {
-    return (a.x <= b.x && a.y <= b.y);
+    return (a.X <= b.X && a.Y <= b.Y);
   }
 
   public static bool operator >=(IntVector2 a, IntVector2 b)
   {
-    return (a.x >= b.x && a.y >= b.y);
+    return (a.X >= b.X && a.Y >= b.Y);
   }
 
   public static explicit operator IntVector2(Vector2 v)
@@ -86,30 +86,30 @@ public struct IntVector2
 
   public static implicit operator Vector2(IntVector2 v)
   {
-    return new Vector2(v.x, v.y);
+    return new Vector2(v.X, v.Y);
   }
 
   public static IntVector2 operator %(IntVector2 a, int n)
   {
-    return new IntVector2(a.x % n, a.y % n);
+    return new IntVector2(a.X % n, a.Y % n);
   }
 
   #endregion
 
   public override bool Equals(object obj)
   {
-    if (obj == null)
+    if(obj == null)
       return false;
 
-    if (!(obj is IntVector2))
+    if(!(obj is IntVector2))
       return false;
 
-    IntVector2 lValue = (IntVector2) obj;
-    return (x == lValue.x && y == lValue.y);
+    IntVector2 lValue = (IntVector2)obj;
+    return (X == lValue.X && Y == lValue.Y);
   }
 
   public override int GetHashCode()
   {
-    return x ^ y;
+    return X ^ Y;
   }
 }

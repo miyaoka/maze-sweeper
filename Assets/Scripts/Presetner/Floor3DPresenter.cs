@@ -1,61 +1,77 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class Floor3DPresenter : MonoBehaviour {
+public class Floor3DPresenter : MonoBehaviour
+{
+  [SerializeField]
+  Renderer floorB_LT;
+  [SerializeField]
+  Renderer floorB_RT;
+  [SerializeField]
+  Renderer floorB_LB;
+  [SerializeField]
+  Renderer floorB_RB;
 
-  [SerializeField] Renderer floorB_LT;
-  [SerializeField] Renderer floorB_RT;
-  [SerializeField] Renderer floorB_LB;
-  [SerializeField] Renderer floorB_RB;
+  const int DirT = 1 << 0;
+  const int DirR = 1 << 1;
+  const int DirB = 1 << 2;
+  const int DirL = 1 << 3;
+  const int DirAll = DirT | DirR | DirB | DirL;
 
-  const int DIR_T = 1 << 0;
-  const int DIR_R = 1 << 1;
-  const int DIR_B = 1 << 2;
-  const int DIR_L = 1 << 3;
-  const int DIR_ALL = DIR_T | DIR_R | DIR_B | DIR_L;
-
-  void Awake () {
-    buildFloor ();
+  void Awake()
+  {
+    buildFloor();
   }
 
-  void buildFloor(){
-
-    var lb = floorTile (0, DIR_ALL);
+  void buildFloor()
+  {
+    var lb = floorTile(0, DirAll);
     int reqDir;
     int availableDir;
 
+    reqDir = 0;
+    availableDir = DirAll;
+    if((lb & DirR) != 0)
+    {
+      reqDir |= DirL;
+    }
+    else
+    {
+      availableDir ^= DirL;
+    }
+    var rb = floorTile(reqDir, availableDir);
 
     reqDir = 0;
-    availableDir = DIR_ALL;
-    if ((lb & DIR_R) != 0) {
-      reqDir |= DIR_L;
-    } else {
-      availableDir ^= DIR_L;
+    availableDir = DirAll;
+    if((lb & DirT) != 0)
+    {
+      reqDir |= DirB;
     }
-    var rb = floorTile (reqDir, availableDir);
+    else
+    {
+      availableDir ^= DirB;
+    }
+    var lt = floorTile(reqDir, availableDir);
 
     reqDir = 0;
-    availableDir = DIR_ALL;
-    if ((lb & DIR_T) != 0) {
-      reqDir |= DIR_B;
-    } else {
-      availableDir ^= DIR_B;
+    availableDir = DirAll;
+    if((rb & DirT) != 0)
+    {
+      reqDir |= DirB;
     }
-    var lt = floorTile (reqDir, availableDir);
-
-    reqDir = 0;
-    availableDir = DIR_ALL;
-    if ((rb & DIR_T) != 0) {
-      reqDir |= DIR_B;
-    } else {
-      availableDir ^= DIR_B;
+    else
+    {
+      availableDir ^= DirB;
     }
-    if ((lt & DIR_R) != 0) {
-      reqDir |= DIR_L;
-    } else {
-      availableDir ^= DIR_L;
+    if((lt & DirR) != 0)
+    {
+      reqDir |= DirL;
     }
-    var rt = floorTile (reqDir, availableDir);
+    else
+    {
+      availableDir ^= DirL;
+    }
+    var rt = floorTile(reqDir, availableDir);
 
     /*
     Debug.Log (binaryToString (lt) + "-" + binaryToString (rt));
@@ -83,34 +99,42 @@ public class Floor3DPresenter : MonoBehaviour {
 
     var x = index % 4 + .25f;
     var y = 3 - Mathf.Floor((float)index / 4f) + .25f;
-    return new Vector2 (x * sliceUnit + xDiff, y * sliceUnit + yDiff);
+    return new Vector2(x * sliceUnit + xDiff, y * sliceUnit + yDiff);
   }
 
-  int floorTile(int requireDir, int availableDir){
+  int floorTile(int requireDir, int availableDir)
+  {
     int tile = 0;
-    while (tile == 0) {
-      tile = (Random.Range (0, 1 << 4) | requireDir) & availableDir;
+    while(tile == 0)
+    {
+      tile = (Random.Range(0, 1 << 4) | requireDir) & availableDir;
       //2辺に満たなければ空欄にしてやり直し
-      if (bitCount (tile) < 2) {
+      if(bitCount(tile) < 2)
+      {
         tile = 0;
       }
       //必須辺が無ければ空欄でも可にする
-      if (requireDir == 0) {
+      if(requireDir == 0)
+      {
         break;
       }
     }
     return tile;
   }
-  int bitCount(int bit){
+  int bitCount(int bit)
+  {
     int count;
-    for (count = 0; bit != 0; bit >>= 1) {
-      if ((bit & 1) != 0) {
+    for(count = 0; bit != 0; bit >>= 1)
+    {
+      if((bit & 1) != 0)
+      {
         count++;
       }
     }
     return count;
   }
-  string binaryToString(int i){
-    return System.Convert.ToString (i, 2).PadLeft (4, '0');
+  string binaryToString(int i)
+  {
+    return System.Convert.ToString(i, 2).PadLeft(4, '0');
   }
 }

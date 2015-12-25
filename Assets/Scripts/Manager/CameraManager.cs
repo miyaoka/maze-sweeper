@@ -4,9 +4,10 @@ using DG.Tweening;
 using UniRx;
 using UniRx.Triggers;
 
-public class CameraManager : SingletonMonoBehaviour<CameraManager>{
-
-  [SerializeField] Transform cameraPivot;
+public class CameraManager : SingletonMonoBehaviour<CameraManager>
+{
+  [SerializeField]
+  Transform cameraPivot;
   [SerializeField]
   Camera mainCam;
   [SerializeField]
@@ -14,31 +15,34 @@ public class CameraManager : SingletonMonoBehaviour<CameraManager>{
   [SerializeField]
   Camera bgCam;
   GraphManager gm;
-  float[] heights = {30, 200, 0};
+  float[] heights = { 30, 200, 0 };
   float baseRatio = 16f / 9f;
-  ReactiveProperty<float> aspect = new ReactiveProperty<float> (1);
+  ReactiveProperty<float> aspect = new ReactiveProperty<float>(1);
 
-  void Awake ()
+  void Awake()
   {
-    if (this != Instance) {
-      Destroy (this);
+    if(this != Instance)
+    {
+      Destroy(this);
       return;
     }
-    DontDestroyOnLoad (this.gameObject);
+    DontDestroyOnLoad(this.gameObject);
     gm = GraphManager.Instance;
   }
-  void Start(){
+  void Start()
+  {
     var gm = GameManager.Instance;
     aspect = mainCam
-      .ObserveEveryValueChanged (c => c.aspect)
-      .ToReactiveProperty ();
+      .ObserveEveryValueChanged(c => c.aspect)
+      .ToReactiveProperty();
 
     gm.viewState
-      .CombineLatest(aspect, (v,a) => heights[(int)v] * Mathf.Pow(baseRatio / a, .5f))
-      .Subscribe (f => {
+      .CombineLatest(aspect, (v, a) => heights[(int)v] * Mathf.Pow(baseRatio / a, .5f))
+      .Subscribe(f =>
+      {
         moveDist(f);
       })
-      .AddTo (this);
+      .AddTo(this);
 
     this
       .UpdateAsObservable()
@@ -48,25 +52,28 @@ public class CameraManager : SingletonMonoBehaviour<CameraManager>{
         skyCam.clearFlags = CameraClearFlags.Color;
         bgCam.enabled = false;
         mainCam.transform.DOLocalMoveY(500, .2f);
-        mainCam.transform.DOLocalRotate(new Vector3(90,0,0), .2f);
+        mainCam.transform.DOLocalRotate(new Vector3(90, 0, 0), .2f);
 
       })
       .AddTo(this);
   }
   //keep rot and go backward
-  void moveDist(float dist){
+  void moveDist(float dist)
+  {
     var pos = mainCam.transform.forward * -dist;
     mainCam.transform
-      .DOLocalMove (pos, .2f)
-      .SetEase (Ease.OutQuad);
+      .DOLocalMove(pos, .2f)
+      .SetEase(Ease.OutQuad);
 
   }
-  public void movePos(IntVector2 dest){
+  public void movePos(IntVector2 dest)
+  {
     cameraPivot.transform
-      .DOLocalMove (new Vector3 (dest.x * gm.gridUnit, cameraPivot.transform.localPosition.y, dest.y * gm.gridUnit), .2f)
-      .SetEase (Ease.OutQuad);
+      .DOLocalMove(new Vector3(dest.X * gm.gridUnit, cameraPivot.transform.localPosition.y, dest.Y * gm.gridUnit), .2f)
+      .SetEase(Ease.OutQuad);
   }
-  public void moveMap(){
+  public void moveMap()
+  {
   }
 }
 

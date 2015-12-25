@@ -4,47 +4,51 @@ using System.Collections.Generic;
 using UniRx;
 using System;
 
-public class Node {
-  public List<Edge> edgeList = new List<Edge> ();
-  public readonly IntVector2 coords;
-  public ReactiveProperty<int> degree = new ReactiveProperty<int> ();
+public class Node
+{
+  public List<Edge> EdgeList = new List<Edge>();
+  public readonly IntVector2 Coords;
+  public ReactiveProperty<int> Degree = new ReactiveProperty<int>();
 
-  public ReactiveProperty<int> enemyCount = new ReactiveProperty<int> (0);
-  public ReactiveProperty<int> alertCount = new ReactiveProperty<int> (0);
-  public ReactiveProperty<bool> visited = new ReactiveProperty<bool> ();
-  public ReactiveProperty<bool> onHere = new ReactiveProperty<bool> ();
-  public ReactiveProperty<bool> onDest = new ReactiveProperty<bool> ();
-  public ReactiveProperty<int> contents = new ReactiveProperty<int>();
+  public ReactiveProperty<int> EnemyCount = new ReactiveProperty<int>(0);
+  public ReactiveProperty<int> AlertCount = new ReactiveProperty<int>(0);
+  public ReactiveProperty<bool> IsVisited = new ReactiveProperty<bool>();
+  public ReactiveProperty<bool> OnHere = new ReactiveProperty<bool>();
+  public ReactiveProperty<bool> OnDest = new ReactiveProperty<bool>();
   public ReactiveProperty<bool> isExit = new ReactiveProperty<bool>();
-  public ReactiveProperty<bool> hasItem = new ReactiveProperty<bool>(false);
-  public bool hasView = false;
+  public ReactiveProperty<bool> HasItem = new ReactiveProperty<bool>(false);
+  public bool HasView = false;
 
 
-  public Node(IntVector2 coords){
-    this.coords = coords;
-  }
-
-  public void addEdge(Edge e){
-    edgeList.Add (e);
-    updateDegree ();
-  }
-  public void removeEdge(Edge e){
-    edgeList.Remove (e);
-    updateDegree ();
-  }
-
-  void updateDegree ()
+  public Node(IntVector2 coords)
   {
-    degree.Value = edgeList.Count;
+    this.Coords = coords;
+  }
+
+  public void AddEdge(Edge e)
+  {
+    EdgeList.Add(e);
+    updateDegree();
+  }
+  public void RemoveEdge(Edge e)
+  {
+    EdgeList.Remove(e);
+    updateDegree();
+  }
+
+  void updateDegree()
+  {
+    Degree.Value = EdgeList.Count;
   }
 
   public event EventHandler OnDestroy;
-  public void destroy(){
-    if (OnDestroy != null)
+  public void destroy()
+  {
+    if(OnDestroy != null)
     {
       OnDestroy(this, EventArgs.Empty);
     }
-    degree.Dispose ();
+    Degree.Dispose();
   }
 
 
