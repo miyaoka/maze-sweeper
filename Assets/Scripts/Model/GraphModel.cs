@@ -7,7 +7,9 @@ using UniRx;
 public class GraphModel
 {
   int divideMargin = 1;
-  float connectRatio = .25f;
+  float connectRatio = .35f;
+  public static readonly IntVector2[] DirCoords = { new IntVector2(0, 1), new IntVector2(1, 0), new IntVector2(0, -1), new IntVector2(-1, 0) };
+
   public GraphModel()
   {
   }
@@ -212,7 +214,7 @@ public class GraphModel
       var connectDir = isVerticalDivide ? Dirs.East : Dirs.North;
       var sourceCoords = baseCoords + connectCoords;
       var targetCoords = sourceCoords + DirCoords[(int)connectDir];
-      graph.CreateEdge(sourceCoords, targetCoords);
+      CreateEdge(sourceCoords, targetCoords);
     }
   }
 }

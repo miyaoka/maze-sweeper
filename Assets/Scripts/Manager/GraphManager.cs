@@ -21,7 +21,6 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
   [SerializeField]
   bool showAll;
 
-  public static readonly IntVector2[] DirCoords = { new IntVector2(0, 1), new IntVector2(1, 0), new IntVector2(0, -1), new IntVector2(-1, 0) };
   public readonly GraphModel graph = new GraphModel();
 
   void Awake()

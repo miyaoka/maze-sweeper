@@ -19,19 +19,7 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
 
   Sequence sq;
   GraphManager gm;
-  /*
-  GameObject _player;
-  GameObject player {
-    get {
-      if (_player == null) {
-        _player = Instantiate (playerPrefab);
-        gm.addToViewContainer (_player);
-        _player.transform.rotation = Quaternion.Euler (new Vector3 (20, 0, 0));
-      }
-      return _player;
-    }
-  }
-  */
+
   void Awake()
   {
     if(this != Instance)
@@ -43,10 +31,6 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
   }
   void Start()
   {
-    //    sq = DOTween.Sequence ();
-    //    movePos (currentCoords.Value);
-    //    movePos (new IntVector2 (3, 3));
-
   }
   public void MoveDir(Dirs dir)
   {
@@ -72,7 +56,7 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
       return;
     }
     */
-    MovePos(CurrentCoords.Value + GraphManager.DirCoords[(int)dir]);
+    MovePos(CurrentCoords.Value + GraphModel.DirCoords[(int)dir]);
   }
   public void MovePos(IntVector2 dest)
   {
@@ -93,7 +77,6 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
 
     AudioManager.door.Play();
     AudioManager.walk.PlayDelayed(.4f);
-    //    AudioManager.enemyDetect.Play ();
 
     player.GetComponentInChildren<Animator>().SetBool("isWalking", true);
 
@@ -138,6 +121,7 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
     CurrentCoords.Value = dest;
     CameraManager.Instance.MovePos(dest);
     player.transform.localPosition = gm.CoordsToVec3(dest);
+    gm.VisitNode(dest);
   }
   void createDead(IntVector2 dest)
   {
