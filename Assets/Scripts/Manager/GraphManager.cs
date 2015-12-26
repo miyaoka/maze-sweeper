@@ -55,7 +55,7 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
       .Where(n => n.Coords.Y > 1)
       .ToList<Node>();
     Debug.Log(list.Count);
-    addEnemies(list, enemyRatio, 2);
+    addEnemies(list, enemyRatio, 3);
     Debug.Log(list.Count);
 
     count = 3;

@@ -15,7 +15,7 @@ public class CameraManager : SingletonMonoBehaviour<CameraManager>
   [SerializeField]
   Camera bgCam;
   GraphManager gm;
-  float[] heights = { 30, 200, 0 };
+  float[] heights = { 30, 150, 0 };
   float baseRatio = 16f / 9f;
   ReactiveProperty<float> aspect = new ReactiveProperty<float>(1);
 
@@ -61,7 +61,7 @@ public class CameraManager : SingletonMonoBehaviour<CameraManager>
 
           skyCam.clearFlags = CameraClearFlags.Color;
           bgCam.enabled = false;
-          mainCam.transform.DOLocalMoveY(500, .1f);
+          mainCam.transform.DOLocalMoveY(300, .1f);
           mainCam.transform.DOLocalRotate(new Vector3(90, 0, 0), .1f);
         }
         else
