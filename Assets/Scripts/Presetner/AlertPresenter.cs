@@ -29,7 +29,7 @@ public class AlertPresenter : MonoBehaviour
 
         DOTween.To(() => alertCountLE.preferredWidth, x => alertCountLE.preferredWidth = x, 20 * c, .4f)
           .SetEase(Ease.OutExpo);
-        if(c == 0 || gm.enemyCount.Value != 0)
+        if (c == 0 || gm.enemyCount.Value != 0)
         {
           seq.Pause();
           //          seq.Complete();
@@ -38,7 +38,7 @@ public class AlertPresenter : MonoBehaviour
         }
         seq.Restart();
         alert.SetActive(true);
-        for(var i = 0; i < c; i++)
+        for (var i = 0; i < c; i++)
         {
           AudioManager.enemyDetect.Play();
         }

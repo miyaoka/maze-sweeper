@@ -41,7 +41,7 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
   }
   public Node InitGrid(int gridWidth, int gridHeight, float enemyRatio)
   {
-    clearView ();
+    clearView();
     graph.Clear();
     graph.CreateMaze(new Rect(0, 0, gridWidth, gridHeight));
 
@@ -169,7 +169,7 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
       return;
 
     var go = Instantiate(gridNodePrefab, CoordsToVec3(node.Coords), Quaternion.identity) as GameObject;
-    AddToView (go);
+    AddToView(go);
     go.GetComponent<NodePresenter>().Model = node;
     go.name = "node_" + coordsToObjectName(node.Coords);
     node.HasView = true;
@@ -178,8 +178,8 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
   {
     if(edge.HasView)
       return;
-    var go = Instantiate(gridEdgePrefab, CoordsToVec3(edge.Coords) + new Vector3(0,-1,0), Quaternion.Euler(new Vector3(0, edge.Deg, 0))) as GameObject;
-    AddToView (go);
+    var go = Instantiate(gridEdgePrefab, CoordsToVec3(edge.Coords) + new Vector3(0, -1, 0), Quaternion.Euler(new Vector3(0, edge.Deg, 0))) as GameObject;
+    AddToView(go);
     go.GetComponent<EdgePresenter>().Model = edge;
     go.name = "edge_" + coordsToObjectName(edge.SourceNode.Coords) + "-" + coordsToObjectName(edge.TargetNode.Coords);
     edge.HasView = true;
@@ -193,12 +193,15 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
   {
     return coords.X + "," + coords.Y;
   }
-  public void AddToView(GameObject go){
+  public void AddToView(GameObject go)
+  {
     go.transform.SetParent(viewContainer, false);
   }
-  void clearView(){
-    foreach (Transform t in viewContainer) {
-      Destroy (t.gameObject);
+  void clearView()
+  {
+    foreach(Transform t in viewContainer)
+    {
+      Destroy(t.gameObject);
     }
   }
 }

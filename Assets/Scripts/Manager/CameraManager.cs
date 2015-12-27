@@ -26,7 +26,6 @@ public class CameraManager : SingletonMonoBehaviour<CameraManager>
       Destroy(this);
       return;
     }
-    DontDestroyOnLoad(this.gameObject);
     gm = GraphManager.Instance;
   }
   void Start()

@@ -12,8 +12,6 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
   SkyCameraPresenter skycam;
 
   [SerializeField]
-  GameObject scene;
-  [SerializeField]
   GameObject hud;
 
   public ReactiveProperty<int> alertCount = new ReactiveProperty<int>();
@@ -31,7 +29,7 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
 
   void Awake()
   {
-    if(this != Instance)
+    if (this != Instance)
     {
       Destroy(this);
       return;
@@ -98,7 +96,7 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
       },
       () => { onConfig = false; }
     );
-    while(onConfig)
+    while (onConfig)
     {
       yield return null;
     }
@@ -108,7 +106,7 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
   IEnumerator onLevel()
   {
     passExit = false;
-    while(PlayerManager.Instance.Health.Value > 0 && !passExit)
+    while (PlayerManager.Instance.Health.Value > 0 && !passExit)
     {
       yield return null;
     }
@@ -119,7 +117,7 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
     cm.enabled = false;
     var isOpen = true;
 
-    if(PlayerManager.Instance.Health.Value > 0)
+    if (PlayerManager.Instance.Health.Value > 0)
     {
       MenuManager.Instance.ModalDialog().Open(
         "level cleared!\nyou rescued " + PlayerManager.Instance.Health.Value.ToString() + " survivors.",
@@ -143,7 +141,7 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
         }
       );
     }
-    while(isOpen)
+    while (isOpen)
     {
       yield return null;
     }
@@ -168,7 +166,7 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
         }),
       }
     );
-    while(isOpen)
+    while (isOpen)
     {
       yield return null;
     }
