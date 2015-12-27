@@ -43,11 +43,13 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
     }
 
     var sr = player.GetComponentInChildren<SpriteRenderer>();
+
+    //default is flipped
     sr.flipX =
       dir == Dirs.East
-      ? true
-      : dir == Dirs.West
       ? false
+      : dir == Dirs.West
+      ? true
       : sr.flipX;
 
     /*
