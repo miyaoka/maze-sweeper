@@ -40,6 +40,7 @@ public class LevelConfigDialogPresenter : DialogPresenterBase
   {
     panel.SetActive(false);
     rowSlider.maxValue = 200;
+    colSlider.minValue = rowSlider.minValue = 10;
   }
 
   void Start()

@@ -16,6 +16,7 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
 
   public ReactiveProperty<int> alertCount = new ReactiveProperty<int>();
   public ReactiveProperty<int> enemyCount = new ReactiveProperty<int>();
+  public ReactiveProperty<float> LevelTimer = new ReactiveProperty<float>();
   public ReactiveProperty<ViewState> viewState = new ReactiveProperty<ViewState>();
   public State state = State.Init;
 
@@ -26,6 +27,9 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
   bool passExit = false;
   ControlManager cm;
   PlayerManager pm;
+  IConnectableObservable<float> timerUpdate;
+  System.IDisposable timerConnect;
+
 
   void Awake()
   {
@@ -39,7 +43,12 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
   }
   void Start()
   {
+    timerUpdate = Observable
+      .EveryFixedUpdate()
+      .Select(_ => Time.fixedDeltaTime)
+      .Publish();
 
+    timerUpdate.Subscribe(t => LevelTimer.Value -= t);
 
     viewState
       .Subscribe(v =>
@@ -72,7 +81,14 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
   IEnumerator enterLevel()
   {
     var pn = GraphManager.Instance.InitGrid(col, row, enemy);
-    pm.Health.Value = 5;
+    pm.Health.Value = 3;
+    alertCount.Value = 0;
+    viewState.Value = ViewState.Move;
+    LevelTimer.Value = 60f * 5f;
+
+    timerConnect = timerUpdate.Connect();
+      
+
     Debug.Log(pn.Coords);
     pm.SetPos(pn.Coords);
 
@@ -106,7 +122,7 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
   IEnumerator onLevel()
   {
     passExit = false;
-    while (PlayerManager.Instance.Health.Value > 0 && !passExit)
+    while (PlayerManager.Instance.Health.Value > 0 && !passExit && LevelTimer.Value > 0)
     {
       yield return null;
     }
@@ -116,8 +132,10 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
 
     cm.enabled = false;
     var isOpen = true;
+    LevelTimer.Value = 0;
+    timerConnect.Dispose();
 
-    if (PlayerManager.Instance.Health.Value > 0)
+    if (passExit)
     {
       MenuManager.Instance.ModalDialog().Open(
         "level cleared!\nyou rescued " + PlayerManager.Instance.Health.Value.ToString() + " survivors.",
@@ -131,6 +149,8 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
     }
     else
     {
+//      GraphManager.Instance.DestroyGrid();
+      viewState.Value = ViewState.Map;
       MenuManager.Instance.ModalDialog().Open(
         "You are dead...",
         new List<DialogOptionDetails> {

@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.Events;
+using System.Collections;
 
-public enum Dirs { North, East, South, West, Null };
+public enum Dirs { East, North, West, South, Null };
 public class GraphManager : SingletonMonoBehaviour<GraphManager>
 {
   [SerializeField]
@@ -17,7 +18,7 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
   [SerializeField]
   float deadEndReduceProb = .5f;
   [SerializeField]
-  float itemProb = .3f;
+  float itemsPerRow = .2f;
   [SerializeField]
   bool showAll;
 
@@ -25,12 +26,12 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
 
   void Awake()
   {
-    if(this != Instance)
+    if (this != Instance)
     {
       Destroy(this);
       return;
     }
-    foreach(Transform t in viewContainer)
+    foreach (Transform t in viewContainer)
     {
       Destroy(t.gameObject);
     }
@@ -46,10 +47,12 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
     graph.CreateMaze(new Rect(0, 0, gridWidth, gridHeight));
 
     var count = 2;
-    while(count-- > 0)
+    while (count-- > 0)
     {
       graph.RemoveDeadend(deadEndReduceProb);
     }
+
+    //enemy
     var list = graph
       .ShuffledNodeList
       .Where(n => n.Coords.Y > 1)
@@ -58,21 +61,31 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
     addEnemies(list, enemyRatio, 3);
     Debug.Log(list.Count);
 
-    count = 3;
-    while(count-- > 0)
-    {
-      createExit();
-    }
-    addItems();
+    //exit
+    createExit(
+      graph
+      .NodeList
+      .Where(n => (float)n.Coords.Y >= (float)gridHeight * .75f)
+      .ToList()
+      );
+    createExit(
+      graph
+      .NodeList
+      .Where(n => (float)n.Coords.Y < (float)gridHeight * .75f && (float)n.Coords.Y >= (float)gridHeight * .5f)
+      .ToList()
+      );
 
-    if(showAll)
+    //survivor
+    addItems(Mathf.CeilToInt(gridHeight * itemsPerRow));
+
+    if (showAll)
     {
       var t = System.DateTime.Now;
-      foreach(var n in graph.NodeList)
+      foreach (var n in graph.NodeList)
       {
         addNodeView(n);
         n.AlertCount.Value = graph.ScanEnemies(n.Coords);
-        foreach(var e in n.EdgeList)
+        foreach (var e in n.EdgeList)
         {
           addEdgeView(e);
         }
@@ -87,16 +100,16 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
   public Node VisitNode(IntVector2 coord)
   {
     var n = graph.GetNode(coord);
-    if(n == null)
+    if (n == null)
     {
       return null;
     }
-    if(!n.IsVisited.Value)
+    if (!n.IsVisited.Value)
     {
       n.IsVisited.Value = true;
       addNodeView(n);
 
-      foreach(var e in n.EdgeList)
+      foreach (var e in n.EdgeList)
       {
         addEdgeView(e);
       }
@@ -105,7 +118,7 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
   }
   public void ClearNodeEnemy(Node node)
   {
-    foreach(var n in graph.Neighbors(node.Coords))
+    foreach (var n in graph.Neighbors(node.Coords))
     {
       n.AlertCount.Value = Mathf.Max(0, n.AlertCount.Value - node.EnemyCount.Value);
     }
@@ -116,14 +129,14 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
   {
     var restEnemyCount = Mathf.FloorToInt(graph.NodeCount * enemyRatio);
     var i = 0;
-    foreach(var n in list)
+    foreach (var n in list)
     {
       i++;
       var enemyCount = Mathf.Min(restEnemyCount, Random.Range(1, maxEnemyCount));
       n.EnemyCount.Value = enemyCount;
       restEnemyCount -= 1;
       //enemyCount;
-      if(restEnemyCount <= 0)
+      if (restEnemyCount <= 0)
       {
         break;
       }
@@ -131,31 +144,36 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
     list.RemoveRange(0, i);
   }
 
-  void createExit()
+  void createExit(List<Node> list)
   {
-    var exitNode = graph.NodeList[Random.Range(0, graph.NodeCount)];
-    addNodeView(exitNode);
-    exitNode.isExit.Value = true;
-    exitNode.IsVisited.Value = true;
+    var node = list[Random.Range(0, list.Count)];
+    addNodeView(node);
+    node.isExit.Value = true;
+//    exitNode.IsVisited.Value = true;
   }
 
-  void addItems()
+  void addItems(int itemCount)
   {
-    var deadends = graph
-      .DeadendNodeList
-      .Where(n => Random.value < itemProb);
+    var deadends = graph.DeadendNodeList;
+    deadends.Sort((a, b) => Random.value < .5f ? -1 : 1);
 
-    foreach(var n in deadends)
+    foreach (var n in deadends)
     {
+      if (itemCount-- == 0)
+      {
+        return;
+      }
       n.HasItem.Value = true;
+      addNodeView(n);
+//      n.IsVisited.Value = true;
     }
   }
 
   Node pickupPlayerPos(List<Node> list)
   {
-    foreach(Node n in list)
+    foreach (Node n in list)
     {
-      if(graph.ScanEnemies(n.Coords) == 0)
+      if (graph.ScanEnemies(n.Coords) == 0)
       {
         return n;
       }
@@ -165,22 +183,22 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
 
   void addNodeView(Node node)
   {
-    if(node.HasView)
+    if (node.HasView)
       return;
 
     var go = Instantiate(gridNodePrefab, CoordsToVec3(node.Coords), Quaternion.identity) as GameObject;
     AddToView(go);
-    go.GetComponent<NodePresenter>().Model = node;
+    go.GetComponent<NodePresenter>().Node = node;
     go.name = "node_" + coordsToObjectName(node.Coords);
     node.HasView = true;
   }
   void addEdgeView(Edge edge)
   {
-    if(edge.HasView)
+    if (edge.HasView)
       return;
-    var go = Instantiate(gridEdgePrefab, CoordsToVec3(edge.Coords) + new Vector3(0, -1, 0), Quaternion.Euler(new Vector3(0, edge.Deg, 0))) as GameObject;
+    var go = Instantiate(gridEdgePrefab, CoordsToVec3(edge.Coords), Quaternion.Euler(new Vector3(0, edge.Angle, 0))) as GameObject;
     AddToView(go);
-    go.GetComponent<EdgePresenter>().Model = edge;
+    go.GetComponent<EdgePresenter>().Edge = edge;
     go.name = "edge_" + coordsToObjectName(edge.SourceNode.Coords) + "-" + coordsToObjectName(edge.TargetNode.Coords);
     edge.HasView = true;
   }
@@ -197,9 +215,22 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
   {
     go.transform.SetParent(viewContainer, false);
   }
+  public void DestroyGrid()
+  {
+    foreach (Transform t in viewContainer)
+    {
+      StartCoroutine(addRigidBody(Random.Range(0, 2.0f), t.gameObject));
+    }
+  }
+  IEnumerator addRigidBody(float waitTime, GameObject go)// UnityAction action)
+  {
+    yield return new WaitForSeconds(waitTime);
+    go.AddComponent<Rigidbody>();
+//    action();
+  }
   void clearView()
   {
-    foreach(Transform t in viewContainer)
+    foreach (Transform t in viewContainer)
     {
       Destroy(t.gameObject);
     }

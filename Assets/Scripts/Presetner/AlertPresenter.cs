@@ -38,10 +38,6 @@ public class AlertPresenter : MonoBehaviour
         }
         seq.Restart();
         alert.SetActive(true);
-        for (var i = 0; i < c; i++)
-        {
-          AudioManager.enemyDetect.Play();
-        }
       })
       .AddTo(this);
   }

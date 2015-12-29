@@ -3,10 +3,11 @@ using System.Collections;
 
 public class AudioManager : SingletonMonoBehaviour<AudioManager>
 {
-  public static AudioSource enemyDetect;
-  public static AudioSource door;
-  public static AudioSource walk;
-  public static AudioSource maleScream;
+  public static AudioSource EnemyDetect;
+  public static AudioSource Door;
+  public static AudioSource Walk;
+  public static AudioSource MaleScream;
+  public static AudioSource Powerup;
 
   void Awake()
   {
@@ -16,10 +17,11 @@ public class AudioManager : SingletonMonoBehaviour<AudioManager>
       return;
     }
     AudioSource[] audios = GetComponents<AudioSource>();
-    enemyDetect = audios[0];
-    door = audios[1];
-    walk = audios[2];
-    maleScream = audios[3];
+    EnemyDetect = audios[0];
+    Door = audios[1];
+    Walk = audios[2];
+    MaleScream = audios[3];
+    Powerup = audios[4];
   }
   public void PlayLoop(AudioSource au)
   {

@@ -8,8 +8,6 @@ using Random = UnityEngine.Random;
 public class NodePresenter : MonoBehaviour
 {
   [SerializeField]
-  GameObject[] walls;
-  [SerializeField]
   Light roomLight;
   [SerializeField]
   GameObject alert;
@@ -21,9 +19,12 @@ public class NodePresenter : MonoBehaviour
   GameObject beacon;
   [SerializeField]
   GameObject floor;
+  [SerializeField]
+  GameObject interiorPrefab;
+  [SerializeField]
+  WallPresenter[] walls = new WallPresenter[4];
 
-  CompositeDisposable modelResources = new CompositeDisposable();
-  Node model;
+  Node node;
   Tweener lightTw;
   Text alertText;
   float lightMax = 1.0f;
@@ -38,24 +39,23 @@ public class NodePresenter : MonoBehaviour
     alertText = alert.GetComponent<Text>();
   }
 
-  public Node Model
+  public Node Node
   {
     set
     {
-      this.model = value;
+      this.node = value;
 
-      modelResources.Clear();
       var mt = floor.GetComponent<Renderer>().material;
       mt.EnableKeyword("_EMISSION");
 
-      model.AlertCount
+      node.AlertCount
         .DistinctUntilChanged()
         .Subscribe(c =>
         {
           alertText.text = c == 0 ? "" : c.ToString();
         })
         .AddTo(this);
-      model.EnemyCount
+      node.EnemyCount
         .DistinctUntilChanged()
         .Subscribe(c =>
         {
@@ -63,14 +63,14 @@ public class NodePresenter : MonoBehaviour
         .AddTo(this);
 
 
-      model.OnHere
-        .CombineLatest(model.OnDest, (l, r) => l || r)
+      node.OnHere
+        .CombineLatest(node.OnDest, (l, r) => l || r)
         .Subscribe(b => wallContainer.SetActive(b))
         .AddTo(this);
-      model.OnHere
+      node.OnHere
         .Subscribe(b =>
         {
-          if(b)
+          if (b)
           {
             //            sq.PrependInterval(.5f);
           }
@@ -81,18 +81,18 @@ public class NodePresenter : MonoBehaviour
         .AddTo(this);
 
       var deadend =
-      model.Degree
+      node.Degree
         .Select(d => d == 1)
         .ToReactiveProperty();
 
       var hasEnemy =
-        model.EnemyCount
+        node.EnemyCount
         .Select(c => c > 0)
         .ToReactiveProperty();
 
 
       deadend
-        .CombineLatest(model.HasItem, hasEnemy, model.AlertCount, model.isExit, (d, i, e, a, x) =>
+        .CombineLatest(node.HasItem, hasEnemy, node.AlertCount, node.isExit, (d, i, e, a, x) =>
       new Color(
           e ? 1 : (a > 0 ? .1f : 0),
           i ? 1 : (d ? 0f : 0),
@@ -104,10 +104,10 @@ public class NodePresenter : MonoBehaviour
         .AddTo(this);
 
 
-      model.OnDest
+      node.OnDest
         .Subscribe(b =>
         {
-          if(b)
+          if (b)
           {
             tiles.SetActive(b);
 
@@ -129,16 +129,40 @@ public class NodePresenter : MonoBehaviour
         })
         .AddTo(this);
 
-      model.isExit
+      node.isExit
         .Subscribe(b =>
         {
           beacon.SetActive(b);
         });
 
+      foreach(var w in walls)
+      {
+        w.Node = node;
+      }
 
-      model.OnDestroy += modelDestoryHandler;
+      for(var i = 0; i < 4; i++)
+      {
+        if(Random.value < .3f)
+        {
+          addInterior(i);
+        }
+      }
+
+      node.OnDestroy += modelDestoryHandler;
     }
-    get { return this.model; }
+    get { return this.node; }
+  }
+  //dir 0-3
+  void addInterior(int dir)
+  {
+    var scale = new Vector3(Random.Range(.5f, 3f), Random.Range(.5f, 4f), Random.Range(.5f, 3f));
+    var halfRoomSize = 4.9f;
+    var pos = new Vector3(halfRoomSize - scale.x * .5f, scale.y * .5f, halfRoomSize - scale.z * .5f);
+    pos.x *= dir % 2 == 0 ? 1 : -1;
+    pos.z *= dir / 2 > 0 ? 1 : -1;
+    var obj = Instantiate(interiorPrefab, pos, Quaternion.identity) as GameObject;
+    obj.transform.SetParent(wallContainer.transform, false);
+    obj.transform.localScale = scale;
   }
   void modelDestoryHandler(object sender, EventArgs e)
   {
@@ -146,9 +170,9 @@ public class NodePresenter : MonoBehaviour
   }
   void OnDestroy()
   {
-    if(model != null)
+    if (node != null)
     {
-      model.OnDestroy -= modelDestoryHandler;
+      node.OnDestroy -= modelDestoryHandler;
     }
   }
 }

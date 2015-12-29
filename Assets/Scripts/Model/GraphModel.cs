@@ -7,8 +7,9 @@ using UniRx;
 public class GraphModel
 {
   int divideMargin = 1;
-  float connectRatio = .35f;
-  public static readonly IntVector2[] DirCoords = { new IntVector2(0, 1), new IntVector2(1, 0), new IntVector2(0, -1), new IntVector2(-1, 0) };
+  float connectRatio = .6f;
+  //E,N,W,S
+  public static readonly IntVector2[] DirCoords = { new IntVector2(1, 0), new IntVector2(0, 1), new IntVector2(-1, 0), new IntVector2(0, -1) };
 
   public GraphModel()
   {
@@ -199,7 +200,7 @@ public class GraphModel
       connectPointList.Add(i);
     }
 
-    var connectCount = (float)lineLength * connectRatio;
+    var connectCount = (float)lineLength * Mathf.Min(.3f, connectRatio * Random.Range(.5f, 1));
 
     //create passage at random points
     while(connectCount-- > 0 && connectPointList.Count > 0)
@@ -216,41 +217,5 @@ public class GraphModel
       var targetCoords = sourceCoords + DirCoords[(int)connectDir];
       CreateEdge(sourceCoords, targetCoords);
     }
-  }
-}
-public class EdgeType
-{
-
-  public const int DIR_TOP = 0;
-  public const int DIR_RIGHT = 1;
-  public ReactiveProperty<bool> isPassable = new ReactiveProperty<bool>();
-  public ReactiveProperty<bool> isBreachable = new ReactiveProperty<bool>();
-  public ReactiveProperty<bool> isBreached = new ReactiveProperty<bool>();
-  public ReactiveProperty<int> doorCount = new ReactiveProperty<int>();
-
-  public EdgeType(bool passable, bool breachable, int doors, bool breached = false)
-  {
-    isPassable.Value = passable;
-    isBreachable.Value = breachable;
-    doorCount.Value = doors;
-    isBreached.Value = breached;
-  }
-  public static EdgeType unbreachableWall { get { return new EdgeType(false, false, 0); } }
-  public static EdgeType wall { get { return new EdgeType(false, true, 0); } }
-  public static EdgeType passage { get { return new EdgeType(true, false, 0); } }
-  public static EdgeType door(int doors)
-  {
-    return new EdgeType(false, true, doors);
-  }
-  public EdgeType breach()
-  {
-    if(!isBreachable.Value)
-    {
-      return this;
-    }
-    doorCount.Value = 0;
-    isPassable.Value = true;
-    isBreached.Value = true;
-    return this;
   }
 }

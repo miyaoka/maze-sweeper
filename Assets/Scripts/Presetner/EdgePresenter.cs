@@ -3,23 +3,24 @@ using System;
 using UniRx;
 using UnityEngine;
 using UnityEngine.UI;
+using System.Linq;
 public class EdgePresenter : MonoBehaviour
 {
   [SerializeField]
-  Image edgeImage;
+  GameObject[] walls = new GameObject[2];
   [SerializeField]
-  CanvasGroup cg;
+  GameObject floor;
 
   CompositeDisposable typeResources = new CompositeDisposable();
   CompositeDisposable modelResources = new CompositeDisposable();
   Tweener t;
 
-  private Edge model;
-  public Edge Model
+  private Edge edge;
+  public Edge Edge
   {
     set
     {
-      this.model = value;
+      this.edge = value;
 
       modelResources.Clear();
 
@@ -36,33 +37,29 @@ public class EdgePresenter : MonoBehaviour
         .AddTo(this); 
         */
 
-
+      var mts = walls.Select(w => w.GetComponent<Renderer>().material).ToList();
+      mts.ForEach(m => m.DOFade(0, 0));
       //player is on the one of nodes
-      model.SourceNode.OnHere
-        .CombineLatest(model.TargetNode.OnHere, (l, r) => l | r)
+      edge.SourceNode.OnHere
+        .CombineLatest(edge.TargetNode.OnHere, (l, r) => l || r)
         .Subscribe(b =>
         {
-          if(t != null)
-          {
-            t.Kill();
-          }
-          t = edgeImage.DOColor(b ? new Color(.8f, .8f, .8f) : new Color(.4f, .4f, .4f), b ? 1f : .2f).SetEase(Ease.OutQuad);
-
-        })
+          mts.ForEach(m => m.DOFade(b ? .5f : 0, .2f).SetEase(Ease.OutQuad));
+         })
         .AddTo(this);
 
       //visited one of nodes
-      model.SourceNode.IsVisited
-        .CombineLatest(model.TargetNode.IsVisited, (l, r) => l | r)
+      edge.SourceNode.IsVisited
+        .CombineLatest(edge.TargetNode.IsVisited, (l, r) => l || r)
         .Subscribe(b =>
         {
-          cg.DOFade(b ? 1 : 0, b ? 1 : 0).SetEase(Ease.OutQuad);
+
         })
         .AddTo(this);
 
-      model.OnDestroy += modelDestoryHandler;
+      edge.OnDestroy += modelDestoryHandler;
     }
-    get { return this.model; }
+    get { return this.edge; }
   }
   void modelDestoryHandler(object sender, EventArgs e)
   {
@@ -71,9 +68,9 @@ public class EdgePresenter : MonoBehaviour
 
   void OnDestroy()
   {
-    if(model != null)
+    if(edge != null)
     {
-      model.OnDestroy -= modelDestoryHandler;
+      edge.OnDestroy -= modelDestoryHandler;
     }
     typeResources.Dispose();
   }

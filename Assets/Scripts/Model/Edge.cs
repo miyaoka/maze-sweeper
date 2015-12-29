@@ -8,9 +8,8 @@ public class Edge
   public readonly Node SourceNode;
   public readonly Node TargetNode;
   public readonly Vector2 Coords;
-  public readonly IntVector2 Vector;
-  public readonly float Deg;
-  public ReactiveProperty<EdgeType> Type = new ReactiveProperty<EdgeType>(EdgeType.passage);
+  public readonly float Angle;
+  public ReactiveProperty<int> Type = new ReactiveProperty<int>();
   public bool HasView = false;
   public Edge(Node sourceNode, Node targetNode)
   {
@@ -18,13 +17,14 @@ public class Edge
     this.TargetNode = targetNode;
     sourceNode.AddEdge(this);
     targetNode.AddEdge(this);
-    Vector = targetNode.Coords - sourceNode.Coords;
     Coords = (Vector2)(sourceNode.Coords + targetNode.Coords) * .5f;
-    Deg = Mathf.Atan2(Vector.Y, Vector.X) * Mathf.Rad2Deg;
+
+    Angle = getAngle(sourceNode, targetNode);
 
     sourceNode.OnDestroy += nodeDestoryHandler;
     targetNode.OnDestroy += nodeDestoryHandler;
   }
+
   //undirected node
   public Node OppositeNode(Node node)
   {
@@ -40,6 +40,16 @@ public class Edge
     {
       throw new UnityException("Illegal node");
     }
+  }
+  public float GetAngleFromNode(Node sourceNode)
+  {
+    var targetNode = OppositeNode(sourceNode);
+    return getAngle(sourceNode, targetNode);
+  }
+  float getAngle(Node sourceNode, Node targetNode)
+  {
+    var Vector = targetNode.Coords - sourceNode.Coords;
+    return Mathf.Atan2(Vector.Y, Vector.X) * Mathf.Rad2Deg;
   }
   public event EventHandler OnDestroy;
   public void Destroy(object sender)
@@ -57,4 +67,10 @@ public class Edge
   {
     Destroy(sender);
   }
+}
+public class EdgeType
+{
+  public const int Passage = 1 << 1;
+  public const int Locked = 1 << 2;
+
 }

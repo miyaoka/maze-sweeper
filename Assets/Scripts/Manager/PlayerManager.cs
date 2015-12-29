@@ -15,14 +15,14 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
   GameObject player;
   public ReactiveProperty<IntVector2> CurrentCoords = new ReactiveProperty<IntVector2>();
   public ReactiveProperty<IntVector2> DestCoords = new ReactiveProperty<IntVector2>();
-  public ReactiveProperty<int> Health = new ReactiveProperty<int>(5);
+  public ReactiveProperty<int> Health = new ReactiveProperty<int>();
 
   Sequence sq;
   GraphManager gm;
 
   void Awake()
   {
-    if(this != Instance)
+    if (this != Instance)
     {
       Destroy(this);
       return;
@@ -34,9 +34,9 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
   }
   public void MoveDir(Dirs dir)
   {
-    if(sq != null)
+    if (sq != null)
     {
-      if(sq.IsPlaying())
+      if (sq.IsPlaying())
       {
         CurrentCoords.Value = DestCoords.Value;
       }
@@ -52,18 +52,18 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
       ? true
       : sr.flipX;
 
-    /*
-    var edge = gm.graph.getNode(currentCoords.Value, dir);
+    var node = gm.graph.GetNode(CurrentCoords.Value);
+    var edge = node.EdgeArray[(int)dir];
     if (edge == null) {
       return;
     }
-    */
+
     MovePos(CurrentCoords.Value + GraphModel.DirCoords[(int)dir]);
   }
   public void MovePos(IntVector2 dest)
   {
     var node = gm.VisitNode(dest);
-    if(node == null)
+    if (node == null)
     {
       return;
     }
@@ -72,13 +72,19 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
     CameraManager.Instance.MovePos(dest);
 
     //if already moving, force complete.
-    if(sq != null)
+    if (sq != null)
     {
       sq.Kill();
     }
     sq = DOTween.Sequence();
 
     startWalk();
+
+    GameManager.Instance.alertCount.Value = node.AlertCount.Value = gm.graph.ScanEnemies(dest);
+    if (node.AlertCount.Value > 0)
+    {
+      AudioManager.EnemyDetect.Play();
+    }
 
     sq.Append(player.transform
       .DOLocalMove(gm.CoordsToVec3(dest), 1f)
@@ -97,37 +103,42 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
   {
     CurrentCoords.Value = dest;
     var ec = node.EnemyCount.Value;
-    if(ec > 0)
+    if (ec > 0)
     {
       Debug.Log("enemy:" + ec);
       Health.Value -= ec;
       gm.ClearNodeEnemy(node);
 
-      AudioManager.maleScream.Play();
-      while(ec-- > 0)
+      AudioManager.MaleScream.Play();
+      while (ec-- > 0)
       {
         createDead(dest);
       }
 
     }
-    if(node.isExit.Value)
+    if (node.isExit.Value)
     {
       GameManager.Instance.onExit();
     }
-    GameManager.Instance.alertCount.Value = node.AlertCount.Value = gm.graph.ScanEnemies(dest);
+    if (node.HasItem.Value)
+    {
+      AudioManager.Powerup.Play();
+      Health.Value += 1;
+      node.HasItem.Value = false;
+    }
   }
 
   private void stopWalk()
   {
     player.GetComponentInChildren<Animator>().SetBool("isWalking", false);
-    AudioManager.Instance.StopLoop(AudioManager.walk);
+    AudioManager.Instance.StopLoop(AudioManager.Walk);
   }
 
   private void startWalk()
   {
-//    AudioManager.door.Play();
+    //    AudioManager.door.Play();
     player.GetComponentInChildren<Animator>().SetBool("isWalking", true);
-    AudioManager.Instance.PlayLoop(AudioManager.walk);
+    AudioManager.Instance.PlayLoop(AudioManager.Walk);
   }
 
   public void SetPos(IntVector2 dest)

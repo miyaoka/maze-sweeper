@@ -3,13 +3,12 @@ using System.Collections;
 using System.Collections.Generic;
 using UniRx;
 using System;
+using System.Linq;
 
 public class Node
 {
-  public List<Edge> EdgeList = new List<Edge>();
   public readonly IntVector2 Coords;
   public ReactiveProperty<int> Degree = new ReactiveProperty<int>();
-
   public ReactiveProperty<int> EnemyCount = new ReactiveProperty<int>(0);
   public ReactiveProperty<int> AlertCount = new ReactiveProperty<int>(0);
   public ReactiveProperty<bool> IsVisited = new ReactiveProperty<bool>();
@@ -19,6 +18,17 @@ public class Node
   public ReactiveProperty<bool> HasItem = new ReactiveProperty<bool>(false);
   public bool HasView = false;
 
+  public readonly Edge[] EdgeArray = new Edge[4];
+
+  public List<Edge> EdgeList
+  {
+    get
+    {
+      return EdgeArray
+        .Where(e => e != null)
+        .ToList<Edge>();
+    }
+  }
 
   public Node(IntVector2 coords)
   {
@@ -40,13 +50,25 @@ public class Node
 
   public void AddEdge(Edge e)
   {
-    EdgeList.Add(e);
+    int d = edgeAngleIndex(e);
+    EdgeArray[d] = e;
+
+    //    EdgeList.Add(e);
     updateDegree();
   }
+
   public void RemoveEdge(Edge e)
   {
-    EdgeList.Remove(e);
+    int d = edgeAngleIndex(e);
+    EdgeArray[d] = null;
+    //    EdgeList.Remove(e);
     updateDegree();
+  }
+
+  private int edgeAngleIndex(Edge e)
+  {
+    //normalize degree to 0 - 3
+    return ((int)e.GetAngleFromNode(this) + 360) % 360 / 90;
   }
 
   void updateDegree()
