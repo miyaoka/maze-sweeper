@@ -38,6 +38,9 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
       Destroy(this);
       return;
     }
+    QualitySettings.vSyncCount = 0;
+    Application.targetFrameRate = 60;
+
     cm = GetComponent<ControlManager>();
     pm = PlayerManager.Instance;
   }
