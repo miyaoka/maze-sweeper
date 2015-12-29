@@ -40,8 +40,8 @@ public class EdgePresenter : MonoBehaviour
       var mts = walls.Select(w => w.GetComponent<Renderer>().material).ToList();
       mts.ForEach(m => m.DOFade(0, 0));
       //player is on the one of nodes
-      edge.SourceNode.OnHere
-        .CombineLatest(edge.TargetNode.OnHere, (l, r) => l || r)
+      edge.SourceNode.OnDest
+        .CombineLatest(edge.TargetNode.OnDest, (l, r) => l || r)
         .Subscribe(b =>
         {
           mts.ForEach(m => m.DOFade(b ? .5f : 0, .2f).SetEase(Ease.OutQuad));

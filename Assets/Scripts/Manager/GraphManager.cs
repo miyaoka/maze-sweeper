@@ -203,6 +203,13 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
     edge.HasView = true;
   }
 
+  public void BreachWall(IntVector2 coords, int dir)
+  {
+    AudioManager.Breach.Play();
+    var e = graph.CreateEdge(coords, coords + GraphModel.DirCoords[dir]);
+    addEdgeView(e);
+  }
+
   public Vector3 CoordsToVec3(Vector2 coords)
   {
     return new Vector3(coords.x * GridUnit, 0, coords.y * GridUnit);
