@@ -36,6 +36,8 @@ public class LevelConfigDialogPresenter : DialogPresenterBase
   Text enemyText;
   [SerializeField]
   Button submitBtn;
+  [SerializeField]
+  Button showAllBtn;
   void Awake()
   {
     panel.SetActive(false);
@@ -68,7 +70,10 @@ public class LevelConfigDialogPresenter : DialogPresenterBase
     submitBtn.onClick.AddListener(() => submit(new LevelConfigDialogDetail((int)colSlider.value, (int)rowSlider.value, enemySlider.value)));
     submitBtn.onClick.AddListener(closePanel);
 
-    if(abort != null)
+    showAllBtn.onClick.AddListener(() => GraphManager.Instance.ShowAllNode());
+    showAllBtn.onClick.AddListener(closePanel);
+
+    if (abort != null)
     {
       outOfPanelBtn.onClick.AddListener(abort);
       outOfPanelBtn.onClick.AddListener(closePanel);
