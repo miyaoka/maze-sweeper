@@ -1,28 +1,31 @@
-﻿using UnityEngine;
-using UnityEngine.UI;
-using System.Collections;
-using System.Collections.Generic;
+﻿using DG.Tweening;
+using System;
 using UniRx;
+using UnityEngine;
+using UnityEngine.UI;
 using System.Linq;
-using DG.Tweening;
-public class EdgePresenter : MonoBehaviour{
-  [SerializeField] Image edgeImage;
-  [SerializeField] CanvasGroup cg;
-
+public class EdgePresenter : MonoBehaviour
+{
+  [SerializeField]
+  GameObject[] walls = new GameObject[2];
+  [SerializeField]
+  GameObject floor;
 
   CompositeDisposable typeResources = new CompositeDisposable();
   CompositeDisposable modelResources = new CompositeDisposable();
   Tweener t;
 
-  private EdgeModel model;
-  public EdgeModel Model
+  private Edge edge;
+  public Edge Edge
   {
-    set { 
-      this.model = value; 
+    set
+    {
+      this.edge = value;
 
-      modelResources.Clear ();
+      modelResources.Clear();
 
       //change image by edgetype
+      /*
       model.type
         .Where(t => t != null)
         .Subscribe(t => {
@@ -32,78 +35,43 @@ public class EdgePresenter : MonoBehaviour{
             .AddTo(typeResources);
         })
         .AddTo(this); 
+        */
 
-
+      var mts = walls.Select(w => w.GetComponent<Renderer>().material).ToList();
+      mts.ForEach(m => m.DOFade(0, 0));
       //player is on the one of nodes
-      model.nodes[0].onHere
-        .CombineLatest(model.nodes[1].onHere, (l,r) => l | r)
-        .Subscribe(b => {
-          if(t != null){
-            t.Kill();
-          }
-          t = edgeImage.DOColor(b ? new Color(.8f, .8f, .8f) : new Color(.4f, .4f, .4f), b ? 1f : .2f).SetEase(Ease.OutQuad);
-
-        })
+      edge.SourceNode.OnHere
+        .CombineLatest(edge.TargetNode.OnHere, (l, r) => l || r)
+        .Subscribe(b =>
+        {
+          mts.ForEach(m => m.DOFade(b ? .5f : 0, .2f).SetEase(Ease.OutQuad));
+         })
         .AddTo(this);
 
       //visited one of nodes
-      model.nodes[0].visited
-        .CombineLatest(model.nodes[1].visited, (l,r) => l | r)
-        .Subscribe(b => {
-          cg.DOFade(b ? 1 : 0, b ? 1 : 0).SetEase(Ease.OutQuad);
+      edge.SourceNode.IsVisited
+        .CombineLatest(edge.TargetNode.IsVisited, (l, r) => l || r)
+        .Subscribe(b =>
+        {
+
         })
         .AddTo(this);
 
+      edge.OnDestroy += modelDestoryHandler;
     }
-    get { return this.model; }
+    get { return this.edge; }
   }
-  /*
-  void Start () {
-//    view.SetActive (false);
+  void modelDestoryHandler(object sender, EventArgs e)
+  {
+    Destroy(gameObject);
+  }
 
-    //両端nodeが設定されている場合
-    Observable
-      .CombineLatest<NodePresenter> (nodeFrom, nodeTo)
-      .Subscribe (nlist => {
-        nodeResources.Clear ();
-        if(nlist.Contains(null)){
-          view.SetActive(false);
-          return;
-        }
-        //接nodeに居る場合はハイライト
-        nodeFrom.Value.onHere
-          .CombineLatest(nodeTo.Value.onHere, (l,r) => l || r)
-          .Subscribe(h => {
-            edgeImage.color = h ? new Color(.8f, .8f, .8f) : new Color(.4f, .4f, .4f);
-          })
-          .AddTo(nodeResources);
-        //接node未探訪の場合は非表示
-        nodeFrom.Value.visited
-          .CombineLatest(nodeTo.Value.visited, (l,r) => l || r)
-          .Subscribe(v => {
-            view.SetActive(v);
-          })
-          .AddTo(nodeResources);
-    }).AddTo (this);
-    
-    type
-      .Where(t => t != null)
-      .Subscribe(t => {
-        typeResources.Clear();
-        t.isPassable
-          .Subscribe(p => edgeImage.gameObject.SetActive(p))
-          .AddTo(typeResources);
-      })
-      .AddTo(this); 
-  }
-  public void breach(){
-    var t = type.Value;
-    t.breach ();
-    type.Value = type.Value.breach ();
-  }
-    */
   void OnDestroy()
   {
-    typeResources.Dispose ();
+    if(edge != null)
+    {
+      edge.OnDestroy -= modelDestoryHandler;
+    }
+    typeResources.Dispose();
   }
 }

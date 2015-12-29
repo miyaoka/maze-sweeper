@@ -4,125 +4,141 @@ using System.Collections.Generic;
 using UniRx;
 using UniRx.Triggers;
 using UnityEngine.UI;
-public enum ViewState {Move, Map, Battle};
-public enum State {Init, EnterLevel, OnLevel, ExitLevel};
-public class GameManager : SingletonMonoBehaviour<GameManager>{
-  [SerializeField] GameObject playerPrefab;
-  [SerializeField] GameObject dialogPrefab;
-  [SerializeField] Transform dialogContainer;
-  [SerializeField] SkyCameraPresenter skycam;
+public enum ViewState { Move, Map, Battle };
+public enum State { Init, EnterLevel, OnLevel, ExitLevel };
+public class GameManager : SingletonMonoBehaviour<GameManager>
+{
+  [SerializeField]
+  SkyCameraPresenter skycam;
 
-  [SerializeField] GameObject scene;
-  [SerializeField] GameObject hud;
+  [SerializeField]
+  GameObject hud;
 
   public ReactiveProperty<int> alertCount = new ReactiveProperty<int>();
   public ReactiveProperty<int> enemyCount = new ReactiveProperty<int>();
-  public ReactiveProperty<ViewState> viewState = new ReactiveProperty<ViewState> ();
-
-  GridManager gridManager;
-
+  public ReactiveProperty<float> LevelTimer = new ReactiveProperty<float>();
+  public ReactiveProperty<ViewState> viewState = new ReactiveProperty<ViewState>();
   public State state = State.Init;
-  ReactiveProperty<bool> waitingInput = new ReactiveProperty<bool> (true);
 
-  int col = 25;
-  int row = 25;
+
+  int col = 15;
+  int row = 30;
   float enemy = .08f;
   bool passExit = false;
   ControlManager cm;
+  PlayerManager pm;
+  IConnectableObservable<float> timerUpdate;
+  System.IDisposable timerConnect;
 
-  void Awake ()
+
+  void Awake()
   {
-    if (this != Instance) {
-      Destroy (this);
+    if (this != Instance)
+    {
+      Destroy(this);
       return;
     }
-    cm = GetComponent<ControlManager> ();
+    cm = GetComponent<ControlManager>();
+    pm = PlayerManager.Instance;
   }
-  void Start(){
-    gridManager = GetComponent<GridManager> ();
+  void Start()
+  {
+    timerUpdate = Observable
+      .EveryFixedUpdate()
+      .Select(_ => Time.fixedDeltaTime)
+      .Publish();
+
+    timerUpdate.Subscribe(t => LevelTimer.Value -= t);
 
     viewState
-      .Subscribe (v => {
-          cm.enabled = viewState.Value == ViewState.Map ? false : true;
+      .Subscribe(v =>
+      {
+        cm.enabled = viewState.Value == ViewState.Map ? false : true;
       })
-      .AddTo (this);
+      .AddTo(this);
 
-    Debug.Log ("--start");
-    StartCoroutine (gameLoop());
-    Debug.Log ("--end");
+    Debug.Log("--start");
+    StartCoroutine(gameLoop());
+    Debug.Log("--end");
   }
 
-  void removeDialog(){
-    foreach(Transform t in dialogContainer)
-    {
-      Destroy(t.gameObject);
-    }
-  }
-  public void restart(){
-    StartCoroutine (levelConfig ());
+  public void LevelConfig()
+  {
+    StartCoroutine(levelConfig());
   }
 
-  IEnumerator gameLoop(){
-    Debug.Log ("enter");
-    yield return StartCoroutine (enterLevel ());
-    Debug.Log ("onGame");
-    yield return StartCoroutine (onLevel ());
-    Debug.Log ("exit");
-    yield return StartCoroutine (exitLevel ());
+  IEnumerator gameLoop()
+  {
+    Debug.Log("enter");
+    yield return StartCoroutine(enterLevel());
+    Debug.Log("onGame");
+    yield return StartCoroutine(onLevel());
+    Debug.Log("exit");
+    yield return StartCoroutine(exitLevel());
 
-    StartCoroutine (gameLoop());
+    StartCoroutine(gameLoop());
   }
-  IEnumerator enterLevel(){
-    PlayerManager.Instance.health.Value = 5;
-    GridManager.Instance.initGrid (col, row, enemy);
+  IEnumerator enterLevel()
+  {
+    var pn = GraphManager.Instance.InitGrid(col, row, enemy);
+    pm.Health.Value = 3;
+    alertCount.Value = 0;
+    viewState.Value = ViewState.Move;
+    LevelTimer.Value = 60f * 5f;
+
+    timerConnect = timerUpdate.Connect();
+      
+
+    Debug.Log(pn.Coords);
+    pm.SetPos(pn.Coords);
+
     yield return 0;
   }
-  IEnumerator levelConfig(){
-    hud.SetActive (false);
+  IEnumerator levelConfig()
+  {
+    hud.SetActive(false);
     bool onConfig = true;
     cm.enabled = false;
-    MenuManager.Instance.levelConfigDialog ().open (
-      new LevelConfigDialogDetail (col, row, enemy),
-      (param) => {
-        col = param.col;
-        row = param.row;
-        enemy = param.enemy;
-        StartCoroutine (enterLevel());
-        skycam.randomRotate ();
+    MenuManager.Instance.LevelConfigDialog().Open(
+      new LevelConfigDialogDetail(col, row, enemy),
+      (param) =>
+      {
+        col = param.Col;
+        row = param.Row;
+        enemy = param.Enemy;
+        StartCoroutine(enterLevel());
+        skycam.RandomRotate();
         onConfig = false;
       },
       () => { onConfig = false; }
     );
-    while (onConfig) {
+    while (onConfig)
+    {
       yield return null;
     }
     cm.enabled = true;
-    hud.SetActive (true);
+    hud.SetActive(true);
   }
-  IEnumerator onLevel(){
+  IEnumerator onLevel()
+  {
     passExit = false;
-    while (PlayerManager.Instance.health.Value > 0 && !passExit) {
+    while (PlayerManager.Instance.Health.Value > 0 && !passExit && LevelTimer.Value > 0)
+    {
       yield return null;
     }
   }
-  IEnumerator exitLevel(){
-    
+  IEnumerator exitLevel()
+  {
+
     cm.enabled = false;
     var isOpen = true;
+    LevelTimer.Value = 0;
+    timerConnect.Dispose();
 
-    if (PlayerManager.Instance.health.Value > 0) {
-      MenuManager.Instance.modalDialog ().open (
-        "level cleared!\nyou rescued " + PlayerManager.Instance.health.Value.ToString() + " survivors.", 
-        new List<DialogOptionDetails> {
-          new DialogOptionDetails ("ok", () => {
-            isOpen = false;
-            cm.enabled = true;
-          }),
-        }
-      );      
-    } else {
-      MenuManager.Instance.modalDialog ().open (
-        "You are dead...", 
+    if (passExit)
+    {
+      MenuManager.Instance.ModalDialog().Open(
+        "level cleared!\nyou rescued " + PlayerManager.Instance.Health.Value.ToString() + " survivors.",
         new List<DialogOptionDetails> {
           new DialogOptionDetails ("ok", () => {
             isOpen = false;
@@ -131,18 +147,35 @@ public class GameManager : SingletonMonoBehaviour<GameManager>{
         }
       );
     }
-    while (isOpen) {
+    else
+    {
+//      GraphManager.Instance.DestroyGrid();
+      viewState.Value = ViewState.Map;
+      MenuManager.Instance.ModalDialog().Open(
+        "You are dead...",
+        new List<DialogOptionDetails> {
+          new DialogOptionDetails ("ok", () => {
+            isOpen = false;
+            cm.enabled = true;
+          }),
+        }
+      );
+    }
+    while (isOpen)
+    {
       yield return null;
     }
   }
-  public void onExit(){
-    StartCoroutine (onExitC());
+  public void onExit()
+  {
+    StartCoroutine(onExitC());
   }
-  IEnumerator onExitC(){
+  IEnumerator onExitC()
+  {
     cm.enabled = false;
     var isOpen = true;
-    MenuManager.Instance.modalDialog().open(
-      "[Exit]\nGo to next level?", 
+    MenuManager.Instance.ModalDialog().Open(
+      "[Exit]\nGo to next level?",
       new List<DialogOptionDetails>{
         new DialogOptionDetails("Yes", ()=> {
           passExit = true;
@@ -153,17 +186,15 @@ public class GameManager : SingletonMonoBehaviour<GameManager>{
         }),
       }
     );
-    while (isOpen) {
+    while (isOpen)
+    {
       yield return null;
     }
     cm.enabled = true;
   }
 
-  public void toggleMap(){
+  public void toggleMap()
+  {
     viewState.Value = viewState.Value == ViewState.Map ? ViewState.Move : ViewState.Map;
   }
-
-
-
-
 }

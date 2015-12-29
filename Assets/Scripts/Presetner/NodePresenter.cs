@@ -1,221 +1,178 @@
 ﻿using UnityEngine;
-using UnityEngine.UI;
-using System.Collections;
-using System.Collections.Generic;
 using UniRx;
-using System.Linq;
 using DG.Tweening;
+using UnityEngine.UI;
+using System;
+using Random = UnityEngine.Random;
 
-public class NodePresenter : MonoBehaviour {
-  [SerializeField] CanvasGroup cg;
-  [SerializeField] public Image floor;
-  [SerializeField] Image wall;
-  [SerializeField] CanvasGroup tile;
-  [SerializeField] Text alertCountText;
-  [SerializeField] Text enemyCountText;
+public class NodePresenter : MonoBehaviour
+{
+  [SerializeField]
+  Light roomLight;
+  [SerializeField]
+  GameObject alert;
+  [SerializeField]
+  GameObject wallContainer;
+  [SerializeField]
+  GameObject tiles;
+  [SerializeField]
+  GameObject beacon;
+  [SerializeField]
+  GameObject floor;
+  [SerializeField]
+  GameObject interiorPrefab;
+  [SerializeField]
+  WallPresenter[] walls = new WallPresenter[4];
 
-  //  public ReactiveProperty<int> enemyCount = new ReactiveProperty<int> (0);
-  //  public ReactiveProperty<int> alertCount = new ReactiveProperty<int> (0);
-  //  public ReactiveProperty<bool> visited = new ReactiveProperty<bool> ();
-  //  public ReactiveProperty<bool> onHere = new ReactiveProperty<bool> ();
-  //  public ReactiveProperty<IntVector2> coords = new ReactiveProperty<IntVector2>();
-  //  public ReactiveProperty<List<NodePresenter>> neighborNodes = new ReactiveProperty<List<NodePresenter>>( new List<NodePresenter>() );
-
-  //  List<CharacterPresenter> survivers = new List<CharacterPresenter> ();
-  //  List<CharacterPresenter> enemies = new List<CharacterPresenter> ();
-
-  //  CompositeDisposable envResources = new CompositeDisposable();
-
-
-  CompositeDisposable modelResources = new CompositeDisposable();
-  float fadeIn = .5f;
-  float fadeOut = .1f;
-  private NodeModel model;
-  Sequence sq;
-  Sequence wallSq;
-  public NodeModel Model
+  Node node;
+  Tweener lightTw;
+  Text alertText;
+  float lightMax = 1.0f;
+  float lightMin = 0f;
+  void Awake()
   {
-    set { 
-      this.model = value; 
-      sq = DOTween.Sequence ();
+    roomLight.intensity = 0;
+    lightTw = roomLight.DOIntensity(0, 0);//.SetLoops (10, LoopType.Yoyo);
+    roomLight.enabled = false;
 
-      modelResources.Clear ();
+    tiles.SetActive(false);
+    alertText = alert.GetComponent<Text>();
+  }
 
-      model.alertCount
+  public Node Node
+  {
+    set
+    {
+      this.node = value;
+
+      var mt = floor.GetComponent<Renderer>().material;
+      mt.EnableKeyword("_EMISSION");
+
+      node.AlertCount
         .DistinctUntilChanged()
-        .Subscribe (c => alertCountText.text = c == 0 ? "" : c.ToString())
-        .AddTo (this);
-      model.enemyCount
+        .Subscribe(c =>
+        {
+          alertText.text = c == 0 ? "" : c.ToString();
+        })
+        .AddTo(this);
+      node.EnemyCount
         .DistinctUntilChanged()
-        .Subscribe (c => enemyCountText.text = c == 0 ? "" : c.ToString())
-        .AddTo (this);
+        .Subscribe(c =>
+        {
+        })
+        .AddTo(this);
 
-      var activeFloorColor = new Color (Random.Range (.7f, .9f), Random.Range (.7f, .9f),Random.Range (.7f, .9f));
-      var visitedFloorColor = new Color (.2f, .2f, .2f);
-      activeFloorColor = new Color(.8f,.8f,.8f);
 
-      model.onHere
-        .Subscribe (b => {
-          var fade = b ? fadeIn : fadeOut;
-
-          sq.Kill ();
-          sq = DOTween.Sequence();
-          if(b) {
+      node.OnHere
+        .CombineLatest(node.OnDest, (l, r) => l || r)
+        .Subscribe(b => wallContainer.SetActive(b))
+        .AddTo(this);
+      node.OnHere
+        .Subscribe(b =>
+        {
+          if (b)
+          {
             //            sq.PrependInterval(.5f);
           }
-          sq.Append(floor.DOColor(b ? activeFloorColor : visitedFloorColor, fade ).SetEase(Ease.OutQuad));
-          //          sq.Join(wall.DOColor(b ? new Color(.8f, .8f, .8f) : new Color(.2f, .2f, .2f), fade).SetEase(Ease.OutQuad));
-          //          sq.Join(wall.DOFade(b ? 1 : 0, fade).SetEase(Ease.OutQuad));
-          sq.Join(tile.DOFade(b ? 1 : 0, fade).SetEase(Ease.OutQuad));
-          //                  wall.gameObject.SetActive(b);
-        })
-        .AddTo (this);
-      model.onDest
-        .Subscribe (b => {
-          if(b){
-            wall.color = new Color(.2f, .2f, .2f, 0);
+          else
+          {
           }
-          if(wallSq != null){
-            wallSq.Kill();
+        })
+        .AddTo(this);
+
+      var deadend =
+      node.Degree
+        .Select(d => d == 1)
+        .ToReactiveProperty();
+
+      var hasEnemy =
+        node.EnemyCount
+        .Select(c => c > 0)
+        .ToReactiveProperty();
+
+
+      deadend
+        .CombineLatest(node.HasItem, hasEnemy, node.AlertCount, node.isExit, (d, i, e, a, x) =>
+      new Color(
+          e ? 1 : (a > 0 ? .1f : 0),
+          i ? 1 : (d ? 0f : 0),
+          x ? 1 : 0))
+        .Subscribe(c =>
+        {
+          mt.SetColor("_EmissionColor", c);
+        })
+        .AddTo(this);
+
+
+      node.OnDest
+        .Subscribe(b =>
+        {
+          if (b)
+          {
+            tiles.SetActive(b);
+
+            roomLight.enabled = true;
+            lightTw.Kill();
+            lightTw = roomLight.DOIntensity(lightMax, Random.Range(.4f, .6f)).SetEase(Ease.InQuad);
           }
-          wallSq = DOTween.Sequence();
-          wallSq.Append(wall.DOFade(b ? 1 : 0, b ? .8f : .5f).SetEase(Ease.OutQuad));
-          wallSq.Append(wall.DOColor(b ? new Color(.8f, .8f, .8f, 1) : new Color(.2f, .2f, .2f, 0), b ? .5f : .2f).SetEase(Ease.OutQuad));
-        })
-        .AddTo (this);
-      model.visited
-        .Where (b => b)
-        .DistinctUntilChanged()
-        //      .Select (c => neighborBombCount())
-        .Subscribe (c => {
-          //        watchEnvs();
-        })
-        .AddTo (this);
+          else
+          {
+            lightTw.Kill();
+            lightTw = roomLight.DOIntensity(lightMin, Random.Range(.3f, .5f)).SetEase(Ease.OutQuad).SetDelay(.5f)
+              .OnComplete(() =>
+              {
+                roomLight.enabled = false;
+                tiles.SetActive(b);
 
-
-      model.visited
-        .DistinctUntilChanged()
-        .Subscribe (b =>  {
-          cg.DOFade(b ? 1 : 0, b ? 1 : 0).SetEase(Ease.OutQuad);
-        })
-        .AddTo (this);
-
-
-    }
-    get { return this.model; }
-  }
-  /*
-  void Awake(){
-    
-  }
-  void Start () {
-    onHere = 
-      GridManager.Instance
-        .currentNode
-        .Select(n => n == this)
-        .DistinctUntilChanged ()
-        .ToReactiveProperty ();
-    alertCount
-      .DistinctUntilChanged()
-      .Subscribe (c => alertCountText.text = c == 0 ? "" : c.ToString())
-      .AddTo (this);
-    enemyCount
-      .DistinctUntilChanged()
-      .Subscribe (c => enemyCountText.text = c == 0 ? "" : c.ToString())
-      .AddTo (this);
-
-
-    var activeFloorColor = new Color (Random.Range (.7f, .9f), Random.Range (.7f, .9f),Random.Range (.7f, .9f));
-    var visitedFloorColor = new Color (.2f, .2f, .2f);
-    activeFloorColor = new Color(.8f,.8f,.8f);
-
-    onHere
-      .Subscribe (b => {
-        floor.DOColor(b ? activeFloorColor : visitedFloorColor, .3f).SetEase(Ease.OutQuad);
-        wall.DOFade(b ? 1 : 0, .3f).SetEase(Ease.OutQuad);
-//        wall.gameObject.SetActive(b);
-        tile.gameObject.SetActive(b);
-      })
-      .AddTo (this);
-
-    visited
-      .Where (b => b)
-      .DistinctUntilChanged()
-//      .Select (c => neighborBombCount())
-      .Subscribe (c => {
-//        watchEnvs();
-      })
-      .AddTo (this);
-    
-
-    visited
-      .DistinctUntilChanged()
-      .Subscribe (b =>  {
-        view.SetActive (b);
-      })
-      .AddTo (this);
-
-
-  }
-  public int scanEnemies(){
-    var ns = Neighbors;
-    var count = 0;
-    foreach (var n in ns) {
-      count += n.enemyCount.Value;
-    }
-    alertCount.Value = count;
-    return count;
-  }
-  void watchEnvs(){
-    envResources.Clear ();
-
-    var enemies = new List<ReactiveProperty<int>> {};
-    foreach (var c in Neighbors) {
-      enemies.Add (c.enemyCount);
-    }
-
-    Observable
-      .CombineLatest (enemies.ToArray ())
-      .Select (list => list.Sum())
-      .Subscribe (v => alertCount.Value = v)
-      .AddTo (envResources);
-  }
-  int neighborBombCount(){
-    var ns = Neighbors;
-    var count = 0;
-    Debug.Log ("n:" + coords.Value.x + "," + coords.Value.y + " - " + ns.Count);
-    foreach (var n in ns) {
-      count += n.enemyCount.Value;
-      Debug.Log (n.enemyCount.Value);
-    }
-    return count;
-  }
-
-  private List<NodePresenter> neighbors;
-  public List<NodePresenter> Neighbors {
-    get {
-      if (neighbors == null) {
-        neighbors = new List<NodePresenter> ();
-        var cd = coords.Value;
-        for (var ny = cd.y - 1; ny <= cd.y + 1; ny++) {
-          for (var nx = cd.x - 1; nx <= cd.x + 1; nx++) {
-            NodePresenter neignbor;
-            try {
-              neignbor = GridManager.Instance.nodes [nx, ny];
-            } catch {
-              continue;
-            }
-            neighbors.Add (neignbor);
+              });
           }
+        })
+        .AddTo(this);
+
+      node.isExit
+        .Subscribe(b =>
+        {
+          beacon.SetActive(b);
+        });
+
+      foreach(var w in walls)
+      {
+        w.Node = node;
+      }
+
+      for(var i = 0; i < 4; i++)
+      {
+        if(Random.value < .3f)
+        {
+          addInterior(i);
         }
       }
-      return neighbors;
-    }
-  }
 
+      node.OnDestroy += modelDestoryHandler;
+    }
+    get { return this.node; }
+  }
+  //dir 0-3
+  void addInterior(int dir)
+  {
+    var scale = new Vector3(Random.Range(.5f, 3f), Random.Range(.5f, 4f), Random.Range(.5f, 3f));
+    var halfRoomSize = 4.9f;
+    var pos = new Vector3(halfRoomSize - scale.x * .5f, scale.y * .5f, halfRoomSize - scale.z * .5f);
+    pos.x *= dir % 2 == 0 ? 1 : -1;
+    pos.z *= dir / 2 > 0 ? 1 : -1;
+    var obj = Instantiate(interiorPrefab, pos, Quaternion.identity) as GameObject;
+    obj.transform.SetParent(wallContainer.transform, false);
+    obj.transform.localScale = scale;
+  }
+  void modelDestoryHandler(object sender, EventArgs e)
+  {
+    Destroy(gameObject);
+  }
   void OnDestroy()
   {
-    envResources.Dispose ();
+    if (node != null)
+    {
+      node.OnDestroy -= modelDestoryHandler;
+    }
   }
-*/
 }

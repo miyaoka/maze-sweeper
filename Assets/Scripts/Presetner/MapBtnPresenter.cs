@@ -2,31 +2,34 @@
 using System.Collections;
 using UnityEngine.UI;
 using UniRx;
-public class MapBtnPresenter : MonoBehaviour {
-
-	// Use this for initialization
-	void Start () {
+public class MapBtnPresenter : MonoBehaviour
+{
+  void Start()
+  {
     var gm = GameManager.Instance;
-    var btn = GetComponent<Button> ();
-    var text = GetComponentInChildren<Text> ();
+    var btn = GetComponent<Button>();
+    var text = GetComponentInChildren<Text>();
 
     btn
       .OnClickAsObservable()
-      .Subscribe (b => {
+      .Subscribe(b =>
+      {
         gm.viewState.Value = gm.viewState.Value == ViewState.Map ? ViewState.Move : ViewState.Map;
       })
-      .AddTo(this); 
+      .AddTo(this);
 
     gm.viewState
-      .Subscribe (v => {
+      .Subscribe(v =>
+      {
         text.text = gm.viewState.Value == ViewState.Map ? "move" : "map";
-    })
-      .AddTo (this);
+      })
+      .AddTo(this);
 
     gm.viewState
-      .Select (v => v == ViewState.Battle)
-      .Subscribe (b => {
-    })
-      .AddTo (this);
-	}
+      .Select(v => v == ViewState.Battle)
+      .Subscribe(b =>
+      {
+      })
+      .AddTo(this);
+  }
 }

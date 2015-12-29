@@ -3,11 +3,14 @@ using System.Collections;
 using UnityEngine.Rendering;
 
 [RequireComponent(typeof(SpriteRenderer))]
-public class SpriteShadow : MonoBehaviour {
+public class SpriteShadow : MonoBehaviour
+{
 
-  [SerializeField] ShadowCastingMode shadow = ShadowCastingMode.On;
+  [SerializeField]
+  ShadowCastingMode shadow = ShadowCastingMode.On;
 
-  void Awake () {
-    GetComponent<SpriteRenderer> ().shadowCastingMode = shadow;
+  void Awake()
+  {
+    GetComponent<SpriteRenderer>().shadowCastingMode = shadow;
   }
 }
