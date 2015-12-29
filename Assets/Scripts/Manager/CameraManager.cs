@@ -15,7 +15,7 @@ public class CameraManager : SingletonMonoBehaviour<CameraManager>
   [SerializeField]
   Camera bgCam;
   GraphManager gm;
-  float[] heights = { 30, 250, 0 };
+  float[] heights = { 25, 200, 0 };
   float baseRatio = 16f / 9f;
   ReactiveProperty<float> aspect = new ReactiveProperty<float>(1);
 
@@ -35,7 +35,7 @@ public class CameraManager : SingletonMonoBehaviour<CameraManager>
       .ObserveEveryValueChanged(c => c.aspect)
       .ToReactiveProperty();
 
-    gm.viewState
+    gm.ViewState
       .CombineLatest(aspect, (v, a) => heights[(int)v] * Mathf.Pow(baseRatio / a, .5f))
       .Subscribe(f =>
       {

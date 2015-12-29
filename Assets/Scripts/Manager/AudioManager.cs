@@ -8,6 +8,7 @@ public class AudioManager : SingletonMonoBehaviour<AudioManager>
   public static AudioSource Walk;
   public static AudioSource MaleScream;
   public static AudioSource Powerup;
+  public static AudioSource Breach;
 
   void Awake()
   {
@@ -22,6 +23,7 @@ public class AudioManager : SingletonMonoBehaviour<AudioManager>
     Walk = audios[2];
     MaleScream = audios[3];
     Powerup = audios[4];
+    Breach = audios[5];
   }
   public void PlayLoop(AudioSource au)
   {

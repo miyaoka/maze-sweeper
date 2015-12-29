@@ -62,6 +62,7 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
   }
   public void MovePos(IntVector2 dest)
   {
+    GameManager.Instance.OnBomb.Value = false;
     var node = gm.VisitNode(dest);
     if (node == null)
     {
@@ -80,7 +81,7 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
 
     startWalk();
 
-    GameManager.Instance.alertCount.Value = node.AlertCount.Value = gm.graph.ScanEnemies(dest);
+    GameManager.Instance.AlertCount.Value = node.AlertCount.Value = gm.graph.ScanEnemies(dest);
     if (node.AlertCount.Value > 0)
     {
       AudioManager.EnemyDetect.Play();

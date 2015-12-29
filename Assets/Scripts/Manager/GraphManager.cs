@@ -78,23 +78,23 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
     //survivor
     addItems(Mathf.CeilToInt(gridHeight * itemsPerRow));
 
-    if (showAll)
-    {
-      var t = System.DateTime.Now;
-      foreach (var n in graph.NodeList)
-      {
-        addNodeView(n);
-        n.AlertCount.Value = graph.ScanEnemies(n.Coords);
-        foreach (var e in n.EdgeList)
-        {
-          addEdgeView(e);
-        }
-      }
-      var t2 = System.DateTime.Now;
-      Debug.Log("Instantiate: " + (t2 - t));
-    }
-
     return pickupPlayerPos(graph.NodeList.Where(n => n.Coords.Y == 0).ToList<Node>());
+  }
+
+  public void ShowAllNode()
+  {
+    var t = System.DateTime.Now;
+    foreach (var n in graph.NodeList)
+    {
+      addNodeView(n);
+      n.AlertCount.Value = graph.ScanEnemies(n.Coords);
+      foreach (var e in n.EdgeList)
+      {
+        addEdgeView(e);
+      }
+    }
+    var t2 = System.DateTime.Now;
+    Debug.Log("Instantiate: " + (t2 - t));
   }
 
   public Node VisitNode(IntVector2 coord)
@@ -201,6 +201,13 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
     go.GetComponent<EdgePresenter>().Edge = edge;
     go.name = "edge_" + coordsToObjectName(edge.SourceNode.Coords) + "-" + coordsToObjectName(edge.TargetNode.Coords);
     edge.HasView = true;
+  }
+
+  public void BreachWall(IntVector2 coords, int dir)
+  {
+    AudioManager.Breach.Play();
+    var e = graph.CreateEdge(coords, coords + GraphModel.DirCoords[dir]);
+    addEdgeView(e);
   }
 
   public Vector3 CoordsToVec3(Vector2 coords)

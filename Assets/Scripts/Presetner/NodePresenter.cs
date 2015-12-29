@@ -22,7 +22,8 @@ public class NodePresenter : MonoBehaviour
   [SerializeField]
   GameObject interiorPrefab;
   [SerializeField]
-  WallPresenter[] walls = new WallPresenter[4];
+  GameObject wallPrefab;
+
 
   Node node;
   Tweener lightTw;
@@ -135,13 +136,11 @@ public class NodePresenter : MonoBehaviour
           beacon.SetActive(b);
         });
 
-      foreach(var w in walls)
-      {
-        w.Node = node;
-      }
-
       for(var i = 0; i < 4; i++)
       {
+        var w = addWall(i);
+        w.index = i;
+        w.Node = node;
         if(Random.value < .3f)
         {
           addInterior(i);
@@ -152,11 +151,39 @@ public class NodePresenter : MonoBehaviour
     }
     get { return this.node; }
   }
+  WallPresenter addWall(int dir)
+  {
+    var wallThick = .4f;
+    var halfRoomSize = 5f + wallThick * .5f;
+    var pos = Vector3.zero;
+    switch (dir)
+    {
+      case 0:
+        pos.x = halfRoomSize;
+        break;
+      case 1:
+        pos.z = halfRoomSize;
+        break;
+      case 2:
+        pos.x = -halfRoomSize;
+        break;
+      case 3:
+        pos.z = -halfRoomSize;
+        break;
+    }
+    var obj = Instantiate(
+      wallPrefab, 
+      pos, 
+      Quaternion.Euler(new Vector3(0,dir * -90, 0))
+      ) as GameObject;
+    obj.transform.SetParent(wallContainer.transform, false);
+    return obj.GetComponent<WallPresenter>();
+  }
   //dir 0-3
   void addInterior(int dir)
   {
     var scale = new Vector3(Random.Range(.5f, 3f), Random.Range(.5f, 4f), Random.Range(.5f, 3f));
-    var halfRoomSize = 4.9f;
+    var halfRoomSize = 5f;
     var pos = new Vector3(halfRoomSize - scale.x * .5f, scale.y * .5f, halfRoomSize - scale.z * .5f);
     pos.x *= dir % 2 == 0 ? 1 : -1;
     pos.z *= dir / 2 > 0 ? 1 : -1;

@@ -4,8 +4,8 @@ using System.Collections.Generic;
 using UniRx;
 using UniRx.Triggers;
 using UnityEngine.UI;
-public enum ViewState { Move, Map, Battle };
-public enum State { Init, EnterLevel, OnLevel, ExitLevel };
+public enum ViewStateName { Move, Map, Battle };
+public enum GameStateName { Init, EnterLevel, OnLevel, ExitLevel };
 public class GameManager : SingletonMonoBehaviour<GameManager>
 {
   [SerializeField]
@@ -14,12 +14,12 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
   [SerializeField]
   GameObject hud;
 
-  public ReactiveProperty<int> alertCount = new ReactiveProperty<int>();
-  public ReactiveProperty<int> enemyCount = new ReactiveProperty<int>();
+  public ReactiveProperty<int> AlertCount = new ReactiveProperty<int>();
+  public ReactiveProperty<int> EnemyCount = new ReactiveProperty<int>();
   public ReactiveProperty<float> LevelTimer = new ReactiveProperty<float>();
-  public ReactiveProperty<ViewState> viewState = new ReactiveProperty<ViewState>();
-  public State state = State.Init;
-
+  public ReactiveProperty<ViewStateName> ViewState = new ReactiveProperty<ViewStateName>();
+  public GameStateName GameState = GameStateName.Init;
+  public ReactiveProperty<bool> OnBomb = new ReactiveProperty<bool>();
 
   int col = 15;
   int row = 30;
@@ -38,6 +38,9 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
       Destroy(this);
       return;
     }
+    QualitySettings.vSyncCount = 0;
+    Application.targetFrameRate = 60;
+
     cm = GetComponent<ControlManager>();
     pm = PlayerManager.Instance;
   }
@@ -50,10 +53,10 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
 
     timerUpdate.Subscribe(t => LevelTimer.Value -= t);
 
-    viewState
+    ViewState
       .Subscribe(v =>
       {
-        cm.enabled = viewState.Value == ViewState.Map ? false : true;
+        cm.enabled = ViewState.Value == ViewStateName.Map ? false : true;
       })
       .AddTo(this);
 
@@ -82,8 +85,8 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
   {
     var pn = GraphManager.Instance.InitGrid(col, row, enemy);
     pm.Health.Value = 3;
-    alertCount.Value = 0;
-    viewState.Value = ViewState.Move;
+    AlertCount.Value = 0;
+    ViewState.Value = ViewStateName.Move;
     LevelTimer.Value = 60f * 5f;
 
     timerConnect = timerUpdate.Connect();
@@ -150,7 +153,7 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
     else
     {
 //      GraphManager.Instance.DestroyGrid();
-      viewState.Value = ViewState.Map;
+      ViewState.Value = ViewStateName.Map;
       MenuManager.Instance.ModalDialog().Open(
         "You are dead...",
         new List<DialogOptionDetails> {
@@ -195,6 +198,6 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
 
   public void toggleMap()
   {
-    viewState.Value = viewState.Value == ViewState.Map ? ViewState.Move : ViewState.Map;
+    ViewState.Value = ViewState.Value == ViewStateName.Map ? ViewStateName.Move : ViewStateName.Map;
   }
 }

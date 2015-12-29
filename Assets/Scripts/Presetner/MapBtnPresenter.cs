@@ -14,19 +14,19 @@ public class MapBtnPresenter : MonoBehaviour
       .OnClickAsObservable()
       .Subscribe(b =>
       {
-        gm.viewState.Value = gm.viewState.Value == ViewState.Map ? ViewState.Move : ViewState.Map;
+        gm.ViewState.Value = gm.ViewState.Value == ViewStateName.Map ? ViewStateName.Move : ViewStateName.Map;
       })
       .AddTo(this);
 
-    gm.viewState
+    gm.ViewState
       .Subscribe(v =>
       {
-        text.text = gm.viewState.Value == ViewState.Map ? "move" : "map";
+        text.text = gm.ViewState.Value == ViewStateName.Map ? "move" : "map";
       })
       .AddTo(this);
 
-    gm.viewState
-      .Select(v => v == ViewState.Battle)
+    gm.ViewState
+      .Select(v => v == ViewStateName.Battle)
       .Subscribe(b =>
       {
       })

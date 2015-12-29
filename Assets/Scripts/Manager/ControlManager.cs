@@ -13,7 +13,6 @@ public class ControlManager : MonoBehaviour
   [SerializeField]
   Transform gridPivot;
   CompositeDisposable mapResources = new CompositeDisposable();
-
   void Awake()
   {
     pm = PlayerManager.Instance;
@@ -55,13 +54,13 @@ public class ControlManager : MonoBehaviour
     this
       .UpdateAsObservable()
       .Where(_ => Input.GetKeyUp(KeyCode.M))
-      .Subscribe(_ => gm.viewState.Value = gm.viewState.Value == ViewState.Map ? ViewState.Move : ViewState.Map)
+      .Subscribe(_ => gm.ViewState.Value = gm.ViewState.Value == ViewStateName.Map ? ViewStateName.Move : ViewStateName.Map)
       .AddTo(this);
 
-    gm.viewState
+    gm.ViewState
       .Subscribe(v =>
       {
-        if(gm.viewState.Value == ViewState.Map)
+        if(gm.ViewState.Value == ViewStateName.Map)
         {
           this
             .LateUpdateAsObservable()
