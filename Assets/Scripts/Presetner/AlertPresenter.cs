@@ -9,35 +9,33 @@ public class AlertPresenter : MonoBehaviour
   LayoutElement alertCountLE;
   [SerializeField]
   Image alertImage;
-  [SerializeField]
-  GameObject alert;
-  [SerializeField]
-  GameObject danger;
-  void Start()
+
+  void Awake()
   {
     var gm = GameManager.Instance;
     var seq = DOTween.Sequence();
+    var cg = GetComponent<CanvasGroup>();
     seq
       .Append(alertImage.DOFade(1, .5f).SetEase(Ease.InCubic))
       .Append(alertImage.DOFade(0, .5f).SetEase(Ease.InCubic))
       .SetLoops(-1);
+    seq.Pause();
 
     gm.AlertCount
       .Subscribe(c =>
       {
-        alertCountLE.preferredWidth = 0;
-
-        DOTween.To(() => alertCountLE.preferredWidth, x => alertCountLE.preferredWidth = x, 20 * c, .4f)
-          .SetEase(Ease.OutExpo);
-        if (c == 0 || gm.EnemyCount.Value != 0)
+        if (c == 0)
         {
+          alertCountLE.preferredWidth = 0;
+          cg.alpha = 0;
           seq.Pause();
-          //          seq.Complete();
-          alert.SetActive(false);
           return;
         }
+        DOTween.To(() => alertCountLE.preferredWidth, x => alertCountLE.preferredWidth = x, 20 * c, .4f)
+          .SetEase(Ease.OutExpo);
+
         seq.Restart();
-        alert.SetActive(true);
+        cg.alpha = 1;
       })
       .AddTo(this);
   }

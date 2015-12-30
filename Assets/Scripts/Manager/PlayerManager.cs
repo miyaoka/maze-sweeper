@@ -81,7 +81,7 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
 
     startWalk();
 
-    GameManager.Instance.AlertCount.Value = node.AlertCount.Value = gm.graph.ScanEnemies(dest);
+    gm.ScanEnemies(node);
     if (node.AlertCount.Value > 0)
     {
       AudioManager.EnemyDetect.Play();
@@ -94,26 +94,27 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
     );
     sq.OnKill(() =>
     {
-      onMoved(dest, node);
+      onMoved(node);
     });
 
 
   }
 
-  private void onMoved(IntVector2 dest, Node node)
+  private void onMoved(Node node)
   {
-    CurrentCoords.Value = dest;
+    CurrentCoords.Value = node.Coords;
     var ec = node.EnemyCount.Value;
     if (ec > 0)
     {
       Debug.Log("enemy:" + ec);
       Health.Value -= ec;
       gm.ClearNodeEnemy(node);
+      gm.ScanEnemies(node);
 
       AudioManager.MaleScream.Play();
       while (ec-- > 0)
       {
-        createDead(dest);
+        createDead(node.Coords);
       }
 
     }

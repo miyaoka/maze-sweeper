@@ -123,6 +123,12 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
       n.AlertCount.Value = Mathf.Max(0, n.AlertCount.Value - node.EnemyCount.Value);
     }
     node.EnemyCount.Value = 0;
+    ScanEnemies(node);
+  }
+
+  public void ScanEnemies(Node node)
+  {
+    GameManager.Instance.AlertCount.Value = node.AlertCount.Value = graph.ScanEnemies(node.Coords);
   }
 
   void addEnemies(List<Node> list, float enemyRatio, int maxEnemyCount)
