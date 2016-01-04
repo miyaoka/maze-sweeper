@@ -15,7 +15,7 @@ public class CameraManager : SingletonMonoBehaviour<CameraManager>
   [SerializeField]
   Camera bgCam;
   GraphManager gm;
-  float[] heights = { 25, 200, 0 };
+  float[] heights = { 35, 125, 0 };
   float baseRatio = 16f / 9f;
   ReactiveProperty<float> aspect = new ReactiveProperty<float>(1);
 

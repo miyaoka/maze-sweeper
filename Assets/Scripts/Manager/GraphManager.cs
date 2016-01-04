@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.Events;
 using System.Collections;
+using UniRx;
 
 public enum Dirs { East, North, West, South, Null };
 public class GraphManager : SingletonMonoBehaviour<GraphManager>
@@ -14,6 +15,8 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
   [SerializeField]
   GameObject gridEdgePrefab;
   [SerializeField]
+  GameObject gridWallPrefab;
+  [SerializeField]
   float GridUnit = 10;
   [SerializeField]
   float deadEndReduceProb = .5f;
@@ -21,8 +24,11 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
   float itemsPerRow = .2f;
   [SerializeField]
   bool showAll;
+  [SerializeField]
+  GameObject explosionPrefab;
 
   public readonly GraphModel graph = new GraphModel();
+  Dictionary<string, Wall> wallDict = new Dictionary<string, Wall>();
 
   void Awake()
   {
@@ -42,6 +48,7 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
   }
   public Node InitGrid(int gridWidth, int gridHeight, float enemyRatio)
   {
+    wallDict.Clear();
     clearView();
     graph.Clear();
     graph.CreateMaze(new Rect(0, 0, gridWidth, gridHeight));
@@ -88,10 +95,7 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
     {
       addNodeView(n);
       n.AlertCount.Value = graph.ScanEnemies(n.Coords);
-      foreach (var e in n.EdgeList)
-      {
-        addEdgeView(e);
-      }
+      addEdgeViews(n);
     }
     var t2 = System.DateTime.Now;
     Debug.Log("Instantiate: " + (t2 - t));
@@ -108,13 +112,25 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
     {
       n.IsVisited.Value = true;
       addNodeView(n);
-
-      foreach (var e in n.EdgeList)
-      {
-        addEdgeView(e);
-      }
+      addEdgeViews(n);
     }
     return n;
+  }
+  void addEdgeViews(Node node)
+  {
+    node.EdgeArray
+      .Select((v, i) => new { Value = v, Index = i })
+      .ToList()
+      .ForEach(e => {
+        if(e.Value == null)
+        {
+          addWallView(node.Coords, e.Index);
+        }
+        else
+        {
+          addEdgeView(e.Value, e.Index);
+        }
+      });
   }
   public void ClearNodeEnemy(Node node)
   {
@@ -198,22 +214,44 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
     go.name = "node_" + coordsToObjectName(node.Coords);
     node.HasView = true;
   }
-  void addEdgeView(Edge edge)
+  void addEdgeView(Edge edge, int dir, bool explode = false)
   {
     if (edge.HasView)
       return;
-    var go = Instantiate(gridEdgePrefab, CoordsToVec3(edge.Coords), Quaternion.Euler(new Vector3(0, edge.Angle, 0))) as GameObject;
+    var go = Instantiate(gridEdgePrefab, CoordsToVec3(edge.Coords), Quaternion.Euler(new Vector3(0, dir * -90, 0))) as GameObject;
     AddToView(go);
-    go.GetComponent<EdgePresenter>().Edge = edge;
+    var ep = go.GetComponent<EdgePresenter>();
+    ep.Edge = edge;
+    if (explode)
+    {
+      ep.breach();
+    }
     go.name = "edge_" + coordsToObjectName(edge.SourceNode.Coords) + "-" + coordsToObjectName(edge.TargetNode.Coords);
     edge.HasView = true;
   }
-
-  public void BreachWall(IntVector2 coords, int dir)
+  void addWallView(IntVector2 coords, int dir)
   {
-    AudioManager.Breach.Play();
-    var e = graph.CreateEdge(coords, coords + GraphModel.DirCoords[dir]);
-    addEdgeView(e);
+    var wall = new Wall(coords, dir);
+    var key = wall.Key;
+    if (wallDict.ContainsKey(key))
+    {
+      return;
+    }
+    wallDict[key] = wall;
+    var go = Instantiate(gridWallPrefab, CoordsToVec3(wall.Coords), Quaternion.Euler(new Vector3(0, dir * -90, 0))) as GameObject;
+    go.GetComponent<WallPresenter>().Wall = wall;
+    go.name = "wall_" + key;
+    AddToView(go);
+  }
+  public void BreachWall(WallPresenter wallView)
+  {
+    GameManager.Instance.OnBomb.Value = false;
+    var w = wallView.Wall;
+    var e = graph.CreateEdge(w.SourceCoords, w.TargetCoords);
+    addEdgeView(e, w.Dir, true);
+
+    Destroy(wallView.gameObject);
+    wallDict.Remove(w.Key);
   }
 
   public Vector3 CoordsToVec3(Vector2 coords)

@@ -58,6 +58,8 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
       return;
     }
 
+    edge.isOpened.Value = true;
+
     MovePos(CurrentCoords.Value + GraphModel.DirCoords[(int)dir]);
   }
   public void MovePos(IntVector2 dest)
