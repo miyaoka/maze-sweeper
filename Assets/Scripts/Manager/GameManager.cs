@@ -15,7 +15,6 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
   GameObject hud;
 
   public ReactiveProperty<int> AlertCount = new ReactiveProperty<int>();
-  public ReactiveProperty<int> EnemyCount = new ReactiveProperty<int>();
   public ReactiveProperty<float> LevelTimer = new ReactiveProperty<float>();
   public ReactiveProperty<ViewStateName> ViewState = new ReactiveProperty<ViewStateName>();
   public GameStateName GameState = GameStateName.Init;

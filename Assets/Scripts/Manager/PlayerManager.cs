@@ -42,6 +42,9 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
       }
     }
 
+    player.transform.DORotate(new Vector3(0, (int)dir * -90 + 90, 0), .5f).SetEase(Ease.InOutQuad);
+
+    /*
     var sr = player.GetComponentInChildren<SpriteRenderer>();
 
     //default is flipped
@@ -51,12 +54,14 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
       : dir == Dirs.West
       ? true
       : sr.flipX;
-
+      */
     var node = gm.graph.GetNode(CurrentCoords.Value);
     var edge = node.EdgeArray[(int)dir];
     if (edge == null) {
       return;
     }
+
+    edge.isOpened.Value = true;
 
     MovePos(CurrentCoords.Value + GraphModel.DirCoords[(int)dir]);
   }
@@ -81,7 +86,7 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
 
     startWalk();
 
-    GameManager.Instance.AlertCount.Value = node.AlertCount.Value = gm.graph.ScanEnemies(dest);
+    gm.ScanEnemies(node);
     if (node.AlertCount.Value > 0)
     {
       AudioManager.EnemyDetect.Play();
@@ -94,26 +99,27 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
     );
     sq.OnKill(() =>
     {
-      onMoved(dest, node);
+      onMoved(node);
     });
 
 
   }
 
-  private void onMoved(IntVector2 dest, Node node)
+  private void onMoved(Node node)
   {
-    CurrentCoords.Value = dest;
+    CurrentCoords.Value = node.Coords;
     var ec = node.EnemyCount.Value;
     if (ec > 0)
     {
       Debug.Log("enemy:" + ec);
       Health.Value -= ec;
       gm.ClearNodeEnemy(node);
+      gm.ScanEnemies(node);
 
       AudioManager.MaleScream.Play();
       while (ec-- > 0)
       {
-        createDead(dest);
+        createDead(node.Coords);
       }
 
     }
@@ -131,14 +137,14 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
 
   private void stopWalk()
   {
-    player.GetComponentInChildren<Animator>().SetBool("isWalking", false);
+    player.GetComponentInChildren<Animator>().SetBool("IsWalking", false);
     AudioManager.Instance.StopLoop(AudioManager.Walk);
   }
 
   private void startWalk()
   {
     //    AudioManager.door.Play();
-    player.GetComponentInChildren<Animator>().SetBool("isWalking", true);
+    player.GetComponentInChildren<Animator>().SetBool("IsWalking", true);
     AudioManager.Instance.PlayLoop(AudioManager.Walk);
   }
 

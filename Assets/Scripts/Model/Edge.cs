@@ -11,6 +11,8 @@ public class Edge
   public readonly float Angle;
   public ReactiveProperty<int> Type = new ReactiveProperty<int>();
   public bool HasView = false;
+  public ReactiveProperty<bool> isOpened = new ReactiveProperty<bool>();
+
   public Edge(Node sourceNode, Node targetNode)
   {
     this.SourceNode = sourceNode;

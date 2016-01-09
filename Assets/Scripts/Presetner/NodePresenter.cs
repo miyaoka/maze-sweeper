@@ -3,6 +3,7 @@ using UniRx;
 using DG.Tweening;
 using UnityEngine.UI;
 using System;
+using System.Linq;
 using Random = UnityEngine.Random;
 
 public class NodePresenter : MonoBehaviour
@@ -12,7 +13,9 @@ public class NodePresenter : MonoBehaviour
   [SerializeField]
   GameObject alert;
   [SerializeField]
-  GameObject wallContainer;
+  Transform wallContainer;
+  [SerializeField]
+  Transform interiorContainer;
   [SerializeField]
   GameObject tiles;
   [SerializeField]
@@ -21,9 +24,6 @@ public class NodePresenter : MonoBehaviour
   GameObject floor;
   [SerializeField]
   GameObject interiorPrefab;
-  [SerializeField]
-  GameObject wallPrefab;
-
 
   Node node;
   Tweener lightTw;
@@ -66,8 +66,9 @@ public class NodePresenter : MonoBehaviour
 
       node.OnHere
         .CombineLatest(node.OnDest, (l, r) => l || r)
-        .Subscribe(b => wallContainer.SetActive(b))
+        .Subscribe(b => interiorContainer.gameObject.SetActive(b))
         .AddTo(this);
+
       node.OnHere
         .Subscribe(b =>
         {
@@ -136,25 +137,44 @@ public class NodePresenter : MonoBehaviour
           beacon.SetActive(b);
         });
 
-      for(var i = 0; i < 4; i++)
+      for (var i = 0; i < 4; i++)
       {
-        var w = addWall(i);
-        w.index = i;
-        w.Node = node;
-        if(Random.value < .3f)
+        if (Random.value < .3f)
         {
           addInterior(i);
         }
       }
 
+      /*
+      node.Degree
+        .Subscribe(_ =>
+        {
+          foreach(Transform t in wallContainer)
+          {
+            Destroy(t.gameObject);
+          }
+          for (var i = 0; i < 4; i++)
+          {
+            var e = node.EdgeArray[i];
+            if (e == null)
+            {
+              var w = addWall(i);
+              w.Dir = i;
+              w.NodeModel = node;
+            }
+          }
+        }).AddTo(this);
+        */
+
+
       node.OnDestroy += modelDestoryHandler;
     }
     get { return this.node; }
   }
+  /*
   WallPresenter addWall(int dir)
   {
-    var wallThick = .4f;
-    var halfRoomSize = 5f + wallThick * .5f;
+    var halfRoomSize = 5f;
     var pos = Vector3.zero;
     switch (dir)
     {
@@ -172,13 +192,14 @@ public class NodePresenter : MonoBehaviour
         break;
     }
     var obj = Instantiate(
-      wallPrefab, 
-      pos, 
-      Quaternion.Euler(new Vector3(0,dir * -90, 0))
+      wallPrefab,
+      pos,
+      Quaternion.Euler(new Vector3(0, dir * -90, 0))
       ) as GameObject;
-    obj.transform.SetParent(wallContainer.transform, false);
+    obj.transform.SetParent(wallContainer, false);
     return obj.GetComponent<WallPresenter>();
   }
+  */
   //dir 0-3
   void addInterior(int dir)
   {
@@ -188,7 +209,7 @@ public class NodePresenter : MonoBehaviour
     pos.x *= dir % 2 == 0 ? 1 : -1;
     pos.z *= dir / 2 > 0 ? 1 : -1;
     var obj = Instantiate(interiorPrefab, pos, Quaternion.identity) as GameObject;
-    obj.transform.SetParent(wallContainer.transform, false);
+    obj.transform.SetParent(interiorContainer, false);
     obj.transform.localScale = scale;
   }
   void modelDestoryHandler(object sender, EventArgs e)
