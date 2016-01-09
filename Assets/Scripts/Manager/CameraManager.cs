@@ -14,7 +14,6 @@ public class CameraManager : SingletonMonoBehaviour<CameraManager>
   Camera skyCam;
   [SerializeField]
   Camera bgCam;
-  GraphManager gm;
   float[] heights = { 35, 125, 0 };
   float baseRatio = 16f / 9f;
   ReactiveProperty<float> aspect = new ReactiveProperty<float>(1);
@@ -26,14 +25,13 @@ public class CameraManager : SingletonMonoBehaviour<CameraManager>
       Destroy(this);
       return;
     }
-    gm = GraphManager.Instance;
+    aspect = mainCam
+      .ObserveEveryValueChanged(c => c.aspect)
+      .ToReactiveProperty();
   }
   void Start()
   {
     var gm = GameManager.Instance;
-    aspect = mainCam
-      .ObserveEveryValueChanged(c => c.aspect)
-      .ToReactiveProperty();
 
     gm.ViewState
       .CombineLatest(aspect, (v, a) => heights[(int)v] * Mathf.Pow(baseRatio / a, .5f))
@@ -89,7 +87,7 @@ public class CameraManager : SingletonMonoBehaviour<CameraManager>
   }
   public void MovePos(IntVector2 dest)
   {
-    var pos = gm.CoordsToVec3(dest);
+    var pos = GraphManager.Instance.CoordsToVec3(dest);
     cameraPivot.transform
       .DOLocalMove(pos, .2f)
       .SetEase(Ease.OutQuad);

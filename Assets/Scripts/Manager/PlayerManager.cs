@@ -42,6 +42,9 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
       }
     }
 
+    player.transform.DORotate(new Vector3(0, (int)dir * -90 + 90, 0), .5f).SetEase(Ease.InOutQuad);
+
+    /*
     var sr = player.GetComponentInChildren<SpriteRenderer>();
 
     //default is flipped
@@ -51,7 +54,7 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
       : dir == Dirs.West
       ? true
       : sr.flipX;
-
+      */
     var node = gm.graph.GetNode(CurrentCoords.Value);
     var edge = node.EdgeArray[(int)dir];
     if (edge == null) {
@@ -134,14 +137,14 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
 
   private void stopWalk()
   {
-    player.GetComponentInChildren<Animator>().SetBool("isWalking", false);
+    player.GetComponentInChildren<Animator>().SetBool("IsWalking", false);
     AudioManager.Instance.StopLoop(AudioManager.Walk);
   }
 
   private void startWalk()
   {
     //    AudioManager.door.Play();
-    player.GetComponentInChildren<Animator>().SetBool("isWalking", true);
+    player.GetComponentInChildren<Animator>().SetBool("IsWalking", true);
     AudioManager.Instance.PlayLoop(AudioManager.Walk);
   }
 
