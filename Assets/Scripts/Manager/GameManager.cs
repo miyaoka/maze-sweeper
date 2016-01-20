@@ -16,19 +16,19 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
 
   public ReactiveProperty<int> AlertCount = new ReactiveProperty<int>();
   public ReactiveProperty<float> LevelTimer = new ReactiveProperty<float>();
+  public ReactiveProperty<float> LevelTimerMax = new ReactiveProperty<float>();
   public ReactiveProperty<ViewStateName> ViewState = new ReactiveProperty<ViewStateName>();
   public GameStateName GameState = GameStateName.Init;
   public ReactiveProperty<bool> OnBomb = new ReactiveProperty<bool>();
 
-  int col = 15;
-  int row = 30;
-  float enemy = .08f;
+  int col = 12;
+  int row = 25;
+  float enemy = .1f;
   bool passExit = false;
   ControlManager cm;
   PlayerManager pm;
   IConnectableObservable<float> timerUpdate;
   System.IDisposable timerConnect;
-
 
   void Awake()
   {
@@ -39,6 +39,11 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
     }
     QualitySettings.vSyncCount = 0;
     Application.targetFrameRate = 60;
+
+    AlertCount
+      .Where(c => c > 0)
+      .Subscribe(_ => AudioManager.EnemyDetect.Play())
+      .AddTo(this);
 
     cm = GetComponent<ControlManager>();
     pm = PlayerManager.Instance;
@@ -86,13 +91,13 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
     pm.Health.Value = 3;
     AlertCount.Value = 0;
     ViewState.Value = ViewStateName.Move;
-    LevelTimer.Value = 60f * 5f;
+    LevelTimer.Value = LevelTimerMax.Value = 60f * 3f;
 
     timerConnect = timerUpdate.Connect();
       
 
     Debug.Log(pn.Coords);
-    pm.SetPos(pn.Coords);
+    pm.MovePos(pn.Coords, true);
 
     yield return 0;
   }
@@ -134,13 +139,13 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
 
     cm.enabled = false;
     var isOpen = true;
-    LevelTimer.Value = 0;
+    LevelTimer.Value = Mathf.Max(0, LevelTimer.Value);
     timerConnect.Dispose();
 
     if (passExit)
     {
       MenuManager.Instance.ModalDialog().Open(
-        "level cleared!\nyou rescued " + PlayerManager.Instance.Health.Value.ToString() + " survivors.",
+        "level cleared!",
         new List<DialogOptionDetails> {
           new DialogOptionDetails ("ok", () => {
             isOpen = false;
@@ -170,7 +175,8 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
   }
   public void onExit()
   {
-    StartCoroutine(onExitC());
+    passExit = true;
+//    StartCoroutine(onExitC());
   }
   IEnumerator onExitC()
   {
@@ -195,8 +201,13 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
     cm.enabled = true;
   }
 
-  public void toggleMap()
+  public void ToggleMap()
   {
     ViewState.Value = ViewState.Value == ViewStateName.Map ? ViewStateName.Move : ViewStateName.Map;
+  }
+
+  public void AddTime()
+  {
+    LevelTimer.Value = Mathf.Min(LevelTimer.Value + 30f, LevelTimerMax.Value);
   }
 }

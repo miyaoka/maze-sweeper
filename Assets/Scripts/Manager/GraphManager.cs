@@ -11,6 +11,8 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
   [SerializeField]
   Transform viewContainer;
   [SerializeField]
+  GameObject exitZone;
+  [SerializeField]
   GameObject gridNodePrefab;
   [SerializeField]
   GameObject gridEdgePrefab;
@@ -20,8 +22,8 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
   float GridUnit = 10;
   [SerializeField]
   float deadEndReduceProb = .5f;
-  [SerializeField]
-  float itemsPerRow = .2f;
+
+  float itemsPerNode = .015f;
   [SerializeField]
   bool showAll;
   [SerializeField]
@@ -58,32 +60,24 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
     {
       graph.RemoveDeadend(deadEndReduceProb);
     }
+    graph.UpdateMaxCoords();
 
     //enemy
+    var maxEnemyCount = 3;
     var list = graph
       .ShuffledNodeList
       .Where(n => n.Coords.Y > 1)
       .ToList<Node>();
-    Debug.Log(list.Count);
-    addEnemies(list, enemyRatio, 3);
-    Debug.Log(list.Count);
+    addEnemies(list, enemyRatio, maxEnemyCount);
 
-    //exit
-    createExit(
-      graph
-      .NodeList
-      .Where(n => (float)n.Coords.Y >= (float)gridHeight * .75f)
-      .ToList()
-      );
-    createExit(
-      graph
-      .NodeList
-      .Where(n => (float)n.Coords.Y < (float)gridHeight * .75f && (float)n.Coords.Y >= (float)gridHeight * .5f)
-      .ToList()
-      );
+    //exit zone
+    exitZone.transform.localPosition = new Vector3(
+      graph.MaxCoords.X * .5f * GridUnit,
+      exitZone.transform.localPosition.y, 
+      (graph.MaxCoords.Y -.5f) * GridUnit);
 
-    //survivor
-    addItems(Mathf.CeilToInt(gridHeight * itemsPerRow));
+    //items
+    addItems();
 
     return pickupPlayerPos(graph.NodeList.Where(n => n.Coords.Y == 0).ToList<Node>());
   }
@@ -95,25 +89,31 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
     {
       addNodeView(n);
       n.AlertCount.Value = graph.ScanEnemies(n.Coords);
+      n.IsScanned.Value = true;
       addEdgeViews(n);
     }
     var t2 = System.DateTime.Now;
     Debug.Log("Instantiate: " + (t2 - t));
   }
 
-  public Node VisitNode(IntVector2 coord)
+
+  /// <summary>
+  /// add node view with edge
+  /// </summary>
+  /// <param name="coord"></param>
+  /// <param name="visit"></param>
+  /// <returns></returns>
+  public Node ShowNode(IntVector2 coord, bool visit = true)
   {
     var n = graph.GetNode(coord);
     if (n == null)
     {
       return null;
     }
-    if (!n.IsVisited.Value)
-    {
-      n.IsVisited.Value = true;
-      addNodeView(n);
-      addEdgeViews(n);
-    }
+    n.IsScanned.Value = visit || n.IsScanned.Value;
+
+    addNodeView(n);
+    addEdgeViews(n);
     return n;
   }
   void addEdgeViews(Node node)
@@ -154,7 +154,7 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
     foreach (var n in list)
     {
       i++;
-      var enemyCount = Mathf.Min(restEnemyCount, Random.Range(1, maxEnemyCount));
+      var enemyCount = Mathf.Min(restEnemyCount, Random.Range(1, maxEnemyCount + 1));
       n.EnemyCount.Value = enemyCount;
       restEnemyCount -= 1;
       //enemyCount;
@@ -174,14 +174,22 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
 //    exitNode.IsVisited.Value = true;
   }
 
-  void addItems(int itemCount)
+  void addItems()
   {
-    var deadends = graph.DeadendNodeList;
-    deadends.Sort((a, b) => Random.value < .5f ? -1 : 1);
+    var nodes = graph
+      .NodeList
+      .Where(n => n.Coords.Y > 0 && n.Coords.Y < graph.MaxCoords.Y)
+      .ToList();
 
-    foreach (var n in deadends)
+    nodes.Sort((a, b) => Random.value < .5f ? -1 : 1);
+
+    var itemCount = nodes.Count() * itemsPerNode;
+    Debug.Log(nodes.Count());
+    Debug.Log(itemCount);
+
+    foreach (var n in nodes)
     {
-      if (itemCount-- == 0)
+      if (itemCount-- <= 0)
       {
         return;
       }
@@ -205,14 +213,13 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
 
   void addNodeView(Node node)
   {
-    if (node.HasView)
+    if (node.HasView.Value)
       return;
 
     var go = Instantiate(gridNodePrefab, CoordsToVec3(node.Coords), Quaternion.identity) as GameObject;
     AddToView(go);
     go.GetComponent<NodePresenter>().Node = node;
     go.name = "node_" + coordsToObjectName(node.Coords);
-    node.HasView = true;
   }
   void addEdgeView(Edge edge, int dir, bool explode = false)
   {
@@ -285,5 +292,9 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
     {
       Destroy(t.gameObject);
     }
+  }
+  public bool isExit(Node node)
+  {
+    return node.Coords.Y >= graph.MaxCoords.Y;
   }
 }

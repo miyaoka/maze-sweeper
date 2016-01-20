@@ -3,6 +3,7 @@ using System.Collections;
 using UniRx;
 using UniRx.Triggers;
 using DG.Tweening;
+using System.Linq;
 public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
 {
   [SerializeField]
@@ -65,17 +66,35 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
 
     MovePos(CurrentCoords.Value + GraphModel.DirCoords[(int)dir]);
   }
-  public void MovePos(IntVector2 dest)
+  public void MovePos(IntVector2 dest, bool noAnim = false)
   {
     GameManager.Instance.OnBomb.Value = false;
-    var node = gm.VisitNode(dest);
+    var node = gm.ShowNode(dest);
     if (node == null)
     {
       return;
     }
     DestCoords.Value = dest;
-
     CameraManager.Instance.MovePos(dest);
+    gm.ScanEnemies(node);
+
+    //look-ahead
+    /*
+    node.EdgeArray
+      .Select((v, i) => new { Value = v, Index = i })
+      .Where(e => e.Value != null)
+      .ToList()
+      .ForEach(e => {
+        gm.ShowNode(node.Coords + GraphModel.DirCoords[e.Index], false);
+      });
+      */
+
+    if (noAnim)
+    {
+      player.transform.localPosition = gm.CoordsToVec3(dest);
+      onMoved(node);
+      return;
+    }
 
     //if already moving, force complete.
     if (sq != null)
@@ -83,15 +102,7 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
       sq.Kill();
     }
     sq = DOTween.Sequence();
-
     startWalk();
-
-    gm.ScanEnemies(node);
-    if (node.AlertCount.Value > 0)
-    {
-      AudioManager.EnemyDetect.Play();
-    }
-
     sq.Append(player.transform
       .DOLocalMove(gm.CoordsToVec3(dest), 1f)
       .SetEase(Ease.InOutQuad)
@@ -101,8 +112,6 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
     {
       onMoved(node);
     });
-
-
   }
 
   private void onMoved(Node node)
@@ -112,7 +121,9 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
     if (ec > 0)
     {
       Debug.Log("enemy:" + ec);
-      Health.Value -= ec;
+//      Health.Value -= ec;
+      SurvivorManager.Instance.AddDamages(ec);
+
       gm.ClearNodeEnemy(node);
       gm.ScanEnemies(node);
 
@@ -123,7 +134,7 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
       }
 
     }
-    if (node.isExit.Value)
+    if (gm.isExit(node))
     {
       GameManager.Instance.onExit();
     }
@@ -132,7 +143,10 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
       AudioManager.Powerup.Play();
       Health.Value += 1;
       node.HasItem.Value = false;
+      GameManager.Instance.AddTime();
     }
+
+
   }
 
   private void stopWalk()
@@ -148,14 +162,6 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
     AudioManager.Instance.PlayLoop(AudioManager.Walk);
   }
 
-  public void SetPos(IntVector2 dest)
-  {
-    DestCoords.Value = dest;
-    CurrentCoords.Value = dest;
-    CameraManager.Instance.MovePos(dest);
-    player.transform.localPosition = gm.CoordsToVec3(dest);
-    gm.VisitNode(dest);
-  }
   void createDead(IntVector2 dest)
   {
     //    var diff = Random.insideUnitCircle * 2f;

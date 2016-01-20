@@ -11,6 +11,14 @@ public class GraphModel
   //E,N,W,S
   public static readonly IntVector2[] DirCoords = { new IntVector2(1, 0), new IntVector2(0, 1), new IntVector2(-1, 0), new IntVector2(0, -1) };
 
+  IntVector2 maxCoords;
+  public IntVector2 MaxCoords
+  {
+    get
+    {
+      return maxCoords;
+    }
+  }
   public GraphModel()
   {
   }
@@ -217,5 +225,16 @@ public class GraphModel
       var targetCoords = sourceCoords + DirCoords[(int)connectDir];
       CreateEdge(sourceCoords, targetCoords);
     }
+  }
+  public void UpdateMaxCoords()
+  {
+    maxCoords = new IntVector2(
+    NodeList
+    .Select(n => n.Coords.X)
+    .Max(),
+    NodeList
+    .Select(n => n.Coords.Y)
+    .Max()
+    );
   }
 }
