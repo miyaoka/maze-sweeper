@@ -38,11 +38,13 @@ public class LevelConfigDialogPresenter : DialogPresenterBase
   Button submitBtn;
   [SerializeField]
   Button showAllBtn;
+
+  UnityAction onClose;
   void Awake()
   {
     panel.SetActive(false);
     rowSlider.maxValue = 200;
-    colSlider.minValue = rowSlider.minValue = 10;
+    colSlider.minValue = rowSlider.minValue = 8;
   }
 
   void Start()
@@ -60,24 +62,28 @@ public class LevelConfigDialogPresenter : DialogPresenterBase
       .Subscribe(v => enemyText.text = v.ToString("P1"))
       .AddTo(this);
   }
-  public void Open(LevelConfigDialogDetail param, UnityAction<LevelConfigDialogDetail> submit, UnityAction abort = null)
+  public void Open(LevelConfigDialogDetail param, UnityAction<LevelConfigDialogDetail> onSubmit, UnityAction onClose = null)
   {
+    this.onClose = onClose;
     colSlider.value = param.Col;
     rowSlider.value = param.Row;
     enemySlider.value = param.Enemy;
     panel.SetActive(true);
 
-    submitBtn.onClick.AddListener(() => submit(new LevelConfigDialogDetail((int)colSlider.value, (int)rowSlider.value, enemySlider.value)));
+    submitBtn.onClick.AddListener(() => onSubmit(new LevelConfigDialogDetail((int)colSlider.value, (int)rowSlider.value, enemySlider.value)));
     submitBtn.onClick.AddListener(closePanel);
 
     showAllBtn.onClick.AddListener(() => GraphManager.Instance.ShowAllNode());
     showAllBtn.onClick.AddListener(closePanel);
 
-    if (abort != null)
+    outOfPanelBtn.onClick.AddListener(closePanel);
+  }
+  protected override void closePanel()
+  {
+    base.closePanel();
+    if (onClose != null)
     {
-      outOfPanelBtn.onClick.AddListener(abort);
-      outOfPanelBtn.onClick.AddListener(closePanel);
+      onClose();
     }
-
   }
 }

@@ -3,7 +3,7 @@ using UnityEngine.UI;
 
 public class DialogPresenterBase : MonoBehaviour
 {
-  protected void closePanel()
+  protected virtual void closePanel()
   {
     var btns = GetComponentsInChildren<Button>();
     foreach(var btn in btns)

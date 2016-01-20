@@ -12,6 +12,10 @@ public class ControlManager : MonoBehaviour
   System.IDisposable connect;
   [SerializeField]
   Transform gridPivot;
+
+  Vector3 initialHit;
+  Plane floorPlane = new Plane(Vector3.up, Vector3.zero);
+
   CompositeDisposable mapResources = new CompositeDisposable();
   void Awake()
   {
@@ -60,26 +64,50 @@ public class ControlManager : MonoBehaviour
     gm.ViewState
       .Subscribe(v =>
       {
-        if(gm.ViewState.Value == ViewStateName.Map)
+        if (gm.ViewState.Value == ViewStateName.Map)
         {
-          this
-            .LateUpdateAsObservable()
-            .Subscribe(_ =>
-            {
-              //              var d = Lean.LeanTouch.DragDelta;
-              //              gridPivot.localPosition += new Vector3(d.x, 0, d.y);
-              Lean.LeanTouch.MoveObject(gridPivot, Lean.LeanTouch.DragDelta);
-            })
-            .AddTo(mapResources);
+          Lean.LeanTouch.OnFingerDown += onFingerDown;
+          Lean.LeanTouch.OnFingerUp += onFingerUp;
         }
         else
         {
           mapResources.Clear();
+          Lean.LeanTouch.OnFingerDown -= onFingerDown;
+          Lean.LeanTouch.OnFingerUp -= onFingerUp;
           gridPivot.DOLocalMove(Vector3.zero, .2f).SetEase(Ease.OutQuad);
         }
       })
       .AddTo(this);
 
+  }
+  void onFingerDown(Lean.LeanFinger finger)
+  {
+    var ray = finger.GetRay(); //fires ray with ScreenToWorld at finger pos using LeanTouch
+    float enter;
+    var initPos = gridPivot.position;
+    if (floorPlane.Raycast(ray, out enter))
+    {
+      initialHit = ray.GetPoint(enter);
+    }
+
+    mapResources.Clear();
+    this
+      .LateUpdateAsObservable()
+      .Subscribe(_ =>
+      {
+        ray = finger.GetRay();
+        if (floorPlane.Raycast(ray, out enter))
+        {
+          var currentHit = ray.GetPoint(enter);
+          var directionHit = (currentHit - initialHit);
+          gridPivot.position = initPos + new Vector3(directionHit.x, 0, directionHit.z); //camera stays at same height. Invert coords to move camera the correct direction
+        }
+      })
+      .AddTo(mapResources);
+  }
+  void onFingerUp(Lean.LeanFinger finger)
+  {
+    mapResources.Clear();
   }
   protected virtual void OnEnable()
   {
@@ -96,22 +124,22 @@ public class ControlManager : MonoBehaviour
   {
     // Store the swipe delta in a temp variable
     var swipe = finger.SwipeDelta;
-    if(swipe.x < -Mathf.Abs(swipe.y))
+    if (swipe.x < -Mathf.Abs(swipe.y))
     {
       move(Dirs.West);
     }
 
-    if(swipe.x > Mathf.Abs(swipe.y))
+    if (swipe.x > Mathf.Abs(swipe.y))
     {
       move(Dirs.East);
     }
 
-    if(swipe.y < -Mathf.Abs(swipe.x))
+    if (swipe.y < -Mathf.Abs(swipe.x))
     {
       move(Dirs.South);
     }
 
-    if(swipe.y > Mathf.Abs(swipe.x))
+    if (swipe.y > Mathf.Abs(swipe.x))
     {
       move(Dirs.North);
     }

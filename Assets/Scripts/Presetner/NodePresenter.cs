@@ -30,6 +30,7 @@ public class NodePresenter : MonoBehaviour
   Text alertText;
   float lightMax = 1.0f;
   float lightMin = 0f;
+  Color unvisitedFloorColor = new Color(.25f, .25f, .3f);
   void Awake()
   {
     roomLight.intensity = 0;
@@ -46,40 +47,21 @@ public class NodePresenter : MonoBehaviour
     {
       this.node = value;
 
+      node.HasView.Value = true;
+
       var mt = floor.GetComponent<Renderer>().material;
       mt.EnableKeyword("_EMISSION");
+      var initFloorColor = mt.color;
 
       node.AlertCount
-        .DistinctUntilChanged()
-        .Subscribe(c =>
-        {
-          alertText.text = c == 0 ? "" : c.ToString();
-        })
+        .CombineLatest(node.EnemyCount, node.IsScanned, (a, e, v) => v ? (e > 0 ? e : a) : 0)
+        .Select(c => c == 0 ? "" : c.ToString())
+        .SubscribeToText(alertText)
         .AddTo(this);
-      node.EnemyCount
-        .DistinctUntilChanged()
-        .Subscribe(c =>
-        {
-        })
-        .AddTo(this);
-
 
       node.OnHere
         .CombineLatest(node.OnDest, (l, r) => l || r)
         .Subscribe(b => interiorContainer.gameObject.SetActive(b))
-        .AddTo(this);
-
-      node.OnHere
-        .Subscribe(b =>
-        {
-          if (b)
-          {
-            //            sq.PrependInterval(.5f);
-          }
-          else
-          {
-          }
-        })
         .AddTo(this);
 
       var deadend =
@@ -94,15 +76,18 @@ public class NodePresenter : MonoBehaviour
 
 
       deadend
-        .CombineLatest(node.HasItem, hasEnemy, node.AlertCount, node.isExit, (d, i, e, a, x) =>
-      new Color(
-          e ? 1 : (a > 0 ? .1f : 0),
-          i ? 1 : (d ? 0f : 0),
-          x ? 1 : 0))
+        .CombineLatest(hasEnemy, node.AlertCount, node.IsScanned, (d, e, a, v) =>
+          new Color(!v ? 0 : e ? 1 : (a > 0 ? .2f : 0), 0, 0))
+        .CombineLatest(node.HasItem, (c, i) => i ? new Color(0,1,0) : c)
         .Subscribe(c =>
         {
           mt.SetColor("_EmissionColor", c);
         })
+        .AddTo(this);
+
+      node.IsScanned
+        .Select(v => v ? initFloorColor : unvisitedFloorColor)
+        .Subscribe(c => mt.color = c)
         .AddTo(this);
 
 
