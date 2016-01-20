@@ -43,8 +43,11 @@ public class LevelConfigDialogPresenter : DialogPresenterBase
   void Awake()
   {
     panel.SetActive(false);
-    rowSlider.maxValue = 200;
+    colSlider.maxValue = 25;
+    rowSlider.maxValue = 100;
     colSlider.minValue = rowSlider.minValue = 8;
+    enemySlider.minValue = .05f;
+    enemySlider.maxValue = .15f;
   }
 
   void Start()
