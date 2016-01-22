@@ -17,13 +17,20 @@ public class TimerPresenter : MonoBehaviour
     gm
       .LevelTimer
       .Select(t =>
-      string.Format("{0:D2}'{1:D2}''{2:D2}",
+      //      string.Format("{0:D2}'{1:D2}''{2:D2}",
+      string.Format("{0:D2}:{1:D2}",
       Mathf.FloorToInt(t / 60),
       Mathf.FloorToInt(t % 60),
       Mathf.FloorToInt((t % 1) * 100)
       )
       )
       .SubscribeToText(timerText)
+      .AddTo(this);
+
+    gm
+      .LevelTimer
+      .Select(t => t <= 30)
+      .Subscribe(b => timerText.color = b ? Color.red : Color.black)
       .AddTo(this);
 
     gm

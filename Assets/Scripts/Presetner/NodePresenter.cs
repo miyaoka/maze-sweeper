@@ -46,12 +46,19 @@ public class NodePresenter : MonoBehaviour
     set
     {
       this.node = value;
-
       node.HasView.Value = true;
 
       var mt = floor.GetComponent<Renderer>().material;
       mt.EnableKeyword("_EMISSION");
       var initFloorColor = mt.color;
+
+      for (var i = 0; i < 4; i++)
+      {
+        if (Random.value < .3f)
+        {
+          addInterior(i);
+        }
+      }
 
       node.AlertCount
         .CombineLatest(node.EnemyCount, node.IsScanned, (a, e, v) => v ? (e > 0 ? e : a) : 0)
@@ -61,7 +68,12 @@ public class NodePresenter : MonoBehaviour
 
       node.OnHere
         .CombineLatest(node.OnDest, (l, r) => l || r)
-        .Subscribe(b => interiorContainer.gameObject.SetActive(b))
+        .Subscribe(b => {
+          interiorContainer
+          .GetComponentsInChildren<MeshRenderer>()
+          .ToList()
+          .ForEach(m => m.enabled = b);
+        })
         .AddTo(this);
 
       var deadend =
@@ -121,14 +133,6 @@ public class NodePresenter : MonoBehaviour
         {
           beacon.SetActive(b);
         });
-
-      for (var i = 0; i < 4; i++)
-      {
-        if (Random.value < .3f)
-        {
-          addInterior(i);
-        }
-      }
 
       /*
       node.Degree

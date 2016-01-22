@@ -6,9 +6,10 @@ public class AudioManager : SingletonMonoBehaviour<AudioManager>
   public static AudioSource EnemyDetect;
   public static AudioSource Door;
   public static AudioSource Walk;
-  public static AudioSource MaleScream;
+  public static AudioSource Scream;
   public static AudioSource Powerup;
   public static AudioSource Breach;
+  public static AudioSource Damage;
 
   void Awake()
   {
@@ -21,9 +22,10 @@ public class AudioManager : SingletonMonoBehaviour<AudioManager>
     EnemyDetect = audios[0];
     Door = audios[1];
     Walk = audios[2];
-    MaleScream = audios[3];
+    Damage = audios[3];
     Powerup = audios[4];
     Breach = audios[5];
+    Scream = audios[6];
   }
   public void PlayLoop(AudioSource au)
   {

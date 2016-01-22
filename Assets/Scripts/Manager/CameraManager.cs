@@ -14,10 +14,10 @@ public class CameraManager : SingletonMonoBehaviour<CameraManager>
   Camera skyCam;
   [SerializeField]
   Camera bgCam;
-  float[] heights = { 35, 125, 0 };
+  float[] heights = { 35, 125, 15 };
   float baseRatio = 16f / 9f;
   ReactiveProperty<float> aspect = new ReactiveProperty<float>(1);
-
+  Tweener shakeTween;
   void Awake()
   {
     if(this != Instance)
@@ -73,7 +73,7 @@ public class CameraManager : SingletonMonoBehaviour<CameraManager>
     this
       .UpdateAsObservable()
       .Where(_ => Input.GetKeyUp(KeyCode.O))
-      .Subscribe(_ => mapView.Value = !mapView.Value)
+      .Subscribe(_ => { mapView.Value = !mapView.Value; })
       .AddTo(this);
   }
   //keep rot and go backward
@@ -91,6 +91,15 @@ public class CameraManager : SingletonMonoBehaviour<CameraManager>
     cameraPivot.transform
       .DOLocalMove(pos, .2f)
       .SetEase(Ease.OutQuad);
+  }
+  public void shake()
+  {
+    var pos = GraphManager.Instance.CoordsToVec3(PlayerManager.Instance.CurrentCoords.Value);
+    shakeTween.Complete();
+    shakeTween = cameraPivot.transform
+      .DOLocalMoveX(pos.x + 1f, .05f)
+      .SetLoops(2, LoopType.Yoyo)
+      .OnComplete(() => cameraPivot.DOMove(pos, 0));
   }
 }
 
