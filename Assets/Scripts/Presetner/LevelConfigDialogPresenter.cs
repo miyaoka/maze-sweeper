@@ -4,16 +4,18 @@ using UnityEngine.UI;
 using UniRx;
 using UnityEngine.Events;
 
-public class LevelConfigDialogDetail
+public class LevelConfigParam
 {
   public int Col;
   public int Row;
-  public float Enemy;
-  public LevelConfigDialogDetail(int col, int row, float enemy)
+  public float EnemyRatio;
+  public int maxEnemyCount;
+  public LevelConfigParam(int col, int row, float enemyRatio, int maxEnemyCount)
   {
     this.Col = col;
     this.Row = row;
-    this.Enemy = enemy;
+    this.EnemyRatio = enemyRatio;
+    this.maxEnemyCount = maxEnemyCount;
   }
 }
 public class LevelConfigDialogPresenter : DialogPresenterBase
@@ -27,13 +29,17 @@ public class LevelConfigDialogPresenter : DialogPresenterBase
   [SerializeField]
   Slider rowSlider;
   [SerializeField]
-  Slider enemySlider;
+  Slider enemyRatioSlider;
+  [SerializeField]
+  Slider enemyCountSlider;
   [SerializeField]
   Text colText;
   [SerializeField]
   Text rowText;
   [SerializeField]
-  Text enemyText;
+  Text enemyRatioText;
+  [SerializeField]
+  Text enemyCountText;
   [SerializeField]
   Button submitBtn;
   [SerializeField]
@@ -46,34 +52,42 @@ public class LevelConfigDialogPresenter : DialogPresenterBase
     colSlider.maxValue = 25;
     rowSlider.maxValue = 100;
     colSlider.minValue = rowSlider.minValue = 8;
-    enemySlider.minValue = .05f;
-    enemySlider.maxValue = .15f;
+    enemyRatioSlider.minValue = .07f;
+    enemyRatioSlider.maxValue = .17f;
+    enemyCountSlider.minValue = 1;
+    enemyCountSlider.maxValue = 10;
   }
 
   void Start()
   {
     colSlider
       .OnValueChangedAsObservable()
-      .Subscribe(v => colText.text = v.ToString())
+      .SubscribeToText(colText)
       .AddTo(this);
     rowSlider
       .OnValueChangedAsObservable()
-      .Subscribe(v => rowText.text = v.ToString())
+      .SubscribeToText(rowText)
       .AddTo(this);
-    enemySlider
+    enemyRatioSlider
       .OnValueChangedAsObservable()
-      .Subscribe(v => enemyText.text = v.ToString("P1"))
+      .Subscribe(v => enemyRatioText.text = v.ToString("P1"))
+      .AddTo(this);
+    enemyCountSlider
+      .OnValueChangedAsObservable()
+      .SubscribeToText(enemyCountText)
       .AddTo(this);
   }
-  public void Open(LevelConfigDialogDetail param, UnityAction<LevelConfigDialogDetail> onSubmit, UnityAction onClose = null)
+  public void Open(LevelConfigParam param, UnityAction<LevelConfigParam> onSubmit, UnityAction onClose = null)
   {
     this.onClose = onClose;
     colSlider.value = param.Col;
     rowSlider.value = param.Row;
-    enemySlider.value = param.Enemy;
+    enemyRatioSlider.value = param.EnemyRatio;
+    enemyCountSlider.value = param.maxEnemyCount;
     panel.SetActive(true);
 
-    submitBtn.onClick.AddListener(() => onSubmit(new LevelConfigDialogDetail((int)colSlider.value, (int)rowSlider.value, enemySlider.value)));
+    submitBtn.onClick.AddListener(() => onSubmit(
+      new LevelConfigParam((int)colSlider.value, (int)rowSlider.value, enemyRatioSlider.value, (int)enemyCountSlider.value)));
     submitBtn.onClick.AddListener(closePanel);
 
     showAllBtn.onClick.AddListener(() => GraphManager.Instance.ShowAllNode());

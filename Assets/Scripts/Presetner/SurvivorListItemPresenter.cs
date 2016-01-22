@@ -13,8 +13,7 @@ public class SurvivorListItemPresenter : MonoBehaviour
   RectTransform healthTransform;
   [SerializeField]
   Text healthText;
-  [SerializeField]
-  float healthUnitWidth = 10f;
+  float healthUnitWidth = 20f;
 
   Survivor survivor;
 

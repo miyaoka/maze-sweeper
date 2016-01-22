@@ -4,22 +4,25 @@ using UniRx;
 using UniRx.Triggers;
 using DG.Tweening;
 using System.Linq;
+using UnityEngine.Events;
+
 public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
 {
   [SerializeField]
-  GameObject playerPrefab;
-  [SerializeField]
-  GameObject survivorDeadPrefab;
+  GameObject survivorPrefab;
   [SerializeField]
   GameObject bloodPrefab;
   [SerializeField]
+  GameObject alienPrefab;
+
   GameObject player;
+  GameObject playerBody;
   public ReactiveProperty<IntVector2> CurrentCoords = new ReactiveProperty<IntVector2>();
   public ReactiveProperty<IntVector2> DestCoords = new ReactiveProperty<IntVector2>();
-  public ReactiveProperty<int> Health = new ReactiveProperty<int>();
 
   Sequence sq;
-  GraphManager gm;
+  GraphManager graph;
+  GameManager gm;
 
   void Awake()
   {
@@ -28,10 +31,27 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
       Destroy(this);
       return;
     }
-    gm = GraphManager.Instance;
+    graph = GraphManager.Instance;
+    gm = GameManager.Instance;
+
+
+    /*
+    player
+      .GetComponentsInChildren<Collider>()
+      .ToList()
+      .ForEach(c => Destroy(c));
+      */
+
   }
   void Start()
   {
+  }
+  public void InitPlayer(IntVector2 dest)
+  {
+    player = Instantiate(survivorPrefab);
+    graph.AddToView(player);
+    playerBody = player.GetComponent<SurvivorPresenter>().body;
+    MovePos(dest, true);
   }
   public void MoveDir(Dirs dir)
   {
@@ -43,7 +63,7 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
       }
     }
 
-    player.transform.DORotate(new Vector3(0, (int)dir * -90 + 90, 0), .5f).SetEase(Ease.InOutQuad);
+    playerBody.transform.DORotate(new Vector3(0, (int)dir * -90 + 90, 0), .5f).SetEase(Ease.InOutQuad);
 
     /*
     var sr = player.GetComponentInChildren<SpriteRenderer>();
@@ -56,9 +76,10 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
       ? true
       : sr.flipX;
       */
-    var node = gm.graph.GetNode(CurrentCoords.Value);
+    var node = graph.graph.GetNode(CurrentCoords.Value);
     var edge = node.EdgeArray[(int)dir];
-    if (edge == null) {
+    if (edge == null)
+    {
       return;
     }
 
@@ -69,14 +90,14 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
   public void MovePos(IntVector2 dest, bool noAnim = false)
   {
     GameManager.Instance.OnBomb.Value = false;
-    var node = gm.ShowNode(dest);
+    var node = graph.ShowNode(dest);
     if (node == null)
     {
       return;
     }
     DestCoords.Value = dest;
     CameraManager.Instance.MovePos(dest);
-    gm.ScanEnemies(node);
+    graph.ScanEnemies(node);
 
     //look-ahead
     /*
@@ -89,9 +110,13 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
       });
       */
 
+    if(node.EnemyCount.Value > 0)
+    {
+      gm.ViewState.Value = ViewStateName.Battle;
+    }
     if (noAnim)
     {
-      player.transform.localPosition = gm.CoordsToVec3(dest);
+      player.transform.localPosition = graph.CoordsToVec3(dest);
       onMoved(node);
       return;
     }
@@ -104,7 +129,7 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
     sq = DOTween.Sequence();
     startWalk();
     sq.Append(player.transform
-      .DOLocalMove(gm.CoordsToVec3(dest), 1f)
+      .DOLocalMove(graph.CoordsToVec3(dest), 1f)
       .SetEase(Ease.InOutQuad)
       .OnComplete(stopWalk)
     );
@@ -120,28 +145,26 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
     var ec = node.EnemyCount.Value;
     if (ec > 0)
     {
-      Debug.Log("enemy:" + ec);
-//      Health.Value -= ec;
-      SurvivorManager.Instance.AddDamages(ec);
-
-      gm.ClearNodeEnemy(node);
-      gm.ScanEnemies(node);
-
-      AudioManager.MaleScream.Play();
-      while (ec-- > 0)
+      StartCoroutine( enemyAttacks(ec, ()=>
       {
-        createDead(node.Coords);
-      }
+        graph.ClearNodeEnemy(node);
+        graph.ScanEnemies(node);
+
+        if (SurvivorManager.Instance.LivingList.Count > 0)
+        {
+          stopKnock();
+          gm.ViewState.Value = ViewStateName.Move;
+        }
+      }));
 
     }
-    if (gm.isExit(node))
+    if (graph.isExit(node))
     {
       GameManager.Instance.onExit();
     }
     if (node.HasItem.Value)
     {
       AudioManager.Powerup.Play();
-      Health.Value += 1;
       node.HasItem.Value = false;
       GameManager.Instance.AddTime();
     }
@@ -162,19 +185,122 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
     AudioManager.Instance.PlayLoop(AudioManager.Walk);
   }
 
-  void createDead(IntVector2 dest)
+  public void CreateDead(Survivor sv)
+  {
+    AudioManager.Scream.Play();
+    //last one guy
+    if (SurvivorManager.Instance.LivingList.Count == 0)
+    {
+      player.GetComponentInChildren<Animator>().enabled = false;
+      player.GetComponent<SurvivorPresenter>().nameText.text = sv.Name.Value;
+      gm.AllDead();
+      return;
+    }
+    var range = 3f;
+    var dead = Instantiate(survivorPrefab);
+    dead.transform.position = 
+    graph.CoordsToVec3(CurrentCoords.Value) + new Vector3(Random.Range(-range, range), 0f, Random.Range(-range, range));
+
+    var sp = dead.GetComponent<SurvivorPresenter>();
+    sp.nameText.text = sv.Name.Value;
+    sp.body.transform.rotation = Quaternion.Euler(new Vector3(0, Random.Range(0, 360f), 0));
+
+    dead.GetComponentInChildren<Animator>().enabled = false;
+    graph.AddToView(dead);
+  }
+  IEnumerator enemyAttacks(int count, UnityAction onComplete)
   {
     //    var diff = Random.insideUnitCircle * 2f;
-    var range = 2f;
-    var dead = Instantiate(
-      survivorDeadPrefab,
-      gm.CoordsToVec3(dest) + new Vector3(Random.Range(-range, range), 0.1f, Random.Range(-range, range)),
-      Quaternion.Euler(new Vector3(20f, Random.Range(0, 360f), 0))
+    var radUnit = Mathf.PI * 2 / count;
+    var baseRad = Random.Range(0, Mathf.PI * 2);
+    var basePos = graph.CoordsToVec3(CurrentCoords.Value);
+    var complete = 0;
+
+    for (var i = 0; i < count; i++)
+    {
+      var rad = Random.Range(i, i + .8f) * radUnit + baseRad;
+      var len = Random.Range(2f, 4f);
+
+      enemyAttack(
+        basePos + new Vector3(Mathf.Sin(rad) * len, 0f, Mathf.Cos(rad) * len),
+        basePos,
+        () => { complete += 1; },
+        i == 0 ? 0 : Random.Range(0, count * .2f)
+        );
+    }
+    while (complete < count)
+    {
+      yield return null;
+    }
+    onComplete();
+  }
+  void enemyAttack(Vector3 initPos, Vector3 targetPos, UnityAction onComplete, float delay)
+  {
+    var enemy = Instantiate(
+      alienPrefab,
+      initPos,
+      Quaternion.identity
     ) as GameObject;
 
-    gm.AddToView(dead);
-    dead.transform.DOLocalRotate(
-      new Vector3(90, dead.transform.rotation.eulerAngles.y, 0), Random.Range(.3f, .6f)
-    ).SetEase(Ease.InCirc);
+    enemy.transform.LookAt(player.transform);
+    enemy.transform.position += new Vector3(0, -2, 0);
+    graph.AddToView(enemy);
+
+    var attack = .2f;
+    var seq = DOTween.Sequence();
+
+    //popup
+    seq.Append(
+      enemy.transform
+        .DOMoveY(0, .2f)
+        .SetEase(Ease.OutQuad)
+      );
+
+    //attack
+    seq.Append(
+      enemy.transform
+      .DOMoveY(Random.Range(1f, 2f), attack)
+      .SetEase(Ease.OutBack)
+      .SetDelay(delay)
+      );
+    seq.Join(
+      enemy.transform
+      .DOMoveX(targetPos.x, attack)
+      .SetEase(Ease.OutSine)
+      );
+    seq.Join(
+      enemy.transform
+      .DOMoveZ(targetPos.z, attack)
+      .SetEase(Ease.OutSine)
+      );
+    seq.AppendCallback(() =>
+    {
+      startKnock();
+      AudioManager.Damage.Play();
+      CameraManager.Instance.shake();
+      SurvivorManager.Instance.AddDamages(1);
+    });
+
+    //return and hide
+    seq.Append(
+       enemy.transform
+            .DOMove(initPos, .3f)
+            .SetEase(Ease.OutSine)
+      );
+    seq.AppendCallback(() =>
+    {
+      onComplete();
+      Destroy(enemy);
+    });
+
+//    yield return null;
+  }
+  void startKnock()
+  {
+    player.GetComponentInChildren<Animator>().SetBool("IsKnocked", true);
+  }
+  void stopKnock()
+  {
+    player.GetComponentInChildren<Animator>().SetBool("IsKnocked", false);
   }
 }

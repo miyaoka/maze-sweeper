@@ -19,18 +19,17 @@ public class SurvivorManager : SingletonMonoBehaviour<SurvivorManager>
       Destroy(this);
       return;
     }
-    init();
   }
 
-  void init()
+  public void Init()
   {
     clearView();
     SurvivorList.Clear();
 
-    SurvivorList.Add(new Survivor("Andy", 5));
-    SurvivorList.Add(new Survivor("Brian", 4));
-    SurvivorList.Add(new Survivor("Charles", 4));
-    SurvivorList.Add(new Survivor("David", 5));
+    SurvivorList.Add(new Survivor("Andy", 3));
+    SurvivorList.Add(new Survivor("Brian", 3));
+    SurvivorList.Add(new Survivor("Charles", 2));
+    SurvivorList.Add(new Survivor("David", 2));
 
     SurvivorList
       .ForEach(s => addView(s));
@@ -40,9 +39,7 @@ public class SurvivorManager : SingletonMonoBehaviour<SurvivorManager>
   {
     while (totalDamage > 0)
     {
-      var livingList = SurvivorList
-        .Where(s => s.CurrentHealth.Value > 0);
-
+      var livingList = LivingList;
       if (!livingList.Any())
         return;
 
@@ -50,6 +47,19 @@ public class SurvivorManager : SingletonMonoBehaviour<SurvivorManager>
       var damage = Mathf.Min(totalDamage, 1);
       totalDamage -= damage;
       randomSurvivor.CurrentHealth.Value -= damage;
+      if(randomSurvivor.CurrentHealth.Value <= 0)
+      {
+        PlayerManager.Instance.CreateDead(randomSurvivor);
+      }
+    }
+  }
+  public List<Survivor> LivingList
+  {
+    get
+    {
+      return SurvivorList
+          .Where(s => s.CurrentHealth.Value > 0)
+          .ToList();
     }
   }
   void clearView()
