@@ -21,14 +21,16 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
   public GameStateName GameState = GameStateName.Init;
   public ReactiveProperty<bool> OnBomb = new ReactiveProperty<bool>();
   public ReactiveProperty<bool> OnMenu = new ReactiveProperty<bool>();
+  public ReactiveProperty<bool> IsMapView = new ReactiveProperty<bool>();
 
 
   LevelConfigParam levelConf = new LevelConfigParam(12, 25, .1f, 3);
   bool passExit = false;
   bool isAllDead = false;
   PlayerManager pm;
-  IConnectableObservable<long> timerUpdate;
+  IConnectableObservable<float> timerUpdate;
   System.IDisposable timerConnect;
+  float initialTime = 60f * 3f;
 
   void Awake()
   {
@@ -46,16 +48,20 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
       .AddTo(this);
 
     pm = PlayerManager.Instance;
+
+    IsMapView = ViewState
+      .Select(s => s == ViewStateName.Map)
+      .ToReactiveProperty();
   }
   void Start()
   {
     timerUpdate = Observable
-      .Interval(System.TimeSpan.FromSeconds(1))
-//      .EveryFixedUpdate()
-//      .Select(_ => Time.fixedDeltaTime)
+//      .Interval(System.TimeSpan.FromSeconds(10))
+      .EveryFixedUpdate()
+      .Select(_ => Time.fixedDeltaTime)
       .Publish();
 
-    timerUpdate.Subscribe(_ => LevelTimer.Value -= 1);
+    timerUpdate.Subscribe(t => LevelTimer.Value -= t);
 
     Debug.Log("--start");
     StartCoroutine(gameLoop());
@@ -83,7 +89,8 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
     var pn = GraphManager.Instance.InitGrid(levelConf);
     AlertCount.Value = 0;
     ViewState.Value = ViewStateName.Move;
-    LevelTimer.Value = LevelTimerMax.Value = 60f * 3f;
+    LevelTimer.Value = LevelTimerMax.Value = initialTime;
+
     SurvivorManager.Instance.Init();
     isAllDead = false;
 

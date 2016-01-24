@@ -150,6 +150,8 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
         graph.ClearNodeEnemy(node);
         graph.ScanEnemies(node);
 
+        player.GetComponent<SurvivorPresenter>().ShowDamage(ec);
+
         if (SurvivorManager.Instance.LivingList.Count > 0)
         {
           stopKnock();
@@ -167,6 +169,7 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
       AudioManager.Powerup.Play();
       node.HasItem.Value = false;
       GameManager.Instance.AddTime();
+      player.GetComponent<SurvivorPresenter>().ShowMsg("+30sec");
     }
 
 

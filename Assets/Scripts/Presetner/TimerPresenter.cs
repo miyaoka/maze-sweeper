@@ -2,6 +2,7 @@
 using System.Collections;
 using UnityEngine.UI;
 using UniRx;
+using DG.Tweening;
 
 public class TimerPresenter : MonoBehaviour
 {
@@ -10,12 +11,18 @@ public class TimerPresenter : MonoBehaviour
   [SerializeField]
   Image timerImage;
 
+  ReactiveProperty<float> wholeTimer;
+  GameManager gm;
   void Awake()
   {
-    var gm = GameManager.Instance;
-
+    gm = GameManager.Instance;
+    wholeTimer =
     gm
       .LevelTimer
+      .Select(t => Mathf.Ceil(t))
+      .ToReactiveProperty();
+
+    wholeTimer
       .Select(t =>
       //      string.Format("{0:D2}'{1:D2}''{2:D2}",
       string.Format("{0:D2}:{1:D2}",
@@ -27,16 +34,34 @@ public class TimerPresenter : MonoBehaviour
       .SubscribeToText(timerText)
       .AddTo(this);
 
-    gm
-      .LevelTimer
+    wholeTimer
       .Select(t => t <= 30)
       .Subscribe(b => timerText.color = b ? Color.red : Color.black)
       .AddTo(this);
 
-    gm
-      .LevelTimer
+
+  }
+  void Start()
+  {
+    Tweener timerTween = null;
+
+    var timeAmount =
+    wholeTimer
       .CombineLatest(gm.LevelTimerMax, (l, r) => l / r)
-      .Subscribe(t => timerImage.fillAmount = t)
+      .ToReactiveProperty();
+
+    timerImage.fillAmount = timeAmount.Value;
+
+    timeAmount
+      .Subscribe(t =>
+      {
+        if (timerTween != null)
+        {
+          timerTween.Kill();
+        }
+        //to show full-filled image, fast tween if the value is full
+        timerTween = timerImage.DOFillAmount(t, (t == 1) ? .5f : 1f).SetEase(Ease.Linear);
+      })
       .AddTo(this);
   }
 }

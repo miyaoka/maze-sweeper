@@ -2,6 +2,7 @@
 using System.Collections;
 using UnityEngine.UI;
 using UniRx;
+using DG.Tweening;
 
 public class SurvivorListItemPresenter : MonoBehaviour
 {
@@ -10,7 +11,9 @@ public class SurvivorListItemPresenter : MonoBehaviour
   [SerializeField]
   LayoutElement healthLayout;
   [SerializeField]
-  RectTransform healthTransform;
+  Image healthImage;
+  [SerializeField]
+  Image healthDiffImage;
   [SerializeField]
   Text healthText;
   float healthUnitWidth = 20f;
@@ -37,10 +40,34 @@ public class SurvivorListItemPresenter : MonoBehaviour
         .Subscribe(h => healthLayout.preferredWidth = h * healthUnitWidth)
         .AddTo(this);
 
+      Tweener healthTween = null;
+
+      var healthAmount = 
       survivor
         .CurrentHealth
         .CombineLatest(survivor.MaxHealth, (c, m) => Mathf.Clamp01(c / m))
-        .Subscribe(h => healthTransform.anchorMax = new Vector2(h, 1))
+        .ToReactiveProperty();
+
+      healthImage.fillAmount = healthAmount.Value;
+
+      healthAmount
+        .Subscribe(v => {
+          if(healthTween != null)
+          {
+            healthTween.Kill();
+          }
+          healthTween = healthImage.DOFillAmount(v, 1f);
+          /*
+          if (v.d > 0)
+          {
+            tw = healthDiffImage.DOFillAmount(v.v, 1f).OnComplete(() => healthImage.fillAmount = v.v);
+          }
+          else {
+            tw = healthImage.DOFillAmount(v.v, 1f).OnComplete(() => healthDiffImage.fillAmount = v.v);
+          }
+          */
+          
+          })
         .AddTo(this);
 
       survivor
