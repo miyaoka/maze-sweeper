@@ -8,13 +8,13 @@ public class LevelConfigParam
 {
   public int Col;
   public int Row;
-  public float EnemyRatio;
+  public float EnemyRate;
   public int maxEnemyCount;
-  public LevelConfigParam(int col, int row, float enemyRatio, int maxEnemyCount)
+  public LevelConfigParam(int col, int row, float enemyRate, int maxEnemyCount)
   {
     this.Col = col;
     this.Row = row;
-    this.EnemyRatio = enemyRatio;
+    this.EnemyRate = enemyRate;
     this.maxEnemyCount = maxEnemyCount;
   }
 }
@@ -29,7 +29,7 @@ public class LevelConfigDialogPresenter : DialogPresenterBase
   [SerializeField]
   Slider rowSlider;
   [SerializeField]
-  Slider enemyRatioSlider;
+  Slider enemyRateSlider;
   [SerializeField]
   Slider enemyCountSlider;
   [SerializeField]
@@ -37,7 +37,7 @@ public class LevelConfigDialogPresenter : DialogPresenterBase
   [SerializeField]
   Text rowText;
   [SerializeField]
-  Text enemyRatioText;
+  Text enemyRateText;
   [SerializeField]
   Text enemyCountText;
   [SerializeField]
@@ -52,8 +52,8 @@ public class LevelConfigDialogPresenter : DialogPresenterBase
     colSlider.maxValue = 25;
     rowSlider.maxValue = 100;
     colSlider.minValue = rowSlider.minValue = 8;
-    enemyRatioSlider.minValue = .07f;
-    enemyRatioSlider.maxValue = .17f;
+    enemyRateSlider.minValue = .07f;
+    enemyRateSlider.maxValue = .17f;
     enemyCountSlider.minValue = 1;
     enemyCountSlider.maxValue = 10;
   }
@@ -68,9 +68,9 @@ public class LevelConfigDialogPresenter : DialogPresenterBase
       .OnValueChangedAsObservable()
       .SubscribeToText(rowText)
       .AddTo(this);
-    enemyRatioSlider
+    enemyRateSlider
       .OnValueChangedAsObservable()
-      .Subscribe(v => enemyRatioText.text = v.ToString("P1"))
+      .Subscribe(v => enemyRateText.text = v.ToString("P1"))
       .AddTo(this);
     enemyCountSlider
       .OnValueChangedAsObservable()
@@ -82,12 +82,12 @@ public class LevelConfigDialogPresenter : DialogPresenterBase
     this.onClose = onClose;
     colSlider.value = param.Col;
     rowSlider.value = param.Row;
-    enemyRatioSlider.value = param.EnemyRatio;
+    enemyRateSlider.value = param.EnemyRate;
     enemyCountSlider.value = param.maxEnemyCount;
     panel.SetActive(true);
 
     submitBtn.onClick.AddListener(() => onSubmit(
-      new LevelConfigParam((int)colSlider.value, (int)rowSlider.value, enemyRatioSlider.value, (int)enemyCountSlider.value)));
+      new LevelConfigParam((int)colSlider.value, (int)rowSlider.value, enemyRateSlider.value, (int)enemyCountSlider.value)));
     submitBtn.onClick.AddListener(closePanel);
 
     showAllBtn.onClick.AddListener(() => GraphManager.Instance.ShowAllNode());

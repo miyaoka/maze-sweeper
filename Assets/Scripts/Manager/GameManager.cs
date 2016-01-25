@@ -158,7 +158,7 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
       //      GraphManager.Instance.DestroyGrid();
 //      ViewState.Value = ViewStateName.Map;
       MenuManager.Instance.ModalDialog().Open(
-        "You died...",
+        "You have died...",
         new List<DialogOptionDetails> {
           new DialogOptionDetails ("ok", () => {
             onExit = false;

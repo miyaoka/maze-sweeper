@@ -67,7 +67,7 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
       .ShuffledNodeList
       .Where(n => n.Coords.Y > 1)
       .ToList<Node>();
-    addEnemies(list, levelConf.EnemyRatio, levelConf.maxEnemyCount);
+    addEnemies(list, levelConf.EnemyRate, levelConf.maxEnemyCount);
 
     //exit zone
     exitZone.transform.localPosition = new Vector3(
