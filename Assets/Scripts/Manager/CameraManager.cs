@@ -7,7 +7,7 @@ using UniRx.Triggers;
 public class CameraManager : SingletonMonoBehaviour<CameraManager>
 {
   [SerializeField]
-  Transform cameraPivot;
+  public Transform cameraPivot;
   [SerializeField]
   Camera mainCam;
   [SerializeField]
@@ -45,6 +45,7 @@ public class CameraManager : SingletonMonoBehaviour<CameraManager>
     float mainCamPos = mainCam.transform.localPosition.y;
     var mainCamRot = mainCam.transform.localRotation.eulerAngles;
 
+    /*
     var mapView = new ReactiveProperty<bool>();
 
     mapView
@@ -75,6 +76,7 @@ public class CameraManager : SingletonMonoBehaviour<CameraManager>
       .Where(_ => Input.GetKeyUp(KeyCode.O))
       .Subscribe(_ => { mapView.Value = !mapView.Value; })
       .AddTo(this);
+      */
   }
   //keep rot and go backward
   void moveDist(float dist)

@@ -11,7 +11,7 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
   [SerializeField]
   Transform viewContainer;
   [SerializeField]
-  GameObject exitZone;
+  public GameObject exitZone;
   [SerializeField]
   GameObject gridNodePrefab;
   [SerializeField]
@@ -67,7 +67,7 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
       .ShuffledNodeList
       .Where(n => n.Coords.Y > 1)
       .ToList<Node>();
-    addEnemies(list, levelConf.EnemyRate, levelConf.maxEnemyCount);
+    addEnemies(list, levelConf.EnemyRate, levelConf.MaxEnemyCount);
 
     //exit zone
     exitZone.transform.localPosition = new Vector3(

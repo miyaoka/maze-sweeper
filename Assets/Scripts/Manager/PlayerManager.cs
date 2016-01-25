@@ -96,7 +96,6 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
       return;
     }
     DestCoords.Value = dest;
-    CameraManager.Instance.MovePos(dest);
     graph.ScanEnemies(node);
 
     //look-ahead
@@ -120,6 +119,8 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
       onMoved(node);
       return;
     }
+
+    CameraManager.Instance.MovePos(dest);
 
     //if already moving, force complete.
     if (sq != null)

@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using UniRx;
 using UniRx.Triggers;
 using UnityEngine.UI;
+using DG.Tweening;
+
 public enum ViewStateName { Move, Map, Battle };
 public enum GameStateName { Init, EnterLevel, OnLevel, ExitLevel };
 public class GameManager : SingletonMonoBehaviour<GameManager>
@@ -13,6 +15,13 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
 
   [SerializeField]
   GameObject hud;
+
+  [SerializeField]
+  Text floorText;
+  [SerializeField]
+  Text startText;
+  [SerializeField]
+  Text guideText;
 
   public ReactiveProperty<int> AlertCount = new ReactiveProperty<int>();
   public ReactiveProperty<float> LevelTimer = new ReactiveProperty<float>();
@@ -86,22 +95,49 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
   }
   IEnumerator enterLevel()
   {
+    timerStop();
     var pn = GraphManager.Instance.InitGrid(levelConf);
     AlertCount.Value = 0;
-    ViewState.Value = ViewStateName.Move;
+    ViewState.Value = ViewStateName.Map;
     LevelTimer.Value = LevelTimerMax.Value = initialTime;
-
     SurvivorManager.Instance.Init();
     isAllDead = false;
 
-    timerConnect = timerUpdate.Connect();
-    OnMenu.Value = false;
-
+    floorText.enabled = startText.enabled = guideText.enabled = false;
 
     Debug.Log(pn.Coords);
     pm.InitPlayer(pn.Coords);
+    var ct = CameraManager.Instance.cameraPivot;
+    ct.transform.position = GraphManager.Instance.exitZone.transform.position;
 
-    yield return 0;
+    floorText.enabled = true;
+
+    ct
+      .DOLocalMove(GraphManager.Instance.CoordsToVec3(pn.Coords), 1.5f)
+      .SetEase(Ease.InOutCubic)
+      .SetDelay(1f)
+      .OnComplete(() =>
+      {
+        floorText.enabled = false;
+        ViewState.Value = ViewStateName.Move;
+        timerResume();
+        OnMenu.Value = false;
+
+        startText.enabled = true;
+        Observable.Timer(System.TimeSpan.FromSeconds(1f)).Subscribe(s => {
+          startText.enabled = false;
+
+          guideText.enabled = true;
+          Observable.Timer(System.TimeSpan.FromSeconds(10f)).Subscribe(g => {
+            guideText.enabled = false;
+          });
+        });
+      });
+
+    while (OnMenu.Value)
+    {
+      yield return null;
+    }
   }
   IEnumerator levelConfig()
   {
@@ -173,7 +209,10 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
   }
   public void timerStop()
   {
-    timerConnect.Dispose();
+    if(timerConnect != null)
+    {
+      timerConnect.Dispose();
+    }
   }
   public void timerResume()
   {

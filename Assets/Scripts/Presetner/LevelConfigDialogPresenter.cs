@@ -9,13 +9,13 @@ public class LevelConfigParam
   public int Col;
   public int Row;
   public float EnemyRate;
-  public int maxEnemyCount;
+  public int MaxEnemyCount;
   public LevelConfigParam(int col, int row, float enemyRate, int maxEnemyCount)
   {
     this.Col = col;
     this.Row = row;
     this.EnemyRate = enemyRate;
-    this.maxEnemyCount = maxEnemyCount;
+    this.MaxEnemyCount = maxEnemyCount;
   }
 }
 public class LevelConfigDialogPresenter : DialogPresenterBase
@@ -83,7 +83,7 @@ public class LevelConfigDialogPresenter : DialogPresenterBase
     colSlider.value = param.Col;
     rowSlider.value = param.Row;
     enemyRateSlider.value = param.EnemyRate;
-    enemyCountSlider.value = param.maxEnemyCount;
+    enemyCountSlider.value = param.MaxEnemyCount;
     panel.SetActive(true);
 
     submitBtn.onClick.AddListener(() => onSubmit(
