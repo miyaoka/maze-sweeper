@@ -201,7 +201,7 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
       return;
     }
     var range = 3f;
-    var dead = Instantiate(survivorPrefab);
+    var dead = Instantiate(player);
     dead.transform.position = 
     graph.CoordsToVec3(CurrentCoords.Value) + new Vector3(Random.Range(-range, range), 0f, Random.Range(-range, range));
 
