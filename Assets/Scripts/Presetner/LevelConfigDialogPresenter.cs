@@ -10,12 +10,14 @@ public class LevelConfigParam
   public int Row;
   public float EnemyRate;
   public int MaxEnemyCount;
-  public LevelConfigParam(int col, int row, float enemyRate, int maxEnemyCount)
+  public int Timer;
+  public LevelConfigParam(int col, int row, float enemyRate, int maxEnemyCount, int timer)
   {
-    this.Col = col;
-    this.Row = row;
-    this.EnemyRate = enemyRate;
-    this.MaxEnemyCount = maxEnemyCount;
+    Col = col;
+    Row = row;
+    EnemyRate = enemyRate;
+    MaxEnemyCount = maxEnemyCount;
+    Timer = timer;
   }
 }
 public class LevelConfigDialogPresenter : DialogPresenterBase
@@ -33,6 +35,8 @@ public class LevelConfigDialogPresenter : DialogPresenterBase
   [SerializeField]
   Slider enemyCountSlider;
   [SerializeField]
+  Slider timerSlider;
+  [SerializeField]
   Text colText;
   [SerializeField]
   Text rowText;
@@ -40,6 +44,8 @@ public class LevelConfigDialogPresenter : DialogPresenterBase
   Text enemyRateText;
   [SerializeField]
   Text enemyCountText;
+  [SerializeField]
+  Text timerText;
   [SerializeField]
   Button submitBtn;
   [SerializeField]
@@ -56,6 +62,8 @@ public class LevelConfigDialogPresenter : DialogPresenterBase
     enemyRateSlider.maxValue = .17f;
     enemyCountSlider.minValue = 1;
     enemyCountSlider.maxValue = 10;
+    timerSlider.minValue = 10;
+    timerSlider.maxValue = 300;
   }
 
   void Start()
@@ -76,6 +84,10 @@ public class LevelConfigDialogPresenter : DialogPresenterBase
       .OnValueChangedAsObservable()
       .SubscribeToText(enemyCountText)
       .AddTo(this);
+    timerSlider
+      .OnValueChangedAsObservable()
+      .SubscribeToText(timerText)
+      .AddTo(this);
   }
   public void Open(LevelConfigParam param, UnityAction<LevelConfigParam> onSubmit, UnityAction onClose = null)
   {
@@ -84,10 +96,11 @@ public class LevelConfigDialogPresenter : DialogPresenterBase
     rowSlider.value = param.Row;
     enemyRateSlider.value = param.EnemyRate;
     enemyCountSlider.value = param.MaxEnemyCount;
+    timerSlider.value = param.Timer;
     panel.SetActive(true);
 
     submitBtn.onClick.AddListener(() => onSubmit(
-      new LevelConfigParam((int)colSlider.value, (int)rowSlider.value, enemyRateSlider.value, (int)enemyCountSlider.value)));
+      new LevelConfigParam((int)colSlider.value, (int)rowSlider.value, enemyRateSlider.value, (int)enemyCountSlider.value, (int)timerSlider.value)));
     submitBtn.onClick.AddListener(closePanel);
 
     showAllBtn.onClick.AddListener(() => GraphManager.Instance.ShowAllNode());

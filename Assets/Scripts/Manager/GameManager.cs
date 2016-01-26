@@ -33,13 +33,12 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
   public ReactiveProperty<bool> IsMapView = new ReactiveProperty<bool>();
 
 
-  LevelConfigParam levelConf = new LevelConfigParam(12, 25, .1f, 3);
+  LevelConfigParam levelConf = new LevelConfigParam(12, 25, .1f, 3, 180);
   bool passExit = false;
   bool isAllDead = false;
   PlayerManager pm;
   IConnectableObservable<float> timerUpdate;
   System.IDisposable timerConnect;
-  float initialTime = 60f * 3f;
 
   void Awake()
   {
@@ -99,7 +98,7 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
     var pn = GraphManager.Instance.InitGrid(levelConf);
     AlertCount.Value = 0;
     ViewState.Value = ViewStateName.Map;
-    LevelTimer.Value = LevelTimerMax.Value = initialTime;
+    LevelTimer.Value = LevelTimerMax.Value = levelConf.Timer;
     SurvivorManager.Instance.Init();
     isAllDead = false;
 
