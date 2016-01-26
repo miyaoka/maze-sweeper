@@ -62,7 +62,7 @@ public class LevelConfigDialogPresenter : DialogPresenterBase
     enemyRateSlider.maxValue = .17f;
     enemyCountSlider.minValue = 1;
     enemyCountSlider.maxValue = 10;
-    timerSlider.minValue = 10;
+    timerSlider.minValue = 1;
     timerSlider.maxValue = 300;
   }
 

@@ -26,6 +26,8 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
   public ReactiveProperty<int> AlertCount = new ReactiveProperty<int>();
   public ReactiveProperty<float> LevelTimer = new ReactiveProperty<float>();
   public ReactiveProperty<float> LevelTimerMax = new ReactiveProperty<float>();
+  public ReactiveProperty<float> dangerTimer = new ReactiveProperty<float>();
+  public ReactiveProperty<float> dangerTimerMax = new ReactiveProperty<float>(10);
   public ReactiveProperty<ViewStateName> ViewState = new ReactiveProperty<ViewStateName>();
   public GameStateName GameState = GameStateName.Init;
   public ReactiveProperty<bool> OnBomb = new ReactiveProperty<bool>();
@@ -39,6 +41,8 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
   PlayerManager pm;
   IConnectableObservable<float> timerUpdate;
   System.IDisposable timerConnect;
+  IConnectableObservable<float> dangerTimerUpdate;
+  System.IDisposable dangerTimerConnect;
 
   void Awake()
   {
@@ -68,8 +72,44 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
       .EveryFixedUpdate()
       .Select(_ => Time.fixedDeltaTime)
       .Publish();
+    dangerTimerUpdate = Observable
+      .EveryFixedUpdate()
+      .Select(_ => Time.fixedDeltaTime)
+      .Publish();
 
     timerUpdate.Subscribe(t => LevelTimer.Value -= t);
+    dangerTimerUpdate
+      .Subscribe(t =>
+      {
+        dangerTimer.Value += t;
+        if(dangerTimer.Value >= dangerTimerMax.Value)
+        {
+          SurvivorManager.Instance.AddDamageToAll(1);
+
+          dangerTimer.Value %= dangerTimerMax.Value;
+        }
+      })
+      .AddTo(this);
+
+    LevelTimer
+      .Select(t => t <= 0)
+      .Subscribe(isOver =>
+      {
+        dangerTimer.Value = 0;
+        if (isOver)
+        {
+          LevelTimer.Value = 0;
+          timerStop();
+
+          dangerTimerConnect = dangerTimerUpdate.Connect();
+        }
+        else
+        {
+          timerResume();
+          dangerTimerConnect.Dispose();
+        }
+      })
+      .AddTo(this);
 
     Debug.Log("--start");
     StartCoroutine(gameLoop());
@@ -163,7 +203,7 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
   IEnumerator onLevel()
   {
     passExit = false;
-    while (!isAllDead && !passExit && LevelTimer.Value > 0)
+    while (!isAllDead && !passExit)
     {
       yield return null;
     }
@@ -174,6 +214,9 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
     var onExit = true;
     LevelTimer.Value = Mathf.Max(0, LevelTimer.Value);
     timerConnect.Dispose();
+    dangerTimer.Value = 0;
+    dangerTimerConnect.Dispose();
+
 
     if (passExit)
     {

@@ -139,7 +139,10 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
       onMoved(node);
     });
   }
-
+  public void ShowDamage(int damage)
+  {
+    player.GetComponent<SurvivorPresenter>().ShowDamage(damage);
+  }
   private void onMoved(Node node)
   {
     CurrentCoords.Value = node.Coords;
@@ -151,7 +154,7 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
         graph.ClearNodeEnemy(node);
         graph.ScanEnemies(node);
 
-        player.GetComponent<SurvivorPresenter>().ShowDamage(ec);
+        ShowDamage(ec);
 
         if (SurvivorManager.Instance.LivingList.Count > 0)
         {

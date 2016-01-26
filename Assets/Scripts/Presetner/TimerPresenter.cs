@@ -10,9 +10,14 @@ public class TimerPresenter : MonoBehaviour
   Text timerText;
   [SerializeField]
   Image timerImage;
+  [SerializeField]
+  Image dangerTimerImage;
+  [SerializeField]
+  Text dangerText;
 
   ReactiveProperty<float> wholeTimer;
   GameManager gm;
+  Sequence dangerSeq;
   void Awake()
   {
     gm = GameManager.Instance;
@@ -39,7 +44,6 @@ public class TimerPresenter : MonoBehaviour
       .Subscribe(b => timerText.color = b ? Color.red : Color.black)
       .AddTo(this);
 
-
   }
   void Start()
   {
@@ -61,6 +65,40 @@ public class TimerPresenter : MonoBehaviour
         }
         //to show full-filled image, fast tween if the value is full
         timerTween = timerImage.DOFillAmount(t, (t == 1) ? .5f : 1f).SetEase(Ease.Linear);
+      })
+      .AddTo(this);
+
+    dangerSeq = DOTween.Sequence();
+
+    dangerSeq
+      .Append(dangerText.DOFade(1, .6f).SetEase(Ease.InCubic))
+      .Append(dangerText.DOFade(0, .2f).SetEase(Ease.OutCubic))
+      .SetLoops(-1);
+    dangerSeq.Pause();
+    gm
+      .dangerTimer
+      .CombineLatest(gm.dangerTimerMax, (l, r) => l / r)
+      .Subscribe(v =>
+      {
+        dangerTimerImage.fillAmount = 1 - v;
+      })
+      .AddTo(this);
+    gm
+      .dangerTimer
+      .Select(d => d > 0)
+      .DistinctUntilChanged()
+      .Subscribe(isDanger =>
+      {
+        dangerText.enabled = dangerTimerImage.enabled = isDanger;
+
+        if (isDanger)
+        {
+          dangerSeq.Restart();
+        }
+        else
+        {
+          dangerSeq.Pause();
+        }
       })
       .AddTo(this);
   }
