@@ -65,6 +65,7 @@ public class TimerPresenter : MonoBehaviour
         }
         //to show full-filled image, fast tween if the value is full
         timerTween = timerImage.DOFillAmount(t, (t == 1) ? .5f : 1f).SetEase(Ease.Linear);
+        timerImage.color = Color.HSVToRGB(t * .5f, 1, 1);
       })
       .AddTo(this);
 
