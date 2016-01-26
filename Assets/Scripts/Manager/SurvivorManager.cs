@@ -55,6 +55,7 @@ public class SurvivorManager : SingletonMonoBehaviour<SurvivorManager>
     if (!livingList.Any())
       return;
 
+    AudioManager.Damage.Play();
     PlayerManager.Instance.ShowDamage(livingList.Count);
     livingList.ForEach(s => addDamage(s, eachDamage));
 
