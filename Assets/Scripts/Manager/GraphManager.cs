@@ -162,6 +162,9 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
         break;
       }
     }
+    //add strong enemy
+    list[0].EnemyCount.Value = 10;
+
     list.RemoveRange(0, i);
   }
 
