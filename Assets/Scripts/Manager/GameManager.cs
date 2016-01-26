@@ -35,7 +35,7 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
   public ReactiveProperty<bool> IsMapView = new ReactiveProperty<bool>();
 
 
-  LevelConfigParam levelConf = new LevelConfigParam(12, 25, .1f, 3, 180);
+  LevelConfigParam levelConf = new LevelConfigParam(12, 25, .1f, 3, 120);
   bool passExit = false;
   bool isAllDead = false;
   PlayerManager pm;
