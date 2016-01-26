@@ -21,6 +21,8 @@ public class ControlManager : MonoBehaviour
   IConnectableObservable<Lean.LeanFinger> swipe;
   IConnectableObservable<Lean.LeanFinger> fingerDown;
   IConnectableObservable<Lean.LeanFinger> fingerUp;
+  IConnectableObservable<Lean.LeanFinger> fingerTap;
+  double doubleTapInterval = 400;//ms
 
   GameManager gm;
   void Awake()
@@ -47,6 +49,12 @@ public class ControlManager : MonoBehaviour
       .FromEvent<Lean.LeanFinger>(
       h => Lean.LeanTouch.OnFingerUp += h,
       h => Lean.LeanTouch.OnFingerUp -= h)
+      .Publish();
+
+    fingerTap = Observable
+      .FromEvent<Lean.LeanFinger>(
+      h => Lean.LeanTouch.OnFingerTap += h,
+      h => Lean.LeanTouch.OnFingerTap -= h)
       .Publish();
   }
   void Start()
@@ -91,11 +99,30 @@ public class ControlManager : MonoBehaviour
       .AddTo(this);
 
     //toggle map
+    fingerTap.Connect();
+
+    //by double-click/tap
+    fingerTap
+      .TimeInterval()
+      .Scan((a,b) => {
+        return
+        a.Interval.TotalMilliseconds > doubleTapInterval
+          ? b
+          : new TimeInterval<Lean.LeanFinger>(a.Value, TimeSpan.FromMilliseconds(doubleTapInterval * 2));
+        })
+      .Where(t => t.Interval.TotalMilliseconds <= doubleTapInterval)
+      .Subscribe(t =>
+      {
+        gm.ToggleMap();
+      })
+      .AddTo(this);
+
+    //by key
     this
       .UpdateAsObservable()
       .Where(_ => Input.GetKeyUp(KeyCode.M))
       .Subscribe(_ => {
-        gm.ViewState.Value = gm.ViewState.Value == ViewStateName.Map ? ViewStateName.Move : ViewStateName.Map;
+        gm.ToggleMap();
       })
       .AddTo(this);
 

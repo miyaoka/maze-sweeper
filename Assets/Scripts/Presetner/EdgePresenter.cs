@@ -34,6 +34,8 @@ public class EdgePresenter : MonoBehaviour
             return;
           }
 
+          AudioManager.Door.Play();
+
           door.transform
           .DOLocalMoveY(-2, .3f)
           .OnComplete(() =>

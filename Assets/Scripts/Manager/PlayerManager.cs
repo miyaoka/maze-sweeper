@@ -96,7 +96,6 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
       return;
     }
     DestCoords.Value = dest;
-    CameraManager.Instance.MovePos(dest);
     graph.ScanEnemies(node);
 
     //look-ahead
@@ -121,6 +120,8 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
       return;
     }
 
+    CameraManager.Instance.MovePos(dest);
+
     //if already moving, force complete.
     if (sq != null)
     {
@@ -138,7 +139,10 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
       onMoved(node);
     });
   }
-
+  public void ShowDamage(int damage)
+  {
+    player.GetComponent<SurvivorPresenter>().ShowDamage(damage);
+  }
   private void onMoved(Node node)
   {
     CurrentCoords.Value = node.Coords;
@@ -149,6 +153,8 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
       {
         graph.ClearNodeEnemy(node);
         graph.ScanEnemies(node);
+
+        ShowDamage(ec);
 
         if (SurvivorManager.Instance.LivingList.Count > 0)
         {
@@ -167,6 +173,7 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
       AudioManager.Powerup.Play();
       node.HasItem.Value = false;
       GameManager.Instance.AddTime();
+      player.GetComponent<SurvivorPresenter>().ShowMsg("+30sec");
     }
 
 
@@ -197,7 +204,7 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
       return;
     }
     var range = 3f;
-    var dead = Instantiate(survivorPrefab);
+    var dead = Instantiate(player);
     dead.transform.position = 
     graph.CoordsToVec3(CurrentCoords.Value) + new Vector3(Random.Range(-range, range), 0f, Random.Range(-range, range));
 

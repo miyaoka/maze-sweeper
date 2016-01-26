@@ -28,7 +28,7 @@ public class NodePresenter : MonoBehaviour
   Node node;
   Tweener lightTw;
   Text alertText;
-  float lightMax = 1.0f;
+  float lightMax = 1.8f;
   float lightMin = 0f;
   Color unvisitedFloorColor = new Color(.25f, .25f, .3f);
   void Awake()
@@ -61,18 +61,21 @@ public class NodePresenter : MonoBehaviour
       }
 
       node.AlertCount
-        .CombineLatest(node.EnemyCount, node.IsScanned, (a, e, v) => v ? (e > 0 ? e : a) : 0)
+        .CombineLatest(node.EnemyCount, node.IsScanned, node.OnDest,
+        (a, e, v, h) => v ? (e > 0 ? (h ? 0 : e) : a) : 0)
         .Select(c => c == 0 ? "" : c.ToString())
         .SubscribeToText(alertText)
         .AddTo(this);
 
-      node.OnHere
-        .CombineLatest(node.OnDest, (l, r) => l || r)
+      node.IsScanned
+        .CombineLatest(GameManager.Instance.IsMapView, (s, m) => s && !m)
         .Subscribe(b => {
           interiorContainer
           .GetComponentsInChildren<MeshRenderer>()
           .ToList()
           .ForEach(m => m.enabled = b);
+
+          tiles.SetActive(b);
         })
         .AddTo(this);
 
@@ -108,8 +111,6 @@ public class NodePresenter : MonoBehaviour
         {
           if (b)
           {
-            tiles.SetActive(b);
-
             roomLight.enabled = true;
             lightTw.Kill();
             lightTw = roomLight.DOIntensity(lightMax, Random.Range(.4f, .6f)).SetEase(Ease.InQuad);
@@ -121,8 +122,6 @@ public class NodePresenter : MonoBehaviour
               .OnComplete(() =>
               {
                 roomLight.enabled = false;
-                tiles.SetActive(b);
-
               });
           }
         })

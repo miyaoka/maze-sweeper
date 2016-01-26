@@ -46,11 +46,26 @@ public class SurvivorManager : SingletonMonoBehaviour<SurvivorManager>
       var randomSurvivor = livingList.ElementAt(Random.Range(0, livingList.Count()));
       var damage = Mathf.Min(totalDamage, 1);
       totalDamage -= damage;
-      randomSurvivor.CurrentHealth.Value -= damage;
-      if(randomSurvivor.CurrentHealth.Value <= 0)
-      {
-        PlayerManager.Instance.CreateDead(randomSurvivor);
-      }
+      addDamage(randomSurvivor, damage);
+    }
+  }
+  public void AddDamageToAll(float eachDamage)
+  {
+    var livingList = LivingList;
+    if (!livingList.Any())
+      return;
+
+    AudioManager.Damage.Play();
+    PlayerManager.Instance.ShowDamage(livingList.Count);
+    livingList.ForEach(s => addDamage(s, eachDamage));
+
+  }
+  void addDamage(Survivor s, float damage)
+  {
+    s.CurrentHealth.Value -= damage;
+    if (s.CurrentHealth.Value <= 0)
+    {
+      PlayerManager.Instance.CreateDead(s);
     }
   }
   public List<Survivor> LivingList

@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using UniRx;
 using UniRx.Triggers;
 using UnityEngine.UI;
+using DG.Tweening;
+
 public enum ViewStateName { Move, Map, Battle };
 public enum GameStateName { Init, EnterLevel, OnLevel, ExitLevel };
 public class GameManager : SingletonMonoBehaviour<GameManager>
@@ -14,21 +16,33 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
   [SerializeField]
   GameObject hud;
 
+  [SerializeField]
+  Text floorText;
+  [SerializeField]
+  Text startText;
+  [SerializeField]
+  Text guideText;
+
   public ReactiveProperty<int> AlertCount = new ReactiveProperty<int>();
   public ReactiveProperty<float> LevelTimer = new ReactiveProperty<float>();
   public ReactiveProperty<float> LevelTimerMax = new ReactiveProperty<float>();
+  public ReactiveProperty<float> dangerTimer = new ReactiveProperty<float>();
+  public ReactiveProperty<float> dangerTimerMax = new ReactiveProperty<float>(10);
   public ReactiveProperty<ViewStateName> ViewState = new ReactiveProperty<ViewStateName>();
   public GameStateName GameState = GameStateName.Init;
   public ReactiveProperty<bool> OnBomb = new ReactiveProperty<bool>();
   public ReactiveProperty<bool> OnMenu = new ReactiveProperty<bool>();
+  public ReactiveProperty<bool> IsMapView = new ReactiveProperty<bool>();
 
 
-  LevelConfigParam levelConf = new LevelConfigParam(12, 25, .1f, 3);
+  LevelConfigParam levelConf = new LevelConfigParam(12, 25, .1f, 3, 120);
   bool passExit = false;
   bool isAllDead = false;
   PlayerManager pm;
-  IConnectableObservable<long> timerUpdate;
+  IConnectableObservable<float> timerUpdate;
   System.IDisposable timerConnect;
+  IConnectableObservable<float> dangerTimerUpdate;
+  System.IDisposable dangerTimerConnect;
 
   void Awake()
   {
@@ -46,16 +60,57 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
       .AddTo(this);
 
     pm = PlayerManager.Instance;
+
+    IsMapView = ViewState
+      .Select(s => s == ViewStateName.Map)
+      .ToReactiveProperty();
   }
   void Start()
   {
     timerUpdate = Observable
-      .Interval(System.TimeSpan.FromSeconds(1))
-//      .EveryFixedUpdate()
-//      .Select(_ => Time.fixedDeltaTime)
+//      .Interval(System.TimeSpan.FromSeconds(10))
+      .EveryFixedUpdate()
+      .Select(_ => Time.fixedDeltaTime)
+      .Publish();
+    dangerTimerUpdate = Observable
+      .EveryFixedUpdate()
+      .Select(_ => Time.fixedDeltaTime)
       .Publish();
 
-    timerUpdate.Subscribe(_ => LevelTimer.Value -= 1);
+    timerUpdate.Subscribe(t => LevelTimer.Value -= t);
+    dangerTimerUpdate
+      .Subscribe(t =>
+      {
+        dangerTimer.Value += t;
+        if(dangerTimer.Value >= dangerTimerMax.Value)
+        {
+          SurvivorManager.Instance.AddDamageToAll(1);
+
+          dangerTimer.Value %= dangerTimerMax.Value;
+        }
+      })
+      .AddTo(this);
+
+    LevelTimer
+      .Select(t => t <= 0)
+      .DistinctUntilChanged()
+      .Subscribe(isOver =>
+      {
+        dangerTimer.Value = 0;
+        if (isOver)
+        {
+          LevelTimer.Value = 0;
+          timerStop();
+
+          dangerTimerConnect = dangerTimerUpdate.Connect();
+        }
+        else
+        {
+          timerResume();
+          dangerTimerConnect.Dispose();
+        }
+      })
+      .AddTo(this);
 
     Debug.Log("--start");
     StartCoroutine(gameLoop());
@@ -82,19 +137,47 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
   {
     var pn = GraphManager.Instance.InitGrid(levelConf);
     AlertCount.Value = 0;
-    ViewState.Value = ViewStateName.Move;
-    LevelTimer.Value = LevelTimerMax.Value = 60f * 3f;
+    ViewState.Value = ViewStateName.Map;
+    LevelTimer.Value = LevelTimerMax.Value = levelConf.Timer;
     SurvivorManager.Instance.Init();
     isAllDead = false;
+    timerStop();
 
-    timerConnect = timerUpdate.Connect();
-    OnMenu.Value = false;
-
+    floorText.enabled = startText.enabled = guideText.enabled = false;
 
     Debug.Log(pn.Coords);
     pm.InitPlayer(pn.Coords);
+    var ct = CameraManager.Instance.cameraPivot;
+    ct.transform.position = GraphManager.Instance.exitZone.transform.position;
 
-    yield return 0;
+    floorText.enabled = true;
+
+    ct
+      .DOLocalMove(GraphManager.Instance.CoordsToVec3(pn.Coords), 1.5f)
+      .SetEase(Ease.InOutCubic)
+      .SetDelay(1f)
+      .OnComplete(() =>
+      {
+        floorText.enabled = false;
+        ViewState.Value = ViewStateName.Move;
+        timerResume();
+        OnMenu.Value = false;
+
+        startText.enabled = true;
+        Observable.Timer(System.TimeSpan.FromSeconds(1f)).Subscribe(s => {
+          startText.enabled = false;
+
+          guideText.enabled = true;
+          Observable.Timer(System.TimeSpan.FromSeconds(10f)).Subscribe(g => {
+            guideText.enabled = false;
+          });
+        });
+      });
+
+    while (OnMenu.Value)
+    {
+      yield return null;
+    }
   }
   IEnumerator levelConfig()
   {
@@ -121,7 +204,7 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
   IEnumerator onLevel()
   {
     passExit = false;
-    while (!isAllDead && !passExit && LevelTimer.Value > 0)
+    while (!isAllDead && !passExit)
     {
       yield return null;
     }
@@ -132,6 +215,9 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
     var onExit = true;
     LevelTimer.Value = Mathf.Max(0, LevelTimer.Value);
     timerConnect.Dispose();
+    dangerTimer.Value = 0;
+    dangerTimerConnect.Dispose();
+
 
     if (passExit)
     {
@@ -151,7 +237,7 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
       //      GraphManager.Instance.DestroyGrid();
 //      ViewState.Value = ViewStateName.Map;
       MenuManager.Instance.ModalDialog().Open(
-        "You died...",
+        "You have died...",
         new List<DialogOptionDetails> {
           new DialogOptionDetails ("ok", () => {
             onExit = false;
@@ -166,7 +252,10 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
   }
   public void timerStop()
   {
-    timerConnect.Dispose();
+    if(timerConnect != null)
+    {
+      timerConnect.Dispose();
+    }
   }
   public void timerResume()
   {
