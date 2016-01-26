@@ -93,6 +93,7 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
 
     LevelTimer
       .Select(t => t <= 0)
+      .DistinctUntilChanged()
       .Subscribe(isOver =>
       {
         dangerTimer.Value = 0;
@@ -134,13 +135,13 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
   }
   IEnumerator enterLevel()
   {
-    timerStop();
     var pn = GraphManager.Instance.InitGrid(levelConf);
     AlertCount.Value = 0;
     ViewState.Value = ViewStateName.Map;
     LevelTimer.Value = LevelTimerMax.Value = levelConf.Timer;
     SurvivorManager.Instance.Init();
     isAllDead = false;
+    timerStop();
 
     floorText.enabled = startText.enabled = guideText.enabled = false;
 
