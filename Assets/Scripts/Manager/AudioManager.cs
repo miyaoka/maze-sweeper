@@ -10,6 +10,8 @@ public class AudioManager : SingletonMonoBehaviour<AudioManager>
   public static AudioSource Powerup;
   public static AudioSource Breach;
   public static AudioSource Damage;
+  public static AudioSource TimeoutAlert;
+  public static AudioSource TimeoutDamage;
 
   void Awake()
   {
@@ -26,6 +28,8 @@ public class AudioManager : SingletonMonoBehaviour<AudioManager>
     Powerup = audios[4];
     Breach = audios[5];
     Scream = audios[6];
+    TimeoutAlert = audios[8];
+    TimeoutDamage = audios[7];
   }
   public void PlayLoop(AudioSource au)
   {

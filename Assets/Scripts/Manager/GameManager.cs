@@ -94,27 +94,29 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
     LevelTimer
       .Select(t => t <= 0)
       .DistinctUntilChanged()
-      .Subscribe(isOver =>
-      {
-        dangerTimer.Value = 0;
-        if (isOver)
-        {
-          LevelTimer.Value = 0;
-          timerStop();
-
-          dangerTimerConnect = dangerTimerUpdate.Connect();
-        }
-        else
-        {
-          timerResume();
-          dangerTimerConnect.Dispose();
-        }
-      })
+      .Subscribe(isTimeout => setTimeout(isTimeout))
       .AddTo(this);
 
     Debug.Log("--start");
     StartCoroutine(gameLoop());
     Debug.Log("--end");
+  }
+  void setTimeout(bool timeout)
+  {
+    dangerTimer.Value = 0;
+    if (timeout)
+    {
+      timerStop();
+      AudioManager.TimeoutAlert.Play();
+      LevelTimer.Value = 0;
+      dangerTimerConnect = dangerTimerUpdate.Connect();
+    }
+    else
+    {
+      timerResume();
+      AudioManager.TimeoutAlert.Stop();
+      dangerTimerConnect.Dispose();
+    }
   }
 
   public void LevelConfig()
@@ -214,9 +216,8 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
 //    OnMenu.Value = true;
     var onExit = true;
     LevelTimer.Value = Mathf.Max(0, LevelTimer.Value);
-    timerConnect.Dispose();
-    dangerTimer.Value = 0;
-    dangerTimerConnect.Dispose();
+    setTimeout(false);
+    timerStop();
 
 
     if (passExit)
