@@ -145,6 +145,10 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
   }
   private void onMoved(Node node)
   {
+    if (GameManager.Instance.IsAllDead)
+    {
+      return;
+    }
     CurrentCoords.Value = node.Coords;
     var ec = node.EnemyCount.Value;
     if (ec > 0)
@@ -170,7 +174,6 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
     }
     if (node.HasItem.Value)
     {
-      AudioManager.Powerup.Play();
       node.HasItem.Value = false;
       GameManager.Instance.AddTime();
       player.GetComponent<SurvivorPresenter>().ShowMsg("+30sec");

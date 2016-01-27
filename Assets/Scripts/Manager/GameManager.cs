@@ -37,7 +37,7 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
 
   LevelConfigParam levelConf = new LevelConfigParam(12, 25, .1f, 3, 120);
   bool passExit = false;
-  bool isAllDead = false;
+  public bool IsAllDead = false;
   PlayerManager pm;
   IConnectableObservable<float> timerUpdate;
   System.IDisposable timerConnect;
@@ -142,7 +142,7 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
     ViewState.Value = ViewStateName.Map;
     LevelTimer.Value = LevelTimerMax.Value = levelConf.Timer;
     SurvivorManager.Instance.Init();
-    isAllDead = false;
+    IsAllDead = false;
     timerStop();
 
     floorText.enabled = startText.enabled = guideText.enabled = false;
@@ -206,7 +206,7 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
   IEnumerator onLevel()
   {
     passExit = false;
-    while (!isAllDead && !passExit)
+    while (!IsAllDead && !passExit)
     {
       yield return null;
     }
@@ -275,10 +275,11 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
 
   public void AddTime()
   {
+    AudioManager.Powerup.Play();
     LevelTimer.Value = Mathf.Min(LevelTimer.Value + 30f, LevelTimerMax.Value);
   }
   public void AllDead()
   {
-    isAllDead = true;
+    IsAllDead = true;
   }
 }
