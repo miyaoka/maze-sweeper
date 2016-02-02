@@ -31,7 +31,7 @@ public class CameraManager : SingletonMonoBehaviour<CameraManager>
   }
   void Start()
   {
-    var gm = GameManager.Instance;
+    var gm = FloorManager.Instance;
 
     gm.ViewState
       .CombineLatest(aspect, (v, a) => heights[(int)v] * Mathf.Pow(baseRatio / a, .5f))

@@ -143,7 +143,7 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
 
   public void ScanEnemies(Node node)
   {
-    GameManager.Instance.AlertCount.Value = node.AlertCount.Value = graph.ScanEnemies(node.Coords);
+    FloorManager.Instance.AlertCount.Value = node.AlertCount.Value = graph.ScanEnemies(node.Coords);
   }
 
   void addEnemies(List<Node> list, float enemyRatio, int maxEnemyCount)
@@ -254,7 +254,7 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
   }
   public void BreachWall(WallPresenter wallView)
   {
-    GameManager.Instance.OnBomb.Value = false;
+    FloorManager.Instance.OnBomb.Value = false;
     var w = wallView.Wall;
     var e = graph.CreateEdge(w.SourceCoords, w.TargetCoords);
     addEdgeView(e, w.Dir, true);

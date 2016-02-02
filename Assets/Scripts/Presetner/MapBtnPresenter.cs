@@ -6,7 +6,7 @@ public class MapBtnPresenter : MonoBehaviour
 {
   void Start()
   {
-    var gm = GameManager.Instance;
+    var gm = FloorManager.Instance;
     var btn = GetComponent<Button>();
     var text = GetComponentInChildren<Text>();
 

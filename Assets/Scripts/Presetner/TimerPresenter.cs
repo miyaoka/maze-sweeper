@@ -16,11 +16,11 @@ public class TimerPresenter : MonoBehaviour
   Text dangerText;
 
   ReactiveProperty<float> wholeTimer;
-  GameManager gm;
+  FloorManager gm;
   Sequence dangerSeq;
   void Awake()
   {
-    gm = GameManager.Instance;
+    gm = FloorManager.Instance;
     wholeTimer =
     gm
       .LevelTimer

@@ -11,7 +11,7 @@ public class ConfPresenter : MonoBehaviour {
     btn
       .OnClickAsObservable()
       .Subscribe (b => {
-        GameManager.Instance.LevelConfig();
+        FloorManager.Instance.LevelConfig();
       })
       .AddTo(this); 
 
