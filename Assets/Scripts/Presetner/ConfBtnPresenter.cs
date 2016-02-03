@@ -11,7 +11,7 @@ public class ConfBtnPresenter : MonoBehaviour {
     btn
       .OnClickAsObservable()
       .Subscribe (b => {
-        RoundManager.Instance.LevelConfig();
+        RoundManager.Instance.RoundConfig();
       })
       .AddTo(this); 
 

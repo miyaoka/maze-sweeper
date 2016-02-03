@@ -105,7 +105,7 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
       .Where(e => e.Value != null)
       .ToList()
       .ForEach(e => {
-        gm.ShowNode(node.Coords + GraphModel.DirCoords[e.Index], false);
+        graph.ShowNode(node.Coords + GraphModel.DirCoords[e.Index], false);
       });
       */
 

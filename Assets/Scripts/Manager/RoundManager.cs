@@ -5,6 +5,7 @@ using UniRx;
 using UniRx.Triggers;
 using UnityEngine.UI;
 using DG.Tweening;
+using UnityEngine.SceneManagement;
 
 public enum ViewStateName { Move, Map, Battle };
 public enum GameStateName { Init, EnterLevel, OnLevel, ExitLevel };
@@ -33,9 +34,9 @@ public class RoundManager : SingletonMonoBehaviour<RoundManager>
   public ReactiveProperty<bool> OnBomb = new ReactiveProperty<bool>();
   public ReactiveProperty<bool> OnMenu = new ReactiveProperty<bool>();
   public ReactiveProperty<bool> IsMapView = new ReactiveProperty<bool>();
+  public ReactiveProperty<float> ExitProgress = new ReactiveProperty<float>();
 
-
-  RoundConfigParam levelConf = new RoundConfigParam(12, 25, .1f, 3, 120);
+  RoundConfigParam roundConf = new RoundConfigParam(12, 25, .1f, 3, 120);
   public ReactiveProperty<bool> IsAllDead = new ReactiveProperty<bool>();
   public ReactiveProperty<bool> IsPassExit = new ReactiveProperty<bool>();
   PlayerManager pm;
@@ -71,7 +72,6 @@ public class RoundManager : SingletonMonoBehaviour<RoundManager>
       .Where(p => p)
       .Subscribe(_ => OnLose())
       .AddTo(this);
-
   }
   void Start()
   {
@@ -105,8 +105,14 @@ public class RoundManager : SingletonMonoBehaviour<RoundManager>
       .Subscribe(isTimeout => setTimeout(isTimeout))
       .AddTo(this);
 
+    ExitProgress =
+    PlayerManager.Instance.DestCoords
+      .Select(c => (float)c.Y / (float)GraphManager.Instance.graph.MaxCoords.Y)
+      .ToReactiveProperty();
 
-    EnterLevel();
+    InitRound(SectorListManager.Instance.Conf(SectorListManager.Instance.CurrentSector.Value));
+
+
 
   }
   void setTimeout(bool timeout)
@@ -128,45 +134,47 @@ public class RoundManager : SingletonMonoBehaviour<RoundManager>
     }
   }
 
-  public void LevelConfig()
+  public void RoundConfig()
   {
     hud.SetActive(false);
-    OnMenu.Value = true;
-    MenuManager.Instance.RoundConfigDialog().Open(levelConf,
+    MenuManager.Instance.RoundConfigDialog().Open(roundConf,
       (param) =>
       {
-        levelConf = param;
-        GameStateManager.Instance.Restart();
+        roundConf = param;
+        InitRound(new RoundConfig(param.Col, param.Row, param.EnemyRate, param.MaxEnemyCount));
+//        SceneManager.LoadScene(SceneManager.GetActiveScene().name, LoadSceneMode.Single);
+        //        GameStateManager.Instance.Restart();
 
         skycam.RandomRotate();
-        OnMenu.Value = false;
+        hud.SetActive(true);
       },
       () => {
-        OnMenu.Value = false;
+        hud.SetActive(true);
       }
     );
   }
 
-  public void EnterLevel()
+  public void InitRound(RoundConfig conf)
   {
-    var pn = GraphManager.Instance.InitGrid(levelConf);
+
+    var playerNode = GraphManager.Instance.InitGrid(conf);
     AlertCount.Value = 0;
     ViewState.Value = ViewStateName.Map;
-    RoundTimer.Value = RoundTimerMax.Value = levelConf.Timer;
+    RoundTimer.Value = RoundTimerMax.Value = roundConf.Timer;
     SurvivorManager.Instance.Init();
     timerStop();
 
     floorText.enabled = startText.enabled = guideText.enabled = false;
 
-    Debug.Log(pn.Coords);
-    pm.InitPlayer(pn.Coords);
+    Debug.Log(playerNode.Coords);
+    pm.InitPlayer(playerNode.Coords);
     var ct = CameraManager.Instance.cameraPivot;
     ct.transform.position = GraphManager.Instance.exitZone.transform.position;
 
     floorText.enabled = true;
 
     ct
-      .DOLocalMove(GraphManager.Instance.CoordsToVec3(pn.Coords), 1.5f)
+      .DOLocalMove(GraphManager.Instance.CoordsToVec3(playerNode.Coords), 1.5f)
       .SetEase(Ease.InOutCubic)
       .SetDelay(1f)
       .OnComplete(() =>
@@ -188,9 +196,6 @@ public class RoundManager : SingletonMonoBehaviour<RoundManager>
       });
   }
 
-  public void OnLevel()
-  {
-  }
   public void OnExit()
   {
     RoundTimer.Value = Mathf.Max(0, RoundTimer.Value);

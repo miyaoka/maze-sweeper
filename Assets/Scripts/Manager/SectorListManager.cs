@@ -16,12 +16,12 @@ public class SectorListManager : SingletonMonoBehaviour<SectorListManager>
 
   List<SectorType> SectorTypeList = new List<SectorType>()
   {
-    new SectorType("Engine", new Color(.8f, .4f, .4f)),
-    new SectorType("Cargo", new Color(.7f, .7f, .7f)),
-    new SectorType("Lab", new Color(.5f, .7f, .9f)),
-    new SectorType("Armory", new Color(.8f, .4f, .8f)),
-    new SectorType("System", new Color(.8f, .8f, 0)),
-    new SectorType("Living", new Color(.5f, .9f, .5f))
+    new SectorType("Engine", new Color(.8f, .4f, .4f), .12f),
+    new SectorType("Armory", new Color(.8f, .4f, .8f), .11f),
+    new SectorType("Lab", new Color(.5f, .7f, .9f), .1f),
+    new SectorType("System", new Color(.8f, .8f, 0), .1f),
+    new SectorType("Living", new Color(.5f, .9f, .5f), .09f),
+    new SectorType("Cargo", new Color(.7f, .7f, .7f), .08f)
   };
 
   void Awake()
@@ -50,7 +50,7 @@ public class SectorListManager : SingletonMonoBehaviour<SectorListManager>
     }
     SectorList.Add(new List<Sector>() {
       new Sector(floorCount, sectorCount, 0,
-      new SectorType("Shuttle", Color.black))
+      new SectorType("Shuttle", Color.black, .13f))
     });
 
     Update.Value += 1;
@@ -84,5 +84,26 @@ public class SectorListManager : SingletonMonoBehaviour<SectorListManager>
     }
     return list;
   }
-	
+
+  float colSizeBase = 12;
+  float colSizePerLevel = 2;
+  float rowSizeBase = 15;
+  float rowSizePerLevel = 5;
+  float maxEnemyCountBase = 1.5f;
+  float maxEnemyCountPerLevel = .5f;
+  float rowSizePerFloor = .25f;
+
+  public RoundConfig Conf(Sector sector)
+  {
+    var conf = new RoundConfig(
+      Mathf.FloorToInt(sector.Level * colSizePerLevel + colSizeBase),
+      Mathf.FloorToInt((sector.Level * rowSizePerLevel + rowSizeBase) * ((sector.FloorSize - 1) * rowSizePerFloor + 1)),
+      sector.Type.EnemyRate,
+      Mathf.FloorToInt(sector.Level * maxEnemyCountPerLevel + maxEnemyCountBase)
+      );
+
+//    Debug.Log(string.Format("{0},{1},{2}", conf.Col, conf.Row, conf.MaxEnemyCount));
+
+    return conf;
+  }
 }

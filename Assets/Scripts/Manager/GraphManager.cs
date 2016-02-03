@@ -48,12 +48,12 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
   {
 
   }
-  public Node InitGrid(RoundConfigParam levelConf)
+  public Node InitGrid(RoundConfig roundConf)
   {
     wallDict.Clear();
     clearView();
     graph.Clear();
-    graph.CreateMaze(new Rect(0, 0, levelConf.Col, levelConf.Row));
+    graph.CreateMaze(new Rect(0, 0, roundConf.Col, roundConf.Row));
 
     var count = 2;
     while (count-- > 0)
@@ -67,7 +67,7 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
       .ShuffledNodeList
       .Where(n => n.Coords.Y > 1)
       .ToList<Node>();
-    addEnemies(list, levelConf.EnemyRate, levelConf.MaxEnemyCount);
+    addEnemies(list, roundConf.EnemyRate, roundConf.MaxEnemyCount);
 
     //exit zone
     exitZone.transform.localPosition = new Vector3(

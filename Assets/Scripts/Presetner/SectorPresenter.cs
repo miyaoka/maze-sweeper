@@ -19,6 +19,8 @@ public class SectorPresenter : MonoBehaviour
   [SerializeField]
   Text sosText;
   [SerializeField]
+  Text sectorText;
+  [SerializeField]
   Image highlight;
   [SerializeField]
   Image fade;
@@ -67,10 +69,15 @@ public class SectorPresenter : MonoBehaviour
         })
         .AddTo(this);
 
+      var conf = SectorListManager.Instance.Conf(sector);
+      sectorText.text = string.Format("col:{0}\nrow:{1}\nrate:{2}\nmax:{3}", conf.Col, conf.Row, conf.EnemyRate, conf.MaxEnemyCount);
+
+      /*
       state
         .Select(s => s == SectorState.Next)
         .Subscribe(b => btn.enabled = b)
         .AddTo(this);
+        */
 
       //SOS
       var seq = DOTween.Sequence();

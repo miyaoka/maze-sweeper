@@ -6,12 +6,13 @@ public class SectorType
 {
   public string Name;
   public Color Color;
-//  public float difficulty;
+  public float EnemyRate;
 
-  public SectorType(string type, Color color)
+  public SectorType(string type, Color color, float enemyRate)
   {
     Name = type;
     Color = color;
+    EnemyRate = enemyRate;
   }
 }
 
