@@ -2,7 +2,7 @@
 using System.Collections;
 using UnityEngine.UI;
 
-public class FloorPresenter : MonoBehaviour
+public class NodeFloorPresenter : MonoBehaviour
 {
   [SerializeField]
   RawImage blackLT;

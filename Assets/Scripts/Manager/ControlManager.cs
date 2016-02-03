@@ -24,11 +24,11 @@ public class ControlManager : MonoBehaviour
   IConnectableObservable<Lean.LeanFinger> fingerTap;
   double doubleTapInterval = 400;//ms
 
-  FloorManager gm;
+  RoundManager gm;
   void Awake()
   {
     pm = PlayerManager.Instance;
-    gm = FloorManager.Instance;
+    gm = RoundManager.Instance;
     movement = this
       .UpdateAsObservable()
       .Publish();

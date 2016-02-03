@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-public class LevelConfig
+public class RoundConfig
 {
   public int FloorNumber;
   public int Col;
@@ -10,7 +10,7 @@ public class LevelConfig
   public float EnemyRate;
   public int MaxEnemyCount;
   public List<Survivor> SurvivorList;
-  public LevelConfig(int col, int row, float enemyRate, int maxEnemyCount)
+  public RoundConfig(int col, int row, float enemyRate, int maxEnemyCount)
   {
     Col = col;
     Row = row;

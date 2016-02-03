@@ -22,7 +22,7 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
 
   Sequence sq;
   GraphManager graph;
-  FloorManager gm;
+  RoundManager gm;
 
   void Awake()
   {
@@ -32,7 +32,7 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
       return;
     }
     graph = GraphManager.Instance;
-    gm = FloorManager.Instance;
+    gm = RoundManager.Instance;
 
 
     /*
@@ -89,7 +89,7 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
   }
   public void MovePos(IntVector2 dest, bool noAnim = false)
   {
-    FloorManager.Instance.OnBomb.Value = false;
+    RoundManager.Instance.OnBomb.Value = false;
     var node = graph.ShowNode(dest);
     if (node == null)
     {
@@ -145,7 +145,7 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
   }
   private void onMoved(Node node)
   {
-    if (FloorManager.Instance.IsAllDead.Value)
+    if (RoundManager.Instance.IsAllDead.Value)
     {
       return;
     }
@@ -170,12 +170,12 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
     }
     if (graph.isExit(node))
     {
-      FloorManager.Instance.onExit();
+      RoundManager.Instance.onExit();
     }
     if (node.HasItem.Value)
     {
       node.HasItem.Value = false;
-      FloorManager.Instance.AddTime();
+      RoundManager.Instance.AddTime();
       player.GetComponent<SurvivorPresenter>().ShowMsg("+30sec");
     }
 

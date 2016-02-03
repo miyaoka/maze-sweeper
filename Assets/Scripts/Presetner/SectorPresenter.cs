@@ -44,7 +44,7 @@ public class SectorPresenter : MonoBehaviour
         .OnClickAsObservable()
         .Subscribe(_ =>
         {
-          LevelListManager.Instance.CurrentSector.Value = sector;
+          SectorListManager.Instance.CurrentSector.Value = sector;
           sector.IsVisited = true;
           GameStateManager.Instance.Next();
 
@@ -52,7 +52,7 @@ public class SectorPresenter : MonoBehaviour
         .AddTo(this);
 
       var state =
-      LevelListManager.Instance.CurrentSector
+      SectorListManager.Instance.CurrentSector
         .Select(s => sector.State(s))
         .ToReactiveProperty();
 

@@ -4,14 +4,14 @@ using UnityEngine.UI;
 using UniRx;
 
 [RequireComponent (typeof (Button))]
-public class ConfPresenter : MonoBehaviour {
+public class ConfBtnPresenter : MonoBehaviour {
   [SerializeField] Button btn;
   void Start () {
 
     btn
       .OnClickAsObservable()
       .Subscribe (b => {
-        FloorManager.Instance.LevelConfig();
+        RoundManager.Instance.LevelConfig();
       })
       .AddTo(this); 
 

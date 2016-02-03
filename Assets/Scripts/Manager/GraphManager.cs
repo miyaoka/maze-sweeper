@@ -48,7 +48,7 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
   {
 
   }
-  public Node InitGrid(LevelConfigParam levelConf)
+  public Node InitGrid(RoundConfigParam levelConf)
   {
     wallDict.Clear();
     clearView();
@@ -143,7 +143,7 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
 
   public void ScanEnemies(Node node)
   {
-    FloorManager.Instance.AlertCount.Value = node.AlertCount.Value = graph.ScanEnemies(node.Coords);
+    RoundManager.Instance.AlertCount.Value = node.AlertCount.Value = graph.ScanEnemies(node.Coords);
   }
 
   void addEnemies(List<Node> list, float enemyRatio, int maxEnemyCount)
@@ -254,7 +254,7 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
   }
   public void BreachWall(WallPresenter wallView)
   {
-    FloorManager.Instance.OnBomb.Value = false;
+    RoundManager.Instance.OnBomb.Value = false;
     var w = wallView.Wall;
     var e = graph.CreateEdge(w.SourceCoords, w.TargetCoords);
     addEdgeView(e, w.Dir, true);

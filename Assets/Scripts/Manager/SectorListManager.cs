@@ -3,16 +3,16 @@ using System.Collections;
 using System.Collections.Generic;
 using UniRx;
 
-public class LevelListManager : SingletonMonoBehaviour<LevelListManager>
+public class SectorListManager : SingletonMonoBehaviour<SectorListManager>
 {  
-  public List<List<Sector>> LevelList = new List<List<Sector>>();
-  int levelCount = 7;
+  public List<List<Sector>> SectorList = new List<List<Sector>>();
+  //col
+  int sectorCount = 7;
+  //row
   int floorCount = 6;
   int maxFloorSize = 3;
   public ReactiveProperty<int> Update = new ReactiveProperty<int>();
   public ReactiveProperty<Sector> CurrentSector = new ReactiveProperty<Sector>();
-
-  //  public enum SectorType { Engine, Weapon, Cargo, Living, System, Lab };
 
   List<SectorType> SectorTypeList = new List<SectorType>()
   {
@@ -41,15 +41,15 @@ public class LevelListManager : SingletonMonoBehaviour<LevelListManager>
 
   public void Init()
   {
-    LevelList.Clear();
+    SectorList.Clear();
     CurrentSector.Value = new Sector(floorCount, -1, 0);
 
-    for (var i = 0; i < levelCount; i++)
+    for (var i = 0; i < sectorCount; i++)
     {
-      LevelList.Add(sectorList(i));
+      SectorList.Add(sectorList(i));
     }
-    LevelList.Add(new List<Sector>() {
-      new Sector(floorCount, levelCount, 0,
+    SectorList.Add(new List<Sector>() {
+      new Sector(floorCount, sectorCount, 0,
       new SectorType("Shuttle", Color.black))
     });
 

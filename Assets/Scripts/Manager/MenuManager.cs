@@ -6,7 +6,7 @@ public class MenuManager : SingletonMonoBehaviour<MenuManager>
   [SerializeField]
   GameObject modalDialogPrefab;
   [SerializeField]
-  GameObject levelConfigDialogPrefab;
+  GameObject roundConfigDialogPrefab;
   [SerializeField]
   Canvas btnCanvas;
   void Awake()
@@ -21,11 +21,11 @@ public class MenuManager : SingletonMonoBehaviour<MenuManager>
   {
 
   }
-  public LevelConfigDialogPresenter LevelConfigDialog()
+  public RoundConfigDialogPresenter RoundConfigDialog()
   {
-    var obj = Instantiate(levelConfigDialogPrefab);
+    var obj = Instantiate(roundConfigDialogPrefab);
     obj.transform.SetParent(btnCanvas.transform, false);
-    return obj.GetComponent<LevelConfigDialogPresenter>();
+    return obj.GetComponent<RoundConfigDialogPresenter>();
   }
 
   public ModalDialogPresenter ModalDialog()

@@ -4,7 +4,7 @@ using UnityEngine.UI;
 using UniRx;
 using DG.Tweening;
 
-public class TimerPresenter : MonoBehaviour
+public class RoundTimerPresenter : MonoBehaviour
 {
   [SerializeField]
   Text timerText;
@@ -16,14 +16,14 @@ public class TimerPresenter : MonoBehaviour
   Text dangerText;
 
   ReactiveProperty<float> wholeTimer;
-  FloorManager gm;
+  RoundManager gm;
   Sequence dangerSeq;
   void Awake()
   {
-    gm = FloorManager.Instance;
+    gm = RoundManager.Instance;
     wholeTimer =
     gm
-      .LevelTimer
+      .RoundTimer
       .Select(t => Mathf.Ceil(t))
       .ToReactiveProperty();
 
@@ -51,7 +51,7 @@ public class TimerPresenter : MonoBehaviour
 
     var timeAmount =
     wholeTimer
-      .CombineLatest(gm.LevelTimerMax, (l, r) => l / r)
+      .CombineLatest(gm.RoundTimerMax, (l, r) => l / r)
       .ToReactiveProperty();
 
     timerImage.fillAmount = timeAmount.Value;
@@ -77,15 +77,15 @@ public class TimerPresenter : MonoBehaviour
       .SetLoops(-1);
     dangerSeq.Pause();
     gm
-      .dangerTimer
-      .CombineLatest(gm.dangerTimerMax, (l, r) => l / r)
+      .DangerTimer
+      .CombineLatest(gm.DangerTimerMax, (l, r) => l / r)
       .Subscribe(v =>
       {
         dangerTimerImage.fillAmount = 1 - v;
       })
       .AddTo(this);
     gm
-      .dangerTimer
+      .DangerTimer
       .Select(d => d > 0)
       .DistinctUntilChanged()
       .Subscribe(isDanger =>

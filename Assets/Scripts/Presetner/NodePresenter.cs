@@ -68,7 +68,7 @@ public class NodePresenter : MonoBehaviour
         .AddTo(this);
 
       node.IsScanned
-        .CombineLatest(FloorManager.Instance.IsMapView, (s, m) => s && !m)
+        .CombineLatest(RoundManager.Instance.IsMapView, (s, m) => s && !m)
         .Subscribe(b => {
           interiorContainer
           .GetComponentsInChildren<MeshRenderer>()

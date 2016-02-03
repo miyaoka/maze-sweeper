@@ -16,11 +16,11 @@ public class BombBtnPresenter : MonoBehaviour
       .OnClickAsObservable()
       .Subscribe(_ =>
       {
-        FloorManager.Instance.OnBomb.Value = !FloorManager.Instance.OnBomb.Value;
+        RoundManager.Instance.OnBomb.Value = !RoundManager.Instance.OnBomb.Value;
       })
       .AddTo(this);
 
-    FloorManager.Instance.OnBomb
+    RoundManager.Instance.OnBomb
       .Subscribe(b => btnText.color = b ? Color.red : Color.white)
       .AddTo(this);
 

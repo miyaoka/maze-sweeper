@@ -6,7 +6,6 @@ using System.Linq;
 public class GameStateManager : SingletonMonoBehaviour<GameStateManager>
 {
   public List<Survivor> SurvivorList = new List<Survivor>();
-  public LevelConfig CurrentLevel;
   Animator states;
 
   void Awake()

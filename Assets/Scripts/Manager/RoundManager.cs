@@ -8,7 +8,7 @@ using DG.Tweening;
 
 public enum ViewStateName { Move, Map, Battle };
 public enum GameStateName { Init, EnterLevel, OnLevel, ExitLevel };
-public class FloorManager : SingletonMonoBehaviour<FloorManager>
+public class RoundManager : SingletonMonoBehaviour<RoundManager>
 {
   [SerializeField]
   SkyCameraPresenter skycam;
@@ -24,10 +24,10 @@ public class FloorManager : SingletonMonoBehaviour<FloorManager>
   Text guideText;
 
   public ReactiveProperty<int> AlertCount = new ReactiveProperty<int>();
-  public ReactiveProperty<float> LevelTimer = new ReactiveProperty<float>(10);
-  public ReactiveProperty<float> LevelTimerMax = new ReactiveProperty<float>();
-  public ReactiveProperty<float> dangerTimer = new ReactiveProperty<float>();
-  public ReactiveProperty<float> dangerTimerMax = new ReactiveProperty<float>(10);
+  public ReactiveProperty<float> RoundTimer = new ReactiveProperty<float>(10);
+  public ReactiveProperty<float> RoundTimerMax = new ReactiveProperty<float>();
+  public ReactiveProperty<float> DangerTimer = new ReactiveProperty<float>();
+  public ReactiveProperty<float> DangerTimerMax = new ReactiveProperty<float>(10);
   public ReactiveProperty<ViewStateName> ViewState = new ReactiveProperty<ViewStateName>();
   public GameStateName GameState = GameStateName.Init;
   public ReactiveProperty<bool> OnBomb = new ReactiveProperty<bool>();
@@ -35,7 +35,7 @@ public class FloorManager : SingletonMonoBehaviour<FloorManager>
   public ReactiveProperty<bool> IsMapView = new ReactiveProperty<bool>();
 
 
-  LevelConfigParam levelConf = new LevelConfigParam(12, 25, .1f, 3, 120);
+  RoundConfigParam levelConf = new RoundConfigParam(12, 25, .1f, 3, 120);
   public ReactiveProperty<bool> IsAllDead = new ReactiveProperty<bool>();
   public ReactiveProperty<bool> IsPassExit = new ReactiveProperty<bool>();
   PlayerManager pm;
@@ -85,21 +85,21 @@ public class FloorManager : SingletonMonoBehaviour<FloorManager>
       .Select(_ => Time.fixedDeltaTime)
       .Publish();
 
-    timerUpdate.Subscribe(t => LevelTimer.Value -= t);
+    timerUpdate.Subscribe(t => RoundTimer.Value -= t);
     dangerTimerUpdate
       .Subscribe(t =>
       {
-        dangerTimer.Value += t;
-        if (dangerTimer.Value >= dangerTimerMax.Value)
+        DangerTimer.Value += t;
+        if (DangerTimer.Value >= DangerTimerMax.Value)
         {
           SurvivorManager.Instance.AddDamageToAll(1);
 
-          dangerTimer.Value %= dangerTimerMax.Value;
+          DangerTimer.Value %= DangerTimerMax.Value;
         }
       })
       .AddTo(this);
 
-    LevelTimer
+    RoundTimer
       .Select(t => t <= 0)
       .DistinctUntilChanged()
       .Subscribe(isTimeout => setTimeout(isTimeout))
@@ -112,12 +112,12 @@ public class FloorManager : SingletonMonoBehaviour<FloorManager>
   void setTimeout(bool timeout)
   {
     return;
-    dangerTimer.Value = 0;
+    DangerTimer.Value = 0;
     if (timeout)
     {
       timerStop();
       AudioManager.TimeoutAlert.Play();
-      LevelTimer.Value = 0;
+      RoundTimer.Value = 0;
       dangerTimerConnect = dangerTimerUpdate.Connect();
     }
     else
@@ -132,7 +132,7 @@ public class FloorManager : SingletonMonoBehaviour<FloorManager>
   {
     hud.SetActive(false);
     OnMenu.Value = true;
-    MenuManager.Instance.LevelConfigDialog().Open(levelConf,
+    MenuManager.Instance.RoundConfigDialog().Open(levelConf,
       (param) =>
       {
         levelConf = param;
@@ -152,7 +152,7 @@ public class FloorManager : SingletonMonoBehaviour<FloorManager>
     var pn = GraphManager.Instance.InitGrid(levelConf);
     AlertCount.Value = 0;
     ViewState.Value = ViewStateName.Map;
-    LevelTimer.Value = LevelTimerMax.Value = levelConf.Timer;
+    RoundTimer.Value = RoundTimerMax.Value = levelConf.Timer;
     SurvivorManager.Instance.Init();
     timerStop();
 
@@ -171,8 +171,6 @@ public class FloorManager : SingletonMonoBehaviour<FloorManager>
       .SetDelay(1f)
       .OnComplete(() =>
       {
-        GameStateManager.Instance.Next();
-        /*
         floorText.enabled = false;
         ViewState.Value = ViewStateName.Move;
         timerResume();
@@ -187,7 +185,6 @@ public class FloorManager : SingletonMonoBehaviour<FloorManager>
             guideText.enabled = false;
           });
         });
-        */
       });
   }
 
@@ -196,7 +193,7 @@ public class FloorManager : SingletonMonoBehaviour<FloorManager>
   }
   public void OnExit()
   {
-    LevelTimer.Value = Mathf.Max(0, LevelTimer.Value);
+    RoundTimer.Value = Mathf.Max(0, RoundTimer.Value);
     setTimeout(false);
     timerStop();
 
@@ -247,7 +244,7 @@ public class FloorManager : SingletonMonoBehaviour<FloorManager>
   public void AddTime()
   {
     AudioManager.Powerup.Play();
-    LevelTimer.Value = Mathf.Min(LevelTimer.Value + 30f, LevelTimerMax.Value);
+    RoundTimer.Value = Mathf.Min(RoundTimer.Value + 30f, RoundTimerMax.Value);
   }
   public void AllDead()
   {
