@@ -78,6 +78,9 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
     //items
     addItems();
 
+    //fire
+    addFire();
+
     return pickupPlayerPos(graph.NodeList.Where(n => n.Coords.Y == 0).ToList<Node>());
   }
 
@@ -199,6 +202,17 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
       addNodeView(n);
 //      n.IsVisited.Value = true;
     }
+  }
+
+  void addFire()
+  {
+    var nodes = graph.ShuffledNodeList;
+
+    nodes.ForEach(n =>
+    {
+      n.HasFire.Value = Random.value < .3f;
+    });
+
   }
 
   Node pickupPlayerPos(List<Node> list)

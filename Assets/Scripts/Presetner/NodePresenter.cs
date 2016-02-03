@@ -24,6 +24,8 @@ public class NodePresenter : MonoBehaviour
   GameObject floor;
   [SerializeField]
   GameObject interiorPrefab;
+  [SerializeField]
+  GameObject firePrefab;
 
   Node node;
   Tweener lightTw;
@@ -132,6 +134,23 @@ public class NodePresenter : MonoBehaviour
         {
           beacon.SetActive(b);
         });
+
+      node.HasFire
+        .Where(f => f)
+        .Subscribe(_ =>
+        {
+          var fire = Instantiate(firePrefab);
+          var ps = fire.GetComponent<ParticleSystem>();
+          ps.startSize = Random.Range(6f, 12f);
+          ps.startLifetime = Mathf.Pow(ps.startSize, .5f);
+
+          var halfRoomSize = 4f;
+          var pos = new Vector3(Random.Range(-halfRoomSize, halfRoomSize), .6f, Random.Range(-halfRoomSize, halfRoomSize));
+          fire.transform.position = pos;
+          fire.transform.SetParent(interiorContainer, false);
+
+        })
+        .AddTo(this);
 
       /*
       node.Degree
