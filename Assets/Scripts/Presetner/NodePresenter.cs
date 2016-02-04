@@ -11,7 +11,9 @@ public class NodePresenter : MonoBehaviour
   [SerializeField]
   Light roomLight;
   [SerializeField]
-  GameObject alert;
+  Text alertCountText;
+  [SerializeField]
+  Text enemyCountText;
   [SerializeField]
   Transform wallContainer;
   [SerializeField]
@@ -31,7 +33,6 @@ public class NodePresenter : MonoBehaviour
 
   Node node;
   Tweener lightTw;
-  Text alertText;
   float lightMax = 1.8f;
   float lightMin = 0f;
   Color unvisitedFloorColor = new Color(.25f, .25f, .3f);
@@ -42,7 +43,6 @@ public class NodePresenter : MonoBehaviour
     roomLight.enabled = false;
 
     tiles.SetActive(false);
-    alertText = alert.GetComponent<Text>();
   }
 
   public Node Node
@@ -65,11 +65,24 @@ public class NodePresenter : MonoBehaviour
         }
       }
 
+
+      node.IsScanned
+        .Subscribe(s =>
+        {
+          alertCountText.enabled = enemyCountText.enabled = s;
+        })
+        .AddTo(this);
+
       node.AlertCount
-        .CombineLatest(node.EnemyCount, node.IsScanned, node.OnDest,
-        (a, e, v, h) => v ? (e > 0 ? (h ? 0 : e) : a) : 0)
+        .CombineLatest(node.EnemyCount, (a,e) => e > 0 ? 0 : a)
         .Select(c => c == 0 ? "" : c.ToString())
-        .SubscribeToText(alertText)
+        .SubscribeToText(alertCountText)
+        .AddTo(this);
+
+      node.EnemyCount
+        .CombineLatest(node.OnDest, (e, d) => d ? 0 : e)
+        .Select(c => c == 0 ? "" : c.ToString())
+        .SubscribeToText(enemyCountText)
         .AddTo(this);
 
       node.IsScanned
