@@ -36,6 +36,8 @@ public class NodePresenter : MonoBehaviour
   float lightMax = 1.8f;
   float lightMin = 0f;
   Color unvisitedFloorColor = new Color(.25f, .25f, .3f);
+  float sensorTargetBtnHeight = 2f;
+
   void Awake()
   {
     roomLight.intensity = 0;
@@ -168,6 +170,7 @@ public class NodePresenter : MonoBehaviour
         })
         .AddTo(this);
 
+      //sensor btn
       node.OnDest
         .CombineLatest(RoundManager.Instance.IsSelectedSensor, (l, r) => l && r)
         .Where(b => b)
@@ -180,7 +183,7 @@ public class NodePresenter : MonoBehaviour
             if(n == null || !n.IsScanned.Value)
             {
               var btn = Instantiate(sensorTargetBtnPrefab);
-              btn.transform.localPosition = graph.CoordsToVec3(coords);
+              btn.transform.localPosition = graph.CoordsToVec3(coords) + new Vector3(0, sensorTargetBtnHeight, 0);
               btn.GetComponent<SensorTargetBtnPresenter>().Coords = coords;
               graph.AddToView(btn);
             }
