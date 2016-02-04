@@ -16,6 +16,10 @@ public class SurvivorListItemPresenter : MonoBehaviour
   Image healthDiffImage;
   [SerializeField]
   Text healthText;
+  [SerializeField]
+  Button medkitTargetBtn;
+  [SerializeField]
+  Image avatarImage;
   float healthUnitWidth = 20f;
 
   Survivor survivor;
@@ -76,6 +80,33 @@ public class SurvivorListItemPresenter : MonoBehaviour
         .SubscribeToText(healthText)
         .AddTo(this);
 
+      var isAlive = 
+      survivor
+        .CurrentHealth
+        .Select(h => h > 0)
+        .DistinctUntilChanged()
+        .ToReactiveProperty();
+
+      //healable and selected medkit
+      healthAmount
+        .Select(a => a > 0 && a < 1)
+        .CombineLatest(RoundManager.Instance.IsSelectedMedkit, (l, m) => l && m)
+        .Subscribe(b => medkitTargetBtn.gameObject.SetActive(b))
+        .AddTo(this);
+
+      isAlive
+        .Subscribe(l => avatarImage.color = l ? Color.white : Color.red)
+        .AddTo(this);
+
+      medkitTargetBtn
+        .OnClickAsObservable()
+        .Subscribe(_ =>
+        {
+          survivor.Heal();
+          GameStateManager.Instance.MedkitCount.Value -= 1;
+          RoundManager.Instance.IsSelectedMedkit.Value = false;
+        })
+        .AddTo(this);
     }
   }
 

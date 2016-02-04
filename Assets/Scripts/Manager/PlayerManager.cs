@@ -89,7 +89,6 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
   }
   public void MovePos(IntVector2 dest, bool noAnim = false)
   {
-    RoundManager.Instance.OnBomb.Value = false;
     var node = graph.ShowNode(dest);
     if (node == null)
     {

@@ -12,5 +12,9 @@ public class Survivor
     Name.Value = name;
     MaxHealth.Value = CurrentHealth.Value = health;
   }
-
+  public void Heal()
+  {
+    var heal = 1;
+    CurrentHealth.Value = Mathf.Min(CurrentHealth.Value + heal, MaxHealth.Value);
+  }
 }

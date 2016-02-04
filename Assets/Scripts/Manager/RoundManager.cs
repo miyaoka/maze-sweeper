@@ -31,7 +31,9 @@ public class RoundManager : SingletonMonoBehaviour<RoundManager>
   public ReactiveProperty<float> DangerTimerMax = new ReactiveProperty<float>(10);
   public ReactiveProperty<ViewStateName> ViewState = new ReactiveProperty<ViewStateName>();
   public GameStateName GameState = GameStateName.Init;
-  public ReactiveProperty<bool> OnBomb = new ReactiveProperty<bool>();
+  public ReactiveProperty<bool> IsSelectedBomb = new ReactiveProperty<bool>();
+  public ReactiveProperty<bool> IsSelectedSensor = new ReactiveProperty<bool>();
+  public ReactiveProperty<bool> IsSelectedMedkit = new ReactiveProperty<bool>();
   public ReactiveProperty<bool> OnMenu = new ReactiveProperty<bool>();
   public ReactiveProperty<bool> IsMapView = new ReactiveProperty<bool>();
   public ReactiveProperty<float> ExitProgress = new ReactiveProperty<float>();
@@ -112,8 +114,21 @@ public class RoundManager : SingletonMonoBehaviour<RoundManager>
 
     InitRound(SectorListManager.Instance.Conf(SectorListManager.Instance.CurrentSector.Value));
 
+    pm.DestCoords
+      .CombineLatest(pm.CurrentCoords, (l, r) => l != r)
+      .Where(moving => moving)
+      .Subscribe(_ =>
+      {
+        ItemBtnSelectClear();
+      })
+      .AddTo(this);
 
-
+  }
+  public void ItemBtnSelectClear()
+  {
+    IsSelectedBomb.Value = false;
+    IsSelectedSensor.Value = false;
+    IsSelectedMedkit.Value = false;
   }
   void setTimeout(bool timeout)
   {
@@ -258,5 +273,18 @@ public class RoundManager : SingletonMonoBehaviour<RoundManager>
   public void onExit()
   {
     IsPassExit.Value = true;
+  }
+
+  public void UseBomb()
+  {
+
+  }
+  public void UseSensor()
+  {
+
+  }
+  public void UseMedkit()
+  {
+
   }
 }
