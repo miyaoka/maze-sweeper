@@ -23,7 +23,7 @@ public class Wall
     Dir = dir;
 
     OnHere = PlayerManager.Instance
-    .CurrentCoords
+    .DestCoords
     .Select(c => c == SourceCoords || c == TargetCoords)
     .ToReactiveProperty();
   }
