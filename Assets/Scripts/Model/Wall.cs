@@ -25,6 +25,7 @@ public class Wall
     OnHere = PlayerManager.Instance
     .DestCoords
     .Select(c => c == SourceCoords || c == TargetCoords)
+    .DistinctUntilChanged()
     .ToReactiveProperty();
   }
   public string Key
