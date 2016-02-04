@@ -268,8 +268,6 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
   }
   public void BreachWall(WallPresenter wallView)
   {
-    RoundManager.Instance.IsSelectedBomb.Value = false;
-    GameStateManager.Instance.BombCount.Value -= 1;
     var w = wallView.Wall;
     var e = graph.CreateEdge(w.SourceCoords, w.TargetCoords);
     addEdgeView(e, w.Dir, true);

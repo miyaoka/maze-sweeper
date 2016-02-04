@@ -26,6 +26,8 @@ public class NodePresenter : MonoBehaviour
   GameObject interiorPrefab;
   [SerializeField]
   GameObject firePrefab;
+  [SerializeField]
+  GameObject sensorTargetBtnPrefab;
 
   Node node;
   Tweener lightTw;
@@ -49,6 +51,7 @@ public class NodePresenter : MonoBehaviour
     {
       this.node = value;
       node.HasView.Value = true;
+      var graph = GraphManager.Instance;
 
       var mt = floor.GetComponent<Renderer>().material;
       mt.EnableKeyword("_EMISSION");
@@ -149,6 +152,26 @@ public class NodePresenter : MonoBehaviour
           fire.transform.position = pos;
           fire.transform.SetParent(interiorContainer, false);
 
+        })
+        .AddTo(this);
+
+      node.OnDest
+        .CombineLatest(RoundManager.Instance.IsSelectedSensor, (l, r) => l && r)
+        .Where(b => b)
+        .Subscribe(_ =>
+        {
+          GraphModel.DirCoords.ToList().ForEach(c =>
+          {
+            var coords = node.Coords + c;
+            var n = graph.graph.GetNode(coords);
+            if(n == null || !n.IsScanned.Value)
+            {
+              var btn = Instantiate(sensorTargetBtnPrefab);
+              btn.transform.localPosition = graph.CoordsToVec3(coords);
+              btn.GetComponent<SensorTargetBtnPresenter>().Coords = coords;
+              graph.AddToView(btn);
+            }
+          });
         })
         .AddTo(this);
 

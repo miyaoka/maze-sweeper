@@ -7,7 +7,7 @@ public class GameStateManager : SingletonMonoBehaviour<GameStateManager>
 {
   public List<Survivor> SurvivorList = new List<Survivor>();
   public ReactiveProperty<int> BombCount = new ReactiveProperty<int>(3);
-  public ReactiveProperty<int> SensorCount = new ReactiveProperty<int>(2);
+  public ReactiveProperty<int> SensorCount = new ReactiveProperty<int>(10);
   public ReactiveProperty<int> MedkitCount = new ReactiveProperty<int>(3);
 
   Animator states;

@@ -5,7 +5,7 @@ using UniRx;
 
 public class SensorTargetBtnPresenter : MonoBehaviour
 {
-  public Node Node;
+  public IntVector2 Coords;
 
   void Awake()
   {
@@ -16,8 +16,9 @@ public class SensorTargetBtnPresenter : MonoBehaviour
       .OnClickAsObservable()
       .Subscribe(_ =>
       {
-        graph.ShowNode(Node.Coords);
-        graph.ScanEnemies(Node);
+        graph.graph.CreateNode(Coords, true);
+        var n = graph.ShowNode(Coords);
+        graph.ScanEnemies(n);
         RoundManager.Instance.IsSelectedSensor.Value = false;
         GameStateManager.Instance.SensorCount.Value -= 1;
       })
