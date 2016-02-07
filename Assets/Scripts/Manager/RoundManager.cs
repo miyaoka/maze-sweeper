@@ -224,7 +224,7 @@ public class RoundManager : SingletonMonoBehaviour<RoundManager>
       "level cleared!",
       new List<DialogOptionDetails> {
           new DialogOptionDetails ("ok", () => {
-             GameStateManager.Instance.Next();
+            SceneLoader.Instance.LoadScene(SceneName.Camp);
           }),
       }
     );
@@ -238,7 +238,7 @@ public class RoundManager : SingletonMonoBehaviour<RoundManager>
       "You have died...",
       new List<DialogOptionDetails> {
           new DialogOptionDetails ("ok", () => {
-             GameStateManager.Instance.Lose();
+            SceneLoader.Instance.LoadScene(SceneName.Lose);
           }),
       }
     );

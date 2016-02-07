@@ -22,7 +22,7 @@ public class BombItemBtnPresenter : MonoBehaviour
       })
       .AddTo(this);
 
-    GameStateManager.Instance.BombCount
+    GameManager.Instance.BombCount
       .Subscribe(c =>
       {
         countText.text = c == 0 ? "" : string.Format("x{0}", c);

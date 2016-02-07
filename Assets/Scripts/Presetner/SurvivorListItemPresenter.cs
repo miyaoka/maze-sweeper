@@ -103,7 +103,7 @@ public class SurvivorListItemPresenter : MonoBehaviour
         .Subscribe(_ =>
         {
           survivor.Heal();
-          GameStateManager.Instance.MedkitCount.Value -= 1;
+          GameManager.Instance.MedkitCount.Value -= 1;
           RoundManager.Instance.IsSelectedMedkit.Value = false;
         })
         .AddTo(this);

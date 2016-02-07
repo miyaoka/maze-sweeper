@@ -22,7 +22,7 @@ public class MedkitItemBtnPresenter : MonoBehaviour
       })
       .AddTo(this);
 
-    GameStateManager.Instance.MedkitCount
+    GameManager.Instance.MedkitCount
       .Subscribe(c =>
       {
         countText.text = c == 0 ? "" : string.Format("x{0}", c);

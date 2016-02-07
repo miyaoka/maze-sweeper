@@ -14,7 +14,7 @@ public class WallPresenter : MonoBehaviour
       .OnClickAsObservable()
       .Subscribe(_ =>
       {
-        GameStateManager.Instance.BombCount.Value -= 1;
+        GameManager.Instance.BombCount.Value -= 1;
         GraphManager.Instance.BreachWall(this);
       })
       .AddTo(this);

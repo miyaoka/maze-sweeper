@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UniRx;
 
-public class SectorListManager : SingletonMonoBehaviour<SectorListManager>
+public class SectorListManager
 {  
   public List<List<Sector>> SectorList = new List<List<Sector>>();
   //col
@@ -24,25 +24,27 @@ public class SectorListManager : SingletonMonoBehaviour<SectorListManager>
     new SectorType("Cargo", new Color(.7f, .7f, .7f), .08f)
   };
 
-  void Awake()
+  private static SectorListManager instance;
+  public static SectorListManager Instance
   {
-    if (this != Instance)
+    get
     {
-      Destroy(this);
-      return;
+      if (instance == null)
+      {
+        instance = new SectorListManager();
+      }
+      return instance;
     }
-
   }
 
-  void Start () {
+  private SectorListManager() {
 
-    Init();
   }
 
   public void Init()
   {
     SectorList.Clear();
-    CurrentSector.Value = new Sector(floorCount, -1, 0);
+    CurrentSector.Value = new Sector(floorCount, 0, 0);
 
     for (var i = 0; i < sectorCount; i++)
     {
@@ -52,6 +54,8 @@ public class SectorListManager : SingletonMonoBehaviour<SectorListManager>
       new Sector(floorCount, sectorCount, 0,
       new SectorType("Shuttle", Color.black, .13f))
     });
+
+    CurrentSector.Value = SectorList[0][0];
 
     Update.Value += 1;
 
@@ -95,6 +99,7 @@ public class SectorListManager : SingletonMonoBehaviour<SectorListManager>
 
   public RoundConfig Conf(Sector sector)
   {
+//    Debug.Log(sector.Type);
     var conf = new RoundConfig(
       Mathf.FloorToInt(sector.Level * colSizePerLevel + colSizeBase),
       Mathf.FloorToInt((sector.Level * rowSizePerLevel + rowSizeBase) * ((sector.FloorSize - 1) * rowSizePerFloor + 1)),

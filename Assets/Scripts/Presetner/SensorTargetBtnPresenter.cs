@@ -20,7 +20,7 @@ public class SensorTargetBtnPresenter : MonoBehaviour
         var n = graph.ShowNode(Coords);
         graph.ScanEnemies(n);
         RoundManager.Instance.IsSelectedSensor.Value = false;
-        GameStateManager.Instance.SensorCount.Value -= 1;
+        GameManager.Instance.SensorCount.Value -= 1;
       })
       .AddTo(this);
 

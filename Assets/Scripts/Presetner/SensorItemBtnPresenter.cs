@@ -22,7 +22,7 @@ public class SensorItemBtnPresenter : MonoBehaviour
       })
       .AddTo(this);
 
-    GameStateManager.Instance.SensorCount
+    GameManager.Instance.SensorCount
       .Subscribe(c =>
       {
         countText.text = c == 0 ? "" : string.Format("x{0}", c);

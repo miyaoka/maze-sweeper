@@ -30,6 +30,8 @@ public class NodePresenter : MonoBehaviour
   GameObject firePrefab;
   [SerializeField]
   GameObject sensorTargetBtnPrefab;
+  [SerializeField]
+  GameObject survivorPrefab;
 
   Node node;
   Tweener lightTw;
@@ -153,8 +155,9 @@ public class NodePresenter : MonoBehaviour
           beacon.SetActive(b);
         });
 
-      node.HasFire
-        .Where(f => f)
+      node.IsScanned
+        .CombineLatest(node.HasFire, (l,r) => l && r)
+        .Where(b => b)
         .Subscribe(_ =>
         {
           var fire = Instantiate(firePrefab);
@@ -169,6 +172,28 @@ public class NodePresenter : MonoBehaviour
 
         })
         .AddTo(this);
+
+      node.IsScanned
+        .CombineLatest(node.HasRescuee, (l, r) => l && r)
+        .Where(b => b)
+        .Subscribe(_ =>
+        {
+          var sv = Instantiate(survivorPrefab);
+
+          //22.5deg-67.5deg
+          var radian = (Random.Range(0, 1f/4f) + 1f/8f + Random.Range(0, 4) * .5f) * Mathf.PI;
+          var radius = Random.Range(2f, 4f);
+
+          var pos = new Vector3(Mathf.Cos(radian), 0, Mathf.Sin(radian)) * radius;
+
+          sv.transform.position = pos;
+          sv.transform.SetParent(transform, false);
+          var sp = sv.GetComponent<SurvivorPresenter>();
+          sp.body.transform.LookAt(transform);
+//          sp.GetComponentInChildren<Animator>().enabled = false;
+        })
+        .AddTo(this);
+
 
       //sensor btn
       node.OnDest

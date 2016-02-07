@@ -48,8 +48,7 @@ public class SectorPresenter : MonoBehaviour
         {
           SectorListManager.Instance.CurrentSector.Value = sector;
           sector.IsVisited = true;
-          GameStateManager.Instance.Next();
-
+          SceneLoader.Instance.LoadScene(SceneName.Round);
         })
         .AddTo(this);
 

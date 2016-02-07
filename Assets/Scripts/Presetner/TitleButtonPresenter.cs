@@ -6,11 +6,12 @@ using UnityEngine.SceneManagement;
 
 public class TitleButtonPresenter : MonoBehaviour {
 	void Start () {
+    var gi = GameManager.Instance;
     var btn = GetComponent<Button>();
     btn.OnClickAsObservable()
       .Subscribe(_ =>
       {
-        GameStateManager.Instance.Next();
+        SceneLoader.Instance.LoadScene(SceneName.SectorList);
       })
       .AddTo(this);
 	}
