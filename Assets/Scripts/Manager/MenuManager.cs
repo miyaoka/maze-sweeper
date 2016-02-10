@@ -21,11 +21,11 @@ public class MenuManager : SingletonMonoBehaviour<MenuManager>
   {
 
   }
-  public RoundConfigDialogPresenter RoundConfigDialog()
+  public LevelConfigDialogPresenter RoundConfigDialog()
   {
     var obj = Instantiate(roundConfigDialogPrefab);
     obj.transform.SetParent(btnCanvas.transform, false);
-    return obj.GetComponent<RoundConfigDialogPresenter>();
+    return obj.GetComponent<LevelConfigDialogPresenter>();
   }
 
   public ModalDialogPresenter ModalDialog()

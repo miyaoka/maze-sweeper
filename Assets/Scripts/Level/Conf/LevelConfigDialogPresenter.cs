@@ -20,7 +20,7 @@ public class LevelConfigParam
     Timer = timer;
   }
 }
-public class RoundConfigDialogPresenter : DialogPresenterBase
+public class LevelConfigDialogPresenter : DialogPresenterBase
 {
   [SerializeField]
   Button outOfPanelBtn;
