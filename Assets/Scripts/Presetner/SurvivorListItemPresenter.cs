@@ -90,7 +90,7 @@ public class SurvivorListItemPresenter : MonoBehaviour
       //healable and selected medkit
       healthAmount
         .Select(a => a > 0 && a < 1)
-        .CombineLatest(RoundManager.Instance.IsSelectedMedkit, (l, m) => l && m)
+        .CombineLatest(LevelManager.Instance.IsSelectedMedkit, (l, m) => l && m)
         .Subscribe(b => medkitTargetBtn.gameObject.SetActive(b))
         .AddTo(this);
 
@@ -104,7 +104,7 @@ public class SurvivorListItemPresenter : MonoBehaviour
         {
           survivor.Heal();
           GameManager.Instance.MedkitCount.Value -= 1;
-          RoundManager.Instance.IsSelectedMedkit.Value = false;
+          LevelManager.Instance.IsSelectedMedkit.Value = false;
         })
         .AddTo(this);
     }

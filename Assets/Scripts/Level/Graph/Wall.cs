@@ -12,7 +12,7 @@ public class Wall
   public Wall(IntVector2 coords, int dir)
   {
     SourceCoords = coords;
-    TargetCoords = coords + GraphModel.DirCoords[dir];
+    TargetCoords = coords + Graph.DirCoords[dir];
 
     if (dir > 1)
     {

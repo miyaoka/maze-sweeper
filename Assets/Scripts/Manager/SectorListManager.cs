@@ -97,10 +97,10 @@ public class SectorListManager
   float maxEnemyCountPerLevel = .5f;
   float rowSizePerFloor = .25f;
 
-  public RoundConfig Conf(Sector sector)
+  public LevelConfig Conf(Sector sector)
   {
 //    Debug.Log(sector.Type);
-    var conf = new RoundConfig(
+    var conf = new LevelConfig(
       Mathf.FloorToInt(sector.Level * colSizePerLevel + colSizeBase),
       Mathf.FloorToInt((sector.Level * rowSizePerLevel + rowSizeBase) * ((sector.FloorSize - 1) * rowSizePerFloor + 1)),
       sector.Type.EnemyRate,

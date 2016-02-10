@@ -4,14 +4,14 @@ using UnityEngine.UI;
 using UniRx;
 using UnityEngine.Events;
 
-public class RoundConfigParam
+public class LevelConfigParam
 {
   public int Col;
   public int Row;
   public float EnemyRate;
   public int MaxEnemyCount;
   public int Timer;
-  public RoundConfigParam(int col, int row, float enemyRate, int maxEnemyCount, int timer)
+  public LevelConfigParam(int col, int row, float enemyRate, int maxEnemyCount, int timer)
   {
     Col = col;
     Row = row;
@@ -89,7 +89,7 @@ public class RoundConfigDialogPresenter : DialogPresenterBase
       .SubscribeToText(timerText)
       .AddTo(this);
   }
-  public void Open(RoundConfigParam param, UnityAction<RoundConfigParam> onSubmit, UnityAction onClose = null)
+  public void Open(LevelConfigParam param, UnityAction<LevelConfigParam> onSubmit, UnityAction onClose = null)
   {
     this.onClose = onClose;
     colSlider.value = param.Col;
@@ -100,7 +100,7 @@ public class RoundConfigDialogPresenter : DialogPresenterBase
     panel.SetActive(true);
 
     submitBtn.onClick.AddListener(() => onSubmit(
-      new RoundConfigParam((int)colSlider.value, (int)rowSlider.value, enemyRateSlider.value, (int)enemyCountSlider.value, (int)timerSlider.value)));
+      new LevelConfigParam((int)colSlider.value, (int)rowSlider.value, enemyRateSlider.value, (int)enemyCountSlider.value, (int)timerSlider.value)));
     submitBtn.onClick.AddListener(closePanel);
 
     showAllBtn.onClick.AddListener(() => GraphManager.Instance.ShowAllNode());

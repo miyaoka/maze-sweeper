@@ -13,7 +13,7 @@ public class ExitProgressPresenter : MonoBehaviour
     progressBar.fillAmount = 0;
 
     Tween tw = null;
-    RoundManager.Instance.ExitProgress
+    LevelManager.Instance.ExitProgress
       .Subscribe(r =>
       {
         if(tw != null)

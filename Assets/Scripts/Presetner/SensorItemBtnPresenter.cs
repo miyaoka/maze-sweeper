@@ -16,9 +16,9 @@ public class SensorItemBtnPresenter : MonoBehaviour
       .OnClickAsObservable()
       .Subscribe(_ =>
       {
-        var b = RoundManager.Instance.IsSelectedSensor.Value;
-        RoundManager.Instance.ItemBtnSelectClear();
-        RoundManager.Instance.IsSelectedSensor.Value = !b;
+        var b = LevelManager.Instance.IsSelectedSensor.Value;
+        LevelManager.Instance.ItemBtnSelectClear();
+        LevelManager.Instance.IsSelectedSensor.Value = !b;
       })
       .AddTo(this);
 
@@ -30,7 +30,7 @@ public class SensorItemBtnPresenter : MonoBehaviour
       })
       .AddTo(this);
 
-    RoundManager.Instance.IsSelectedSensor
+    LevelManager.Instance.IsSelectedSensor
       .Subscribe(b => img.color = b ? Color.red : Color.white)
       .AddTo(this);
 

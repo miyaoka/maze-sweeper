@@ -16,14 +16,14 @@ public class RoundTimerPresenter : MonoBehaviour
   Text dangerText;
 
   ReactiveProperty<float> wholeTimer;
-  RoundManager gm;
+  LevelManager gm;
   Sequence dangerSeq;
   void Awake()
   {
-    gm = RoundManager.Instance;
+    gm = LevelManager.Instance;
     wholeTimer =
     gm
-      .RoundTimer
+      .LevelTimer
       .Select(t => Mathf.Ceil(t))
       .ToReactiveProperty();
 
@@ -51,7 +51,7 @@ public class RoundTimerPresenter : MonoBehaviour
 
     var timeAmount =
     wholeTimer
-      .CombineLatest(gm.RoundTimerMax, (l, r) => l / r)
+      .CombineLatest(gm.LevelTimerMax, (l, r) => l / r)
       .ToReactiveProperty();
 
     timerImage.fillAmount = timeAmount.Value;

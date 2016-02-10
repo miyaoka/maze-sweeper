@@ -90,7 +90,7 @@ public class NodePresenter : MonoBehaviour
         .AddTo(this);
 
       node.IsScanned
-        .CombineLatest(RoundManager.Instance.IsMapView, (s, m) => s && !m)
+        .CombineLatest(LevelManager.Instance.CurrentView, (s, v) => s && v != ViewState.Map)
         .Subscribe(b => {
           interiorContainer
           .GetComponentsInChildren<MeshRenderer>()
@@ -197,11 +197,11 @@ public class NodePresenter : MonoBehaviour
 
       //sensor btn
       node.OnDest
-        .CombineLatest(RoundManager.Instance.IsSelectedSensor, (l, r) => l && r)
+        .CombineLatest(LevelManager.Instance.IsSelectedSensor, (l, r) => l && r)
         .Where(b => b)
         .Subscribe(_ =>
         {
-          GraphModel.DirCoords.ToList().ForEach(c =>
+          Graph.DirCoords.ToList().ForEach(c =>
           {
             var coords = node.Coords + c;
             var n = graph.graph.GetNode(coords);

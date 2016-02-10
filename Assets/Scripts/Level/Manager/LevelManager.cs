@@ -7,9 +7,7 @@ using UnityEngine.UI;
 using DG.Tweening;
 using UnityEngine.SceneManagement;
 
-public enum ViewStateName { Move, Map, Battle };
-public enum GameStateName { Init, EnterLevel, OnLevel, ExitLevel };
-public class RoundManager : SingletonMonoBehaviour<RoundManager>
+public class LevelManager : SingletonMonoBehaviour<LevelManager>
 {
   [SerializeField]
   SkyCameraPresenter skycam;
@@ -25,23 +23,23 @@ public class RoundManager : SingletonMonoBehaviour<RoundManager>
   Text guideText;
 
   public ReactiveProperty<int> AlertCount = new ReactiveProperty<int>();
-  public ReactiveProperty<float> RoundTimer = new ReactiveProperty<float>(10);
-  public ReactiveProperty<float> RoundTimerMax = new ReactiveProperty<float>();
+  public ReactiveProperty<float> LevelTimer = new ReactiveProperty<float>(10);
+  public ReactiveProperty<float> LevelTimerMax = new ReactiveProperty<float>();
   public ReactiveProperty<float> DangerTimer = new ReactiveProperty<float>();
   public ReactiveProperty<float> DangerTimerMax = new ReactiveProperty<float>(10);
-  public ReactiveProperty<ViewStateName> ViewState = new ReactiveProperty<ViewStateName>();
-  public GameStateName GameState = GameStateName.Init;
+  public ReactiveProperty<float> ExitProgress = new ReactiveProperty<float>();
+
+  public ReactiveProperty<ViewState> CurrentView = new ReactiveProperty<ViewState>();
+
   public ReactiveProperty<bool> IsSelectedBomb = new ReactiveProperty<bool>();
   public ReactiveProperty<bool> IsSelectedSensor = new ReactiveProperty<bool>();
   public ReactiveProperty<bool> IsSelectedMedkit = new ReactiveProperty<bool>();
-  public ReactiveProperty<bool> OnMenu = new ReactiveProperty<bool>();
-  public ReactiveProperty<bool> IsMapView = new ReactiveProperty<bool>();
-  public ReactiveProperty<float> ExitProgress = new ReactiveProperty<float>();
 
-  RoundConfigParam roundConf = new RoundConfigParam(12, 25, .1f, 3, 120);
+  LevelConfigParam levelConf = new LevelConfigParam(5, 25, .2f, 3, 120);
+
   public ReactiveProperty<bool> IsAllDead = new ReactiveProperty<bool>();
   public ReactiveProperty<bool> IsPassExit = new ReactiveProperty<bool>();
-  PlayerManager pm;
+
   IConnectableObservable<float> timerUpdate;
   System.IDisposable timerConnect;
   IConnectableObservable<float> dangerTimerUpdate;
@@ -60,12 +58,6 @@ public class RoundManager : SingletonMonoBehaviour<RoundManager>
       .Subscribe(_ => AudioManager.EnemyDetect.Play())
       .AddTo(this);
 
-    pm = PlayerManager.Instance;
-
-    IsMapView = ViewState
-      .Select(s => s == ViewStateName.Map)
-      .ToReactiveProperty();
-
     IsPassExit
       .Where(p => p)
       .Subscribe(_ => OnExit())
@@ -74,9 +66,7 @@ public class RoundManager : SingletonMonoBehaviour<RoundManager>
       .Where(p => p)
       .Subscribe(_ => OnLose())
       .AddTo(this);
-  }
-  void Start()
-  {
+
     timerUpdate = Observable
       //      .Interval(System.TimeSpan.FromSeconds(10))
       .EveryFixedUpdate()
@@ -87,7 +77,7 @@ public class RoundManager : SingletonMonoBehaviour<RoundManager>
       .Select(_ => Time.fixedDeltaTime)
       .Publish();
 
-    timerUpdate.Subscribe(t => RoundTimer.Value -= t);
+    timerUpdate.Subscribe(t => LevelTimer.Value -= t);
     dangerTimerUpdate
       .Subscribe(t =>
       {
@@ -101,7 +91,7 @@ public class RoundManager : SingletonMonoBehaviour<RoundManager>
       })
       .AddTo(this);
 
-    RoundTimer
+    LevelTimer
       .Select(t => t <= 0)
       .DistinctUntilChanged()
       .Subscribe(isTimeout => setTimeout(isTimeout))
@@ -112,17 +102,40 @@ public class RoundManager : SingletonMonoBehaviour<RoundManager>
       .Select(c => (float)c.Y / (float)GraphManager.Instance.graph.MaxCoords.Y)
       .ToReactiveProperty();
 
-    InitRound(SectorListManager.Instance.Conf(SectorListManager.Instance.CurrentSector.Value));
-
-    pm.DestCoords
-      .CombineLatest(pm.CurrentCoords, (l, r) => l != r)
-      .Where(moving => moving)
-      .Subscribe(_ =>
-      {
-        ItemBtnSelectClear();
-      })
+  }
+  void Start()
+  {
+    var input = GetComponent<PlayerInput>();
+    input
+      .ToggleInput
+      .Subscribe(_ => CurrentView.Value = CurrentView.Value == ViewState.Map ? ViewState.Normal : ViewState.Map)
       .AddTo(this);
 
+    InitLevel(SectorListManager.Instance.Conf(SectorListManager.Instance.CurrentSector.Value));
+    //InitLevel(new LevelConfig(10,3,0, 1));
+
+    CurrentView
+      .Subscribe(v =>
+      {
+        switch (v)
+        {
+          case ViewState.Normal:
+            input.IsMovable.Value = true;
+            input.IsScrollable.Value = false;
+            input.IsTogglable.Value = true;
+            break;
+          case ViewState.Map:
+            input.IsMovable.Value = false;
+            input.IsScrollable.Value = true;
+            input.IsTogglable.Value = true;
+            break;
+          case ViewState.Battle:
+            input.IsMovable.Value = false;
+            input.IsScrollable.Value = false;
+            input.IsTogglable.Value = false;
+            break;
+        }
+      });
   }
   public void ItemBtnSelectClear()
   {
@@ -132,16 +145,15 @@ public class RoundManager : SingletonMonoBehaviour<RoundManager>
   }
   void setTimeout(bool timeout)
   {
-    return;
     DangerTimer.Value = 0;
     if (timeout)
     {
       timerStop();
       AudioManager.TimeoutAlert.Play();
-      RoundTimer.Value = 0;
+      LevelTimer.Value = 0;
       dangerTimerConnect = dangerTimerUpdate.Connect();
     }
-    else
+    else if(dangerTimerConnect != null)
     {
       timerResume();
       AudioManager.TimeoutAlert.Stop();
@@ -152,13 +164,11 @@ public class RoundManager : SingletonMonoBehaviour<RoundManager>
   public void RoundConfig()
   {
     hud.SetActive(false);
-    MenuManager.Instance.RoundConfigDialog().Open(roundConf,
+    MenuManager.Instance.RoundConfigDialog().Open(levelConf,
       (param) =>
       {
-        roundConf = param;
-        InitRound(new RoundConfig(param.Col, param.Row, param.EnemyRate, param.MaxEnemyCount));
-//        SceneManager.LoadScene(SceneManager.GetActiveScene().name, LoadSceneMode.Single);
-        //        GameStateManager.Instance.Restart();
+        levelConf = param;
+        InitLevel(new LevelConfig(param.Col, param.Row, param.EnemyRate, param.MaxEnemyCount));
 
         skycam.RandomRotate();
         hud.SetActive(true);
@@ -169,20 +179,20 @@ public class RoundManager : SingletonMonoBehaviour<RoundManager>
     );
   }
 
-  public void InitRound(RoundConfig conf)
+  public void InitLevel(LevelConfig conf)
   {
 
     var playerNode = GraphManager.Instance.InitGrid(conf);
     AlertCount.Value = 0;
-    ViewState.Value = ViewStateName.Map;
-    RoundTimer.Value = RoundTimerMax.Value = roundConf.Timer;
+    CurrentView.Value = ViewState.Map;
+    LevelTimer.Value = LevelTimerMax.Value = levelConf.Timer;
     SurvivorManager.Instance.Init();
     timerStop();
 
     floorText.enabled = startText.enabled = guideText.enabled = false;
 
     Debug.Log(playerNode.Coords);
-    pm.InitPlayer(playerNode.Coords);
+    PlayerManager.Instance.InitPlayer(playerNode.Coords);
     var ct = CameraManager.Instance.cameraPivot;
     ct.transform.position = GraphManager.Instance.exitZone.transform.position;
 
@@ -195,9 +205,8 @@ public class RoundManager : SingletonMonoBehaviour<RoundManager>
       .OnComplete(() =>
       {
         floorText.enabled = false;
-        ViewState.Value = ViewStateName.Move;
+        CurrentView.Value = ViewState.Normal;
         timerResume();
-        OnMenu.Value = false;
 
         startText.enabled = true;
         Observable.Timer(System.TimeSpan.FromSeconds(1f)).Subscribe(s => {
@@ -213,12 +222,13 @@ public class RoundManager : SingletonMonoBehaviour<RoundManager>
 
   public void OnExit()
   {
-    RoundTimer.Value = Mathf.Max(0, RoundTimer.Value);
-    setTimeout(false);
-    timerStop();
+    allTimerStop();
 
+    CurrentView.Value = ViewState.Map;
+    var input = GetComponent<PlayerInput>();
+    input.IsMovable.Value = false;
+    input.IsTogglable.Value = false;
 
-    ViewState.Value = ViewStateName.Map;
     //      GraphManager.Instance.ShowAllNode();
     MenuManager.Instance.ModalDialog().Open(
       "level cleared!",
@@ -232,8 +242,12 @@ public class RoundManager : SingletonMonoBehaviour<RoundManager>
 
   public void OnLose()
   {
-    //      GraphManager.Instance.DestroyGrid();
-    //      ViewState.Value = ViewStateName.Map;
+    allTimerStop();
+
+    var input = GetComponent<PlayerInput>();
+    input.IsMovable.Value = false;
+    input.IsTogglable.Value = false;
+
     MenuManager.Instance.ModalDialog().Open(
       "You have died...",
       new List<DialogOptionDetails> {
@@ -243,6 +257,15 @@ public class RoundManager : SingletonMonoBehaviour<RoundManager>
       }
     );
 
+  }
+  void allTimerStop()
+  {
+    timerStop();
+    AudioManager.TimeoutAlert.Stop();
+    if(dangerTimerConnect != null)
+    {
+      dangerTimerConnect.Dispose();
+    }
   }
   public void timerStop()
   {
@@ -256,15 +279,10 @@ public class RoundManager : SingletonMonoBehaviour<RoundManager>
     timerConnect = timerUpdate.Connect();
   }
 
-  public void ToggleMap()
-  {
-    ViewState.Value = ViewState.Value == ViewStateName.Map ? ViewStateName.Move : ViewStateName.Map;
-  }
-
   public void AddTime()
   {
     AudioManager.Powerup.Play();
-    RoundTimer.Value = Mathf.Min(RoundTimer.Value + 30f, RoundTimerMax.Value);
+    LevelTimer.Value = Mathf.Min(LevelTimer.Value + 30f, LevelTimerMax.Value);
   }
   public void AllDead()
   {
@@ -273,18 +291,5 @@ public class RoundManager : SingletonMonoBehaviour<RoundManager>
   public void onExit()
   {
     IsPassExit.Value = true;
-  }
-
-  public void UseBomb()
-  {
-
-  }
-  public void UseSensor()
-  {
-
-  }
-  public void UseMedkit()
-  {
-
   }
 }

@@ -11,8 +11,6 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
   [SerializeField]
   GameObject survivorPrefab;
   [SerializeField]
-  GameObject bloodPrefab;
-  [SerializeField]
   GameObject alienPrefab;
 
   GameObject player;
@@ -20,9 +18,11 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
   public ReactiveProperty<IntVector2> CurrentCoords = new ReactiveProperty<IntVector2>();
   public ReactiveProperty<IntVector2> DestCoords = new ReactiveProperty<IntVector2>();
 
+
+
   Sequence sq;
   GraphManager graph;
-  RoundManager gm;
+  LevelManager gm;
 
   void Awake()
   {
@@ -32,7 +32,7 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
       return;
     }
     graph = GraphManager.Instance;
-    gm = RoundManager.Instance;
+    gm = LevelManager.Instance;
 
 
     /*
@@ -45,7 +45,25 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
   }
   void Start()
   {
+    var input = GetComponent<PlayerInput>();
+    input
+      .MoveInput
+      .Subscribe(v =>
+      {
+        MoveDir(DirVector.VecToDir((IntVector2)v));
+      })
+      .AddTo(this);
+
+     DestCoords
+      .CombineLatest(CurrentCoords, (l, r) => l != r)
+      .Where(moving => moving)
+      .Subscribe(_ =>
+      {
+        gm.ItemBtnSelectClear();
+      })
+      .AddTo(this);
   }
+
   public void InitPlayer(IntVector2 dest)
   {
     player = Instantiate(survivorPrefab);
@@ -53,7 +71,7 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
     playerBody = player.GetComponent<SurvivorPresenter>().body;
     MovePos(dest, true);
   }
-  public void MoveDir(Dirs dir)
+  public void MoveDir(Dir dir)
   {
     if (sq != null)
     {
@@ -65,17 +83,6 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
 
     playerBody.transform.DORotate(new Vector3(0, (int)dir * -90 + 90, 0), .5f).SetEase(Ease.InOutQuad);
 
-    /*
-    var sr = player.GetComponentInChildren<SpriteRenderer>();
-
-    //default is flipped
-    sr.flipX =
-      dir == Dirs.East
-      ? false
-      : dir == Dirs.West
-      ? true
-      : sr.flipX;
-      */
     var node = graph.graph.GetNode(CurrentCoords.Value);
     var edge = node.EdgeArray[(int)dir];
     if (edge == null)
@@ -85,7 +92,7 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
 
     edge.isOpened.Value = true;
 
-    MovePos(CurrentCoords.Value + GraphModel.DirCoords[(int)dir]);
+    MovePos(CurrentCoords.Value + Graph.DirCoords[(int)dir]);
   }
   public void MovePos(IntVector2 dest, bool noAnim = false)
   {
@@ -110,7 +117,7 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
 
     if(node.EnemyCount.Value > 0)
     {
-      gm.ViewState.Value = ViewStateName.Battle;
+      gm.CurrentView.Value = ViewState.Battle;
     }
     if (noAnim)
     {
@@ -144,7 +151,7 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
   }
   private void onMoved(Node node)
   {
-    if (RoundManager.Instance.IsAllDead.Value)
+    if (LevelManager.Instance.IsAllDead.Value)
     {
       return;
     }
@@ -162,19 +169,19 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
         if (SurvivorManager.Instance.LivingList.Count > 0)
         {
           stopKnock();
-          gm.ViewState.Value = ViewStateName.Move;
+          gm.CurrentView.Value = ViewState.Normal;
         }
       }));
 
     }
     if (graph.isExit(node))
     {
-      RoundManager.Instance.onExit();
+      LevelManager.Instance.onExit();
     }
     if (node.HasItem.Value)
     {
       node.HasItem.Value = false;
-      RoundManager.Instance.AddTime();
+      LevelManager.Instance.AddTime();
       player.GetComponent<SurvivorPresenter>().ShowMsg("+30sec");
     }
 

@@ -5,7 +5,6 @@ using UnityEngine.Events;
 using System.Collections;
 using UniRx;
 
-public enum Dirs { East, North, West, South, Null };
 public class GraphManager : SingletonMonoBehaviour<GraphManager>
 {
   [SerializeField]
@@ -29,7 +28,7 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
   [SerializeField]
   GameObject explosionPrefab;
 
-  public readonly GraphModel graph = new GraphModel();
+  public readonly Graph graph = new Graph();
   Dictionary<string, Wall> wallDict = new Dictionary<string, Wall>();
 
   void Awake()
@@ -48,7 +47,7 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
   {
 
   }
-  public Node InitGrid(RoundConfig roundConf)
+  public Node InitGrid(LevelConfig roundConf)
   {
     wallDict.Clear();
     clearView();
@@ -148,7 +147,7 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
 
   public void ScanEnemies(Node node)
   {
-    RoundManager.Instance.AlertCount.Value = node.AlertCount.Value = graph.ScanEnemies(node.Coords);
+    LevelManager.Instance.AlertCount.Value = node.AlertCount.Value = graph.ScanEnemies(node.Coords);
   }
 
   void addEnemies(List<Node> list, float enemyRatio, int maxEnemyCount)
@@ -212,7 +211,7 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
 
     nodes.ForEach(n =>
     {
-      n.HasFire.Value = Random.value < .3f;
+      n.HasFire.Value = Random.value < .1f;
     });
 
   }

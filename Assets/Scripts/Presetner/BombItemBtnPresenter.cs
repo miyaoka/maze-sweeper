@@ -16,9 +16,9 @@ public class BombItemBtnPresenter : MonoBehaviour
       .OnClickAsObservable()
       .Subscribe(_ =>
       {
-        var b = RoundManager.Instance.IsSelectedBomb.Value;
-        RoundManager.Instance.ItemBtnSelectClear();
-        RoundManager.Instance.IsSelectedBomb.Value = !b;
+        var b = LevelManager.Instance.IsSelectedBomb.Value;
+        LevelManager.Instance.ItemBtnSelectClear();
+        LevelManager.Instance.IsSelectedBomb.Value = !b;
       })
       .AddTo(this);
 
@@ -30,7 +30,7 @@ public class BombItemBtnPresenter : MonoBehaviour
       })
       .AddTo(this);
 
-    RoundManager.Instance.IsSelectedBomb
+    LevelManager.Instance.IsSelectedBomb
       .Subscribe(b => img.color = b ? Color.red : Color.white)
       .AddTo(this);
 

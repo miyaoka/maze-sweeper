@@ -27,7 +27,7 @@ public class WallPresenter : MonoBehaviour
       this.wall = value;
 
       wall.OnHere
-        .CombineLatest(RoundManager.Instance.IsSelectedBomb, (l, r) => l && r)
+        .CombineLatest(LevelManager.Instance.IsSelectedBomb, (l, r) => l && r)
         .Subscribe(b => bombButton.gameObject.SetActive(b))
         .AddTo(this);
     }

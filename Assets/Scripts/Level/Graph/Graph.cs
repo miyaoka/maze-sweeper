@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UniRx;
 
-public class GraphModel
+public class Graph
 {
   int divideMargin = 1;
   float connectRatio = .6f;
@@ -19,7 +19,7 @@ public class GraphModel
       return maxCoords;
     }
   }
-  public GraphModel()
+  public Graph()
   {
   }
   Dictionary<IntVector2, Node> nodeDict = new Dictionary<IntVector2, Node>();
@@ -220,7 +220,7 @@ public class GraphModel
       var connectCoords = isVerticalDivide
         ? new IntVector2(0, connectPoint)
         : new IntVector2(connectPoint, 0);
-      var connectDir = isVerticalDivide ? Dirs.East : Dirs.North;
+      var connectDir = isVerticalDivide ? Dir.East : Dir.North;
       var sourceCoords = baseCoords + connectCoords;
       var targetCoords = sourceCoords + DirCoords[(int)connectDir];
       CreateEdge(sourceCoords, targetCoords);

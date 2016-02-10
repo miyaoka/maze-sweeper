@@ -6,7 +6,7 @@ using UnityEngine.SceneManagement;
 using System;
 using DG.Tweening;
 
-public enum SceneName { Title, Lobby, SectorList, Round, Camp, Win, Lose, Result };
+public enum SceneName { Title, Lobby, SectorList, Level, Camp, Win, Lose, Result };
 
 [Prefab("SceneLoader")]
 public class SceneLoader : SingletonMonoBehaviour<SceneLoader> {

@@ -12,7 +12,7 @@ public class AlertPresenter : MonoBehaviour
 
   void Awake()
   {
-    var gm = RoundManager.Instance;
+    var gm = LevelManager.Instance;
     var seq = DOTween.Sequence();
     var cg = GetComponent<CanvasGroup>();
     seq

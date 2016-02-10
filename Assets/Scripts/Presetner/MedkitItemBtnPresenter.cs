@@ -16,9 +16,9 @@ public class MedkitItemBtnPresenter : MonoBehaviour
       .OnClickAsObservable()
       .Subscribe(_ =>
       {
-        var b = RoundManager.Instance.IsSelectedMedkit.Value;
-        RoundManager.Instance.ItemBtnSelectClear();
-        RoundManager.Instance.IsSelectedMedkit.Value = !b;
+        var b = LevelManager.Instance.IsSelectedMedkit.Value;
+        LevelManager.Instance.ItemBtnSelectClear();
+        LevelManager.Instance.IsSelectedMedkit.Value = !b;
       })
       .AddTo(this);
 
@@ -30,7 +30,7 @@ public class MedkitItemBtnPresenter : MonoBehaviour
       })
       .AddTo(this);
 
-    RoundManager.Instance.IsSelectedMedkit
+    LevelManager.Instance.IsSelectedMedkit
       .Subscribe(b => img.color = b ? Color.red : Color.white)
       .AddTo(this);
 
