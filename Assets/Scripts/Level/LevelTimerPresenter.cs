@@ -4,7 +4,7 @@ using UnityEngine.UI;
 using UniRx;
 using DG.Tweening;
 
-public class RoundTimerPresenter : MonoBehaviour
+public class LevelTimerPresenter : MonoBehaviour
 {
   [SerializeField]
   Text timerText;
@@ -39,10 +39,12 @@ public class RoundTimerPresenter : MonoBehaviour
       .SubscribeToText(timerText)
       .AddTo(this);
 
+    /*
     wholeTimer
       .Select(t => t <= 30)
-      .Subscribe(b => timerText.color = b ? Color.red : Color.black)
+      .Subscribe(b => timerText.color = b ? Color.red : Color.white)
       .AddTo(this);
+      */
 
   }
   void Start()
@@ -65,7 +67,7 @@ public class RoundTimerPresenter : MonoBehaviour
         }
         //to show full-filled image, fast tween if the value is full
         timerTween = timerImage.DOFillAmount(t, (t == 1) ? .5f : 1f).SetEase(Ease.Linear);
-        timerImage.color = Color.HSVToRGB(t * .5f, 1, 1);
+//        timerImage.color = Color.HSVToRGB(t * .5f, 1, 1);
       })
       .AddTo(this);
 
