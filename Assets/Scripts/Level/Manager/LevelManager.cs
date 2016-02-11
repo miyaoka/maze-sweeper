@@ -35,7 +35,7 @@ public class LevelManager : SingletonMonoBehaviour<LevelManager>
   public ReactiveProperty<bool> IsSelectedSensor = new ReactiveProperty<bool>();
   public ReactiveProperty<bool> IsSelectedMedkit = new ReactiveProperty<bool>();
 
-  LevelConfigParam levelConf = new LevelConfigParam(5, 25, .2f, 3, 120);
+  LevelConfigParam levelConf = new LevelConfigParam(15, 30, .1f, 3, 100);
 
   public ReactiveProperty<bool> IsAllDead = new ReactiveProperty<bool>();
   public ReactiveProperty<bool> IsPassExit = new ReactiveProperty<bool>();
@@ -84,7 +84,7 @@ public class LevelManager : SingletonMonoBehaviour<LevelManager>
         DangerTimer.Value += t;
         if (DangerTimer.Value >= DangerTimerMax.Value)
         {
-          SurvivorManager.Instance.AddDamageToAll(1);
+          PartyManager.Instance.AddDamageToAll(1);
 
           DangerTimer.Value %= DangerTimerMax.Value;
         }
@@ -186,7 +186,7 @@ public class LevelManager : SingletonMonoBehaviour<LevelManager>
     AlertCount.Value = 0;
     CurrentView.Value = ViewState.Map;
     LevelTimer.Value = LevelTimerMax.Value = levelConf.Timer;
-    SurvivorManager.Instance.Init();
+    PartyManager.Instance.Init();
     timerStop();
 
     floorText.enabled = startText.enabled = guideText.enabled = false;

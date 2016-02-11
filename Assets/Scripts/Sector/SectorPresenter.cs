@@ -69,7 +69,7 @@ public class SectorPresenter : MonoBehaviour
         .AddTo(this);
 
       var conf = SectorListManager.Instance.Conf(sector);
-      sectorText.text = string.Format("col:{0}\nrow:{1}\nrate:{2}\nmax:{3}", conf.Col, conf.Row, conf.EnemyRate, conf.MaxEnemyCount);
+      sectorText.text = string.Format("col:{0}\nrow:{1}\nrate:{2:p1}\nmax:{3}", conf.Col, conf.Row, conf.EnemyRate, conf.MaxEnemyCount);
 
       /*
       state

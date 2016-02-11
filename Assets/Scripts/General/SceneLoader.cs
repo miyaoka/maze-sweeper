@@ -24,7 +24,6 @@ public class SceneLoader : SingletonMonoBehaviour<SceneLoader> {
     loadingBar.fillAmount = 0;
     loadingText.text = "";
 
-    Debug.Log("sl");
     DontDestroyOnLoad(gameObject);
 	}
 
@@ -38,7 +37,8 @@ public class SceneLoader : SingletonMonoBehaviour<SceneLoader> {
     var ao = SceneManager.LoadSceneAsync(sceneName.ToString(), LoadSceneMode.Single);
     while (!ao.isDone)
     {
-      progress(ao.progress);
+      //Loading thread will finish when progress reaches 90%
+      progress(ao.progress / .9f);
       yield return null;
     }
     progress(1);
@@ -46,6 +46,7 @@ public class SceneLoader : SingletonMonoBehaviour<SceneLoader> {
   }
   void progress(float p)
   {
+//    loadingText.text = string.Format("loading {0:P0}", p);
     if (tw != null)
     {
       tw.Kill();

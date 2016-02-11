@@ -39,12 +39,11 @@ public class LevelTimerPresenter : MonoBehaviour
       .SubscribeToText(timerText)
       .AddTo(this);
 
-    /*
+
     wholeTimer
       .Select(t => t <= 30)
       .Subscribe(b => timerText.color = b ? Color.red : Color.white)
       .AddTo(this);
-      */
 
   }
   void Start()

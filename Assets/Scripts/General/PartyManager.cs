@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
-public class SurvivorManager : SingletonMonoBehaviour<SurvivorManager>
+public class PartyManager : SingletonMonoBehaviour<PartyManager>
 {
   [SerializeField]
   Transform SurvivorListContainer;

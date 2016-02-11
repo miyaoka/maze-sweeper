@@ -166,7 +166,7 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
 
         ShowDamage(ec);
 
-        if (SurvivorManager.Instance.LivingList.Count > 0)
+        if (PartyManager.Instance.LivingList.Count > 0)
         {
           stopKnock();
           gm.CurrentView.Value = ViewState.Normal;
@@ -205,7 +205,7 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
   {
     AudioManager.Scream.Play();
     //last one guy
-    if (SurvivorManager.Instance.LivingList.Count == 0)
+    if (PartyManager.Instance.LivingList.Count == 0)
     {
       player.GetComponentInChildren<Animator>().enabled = false;
       player.GetComponent<SurvivorPresenter>().nameText.text = sv.Name.Value;
@@ -294,7 +294,7 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
       startKnock();
       AudioManager.Damage.Play();
       CameraManager.Instance.shake();
-      SurvivorManager.Instance.AddDamages(1);
+      PartyManager.Instance.AddDamages(1);
     });
 
     //return and hide

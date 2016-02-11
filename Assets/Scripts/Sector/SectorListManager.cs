@@ -37,10 +37,6 @@ public class SectorListManager
     }
   }
 
-  private SectorListManager() {
-
-  }
-
   public void Init()
   {
     SectorList.Clear();

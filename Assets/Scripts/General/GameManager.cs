@@ -5,7 +5,7 @@ using System.Linq;
 using UniRx;
 
 
-[Prefab("GameManager")]
+[Prefab("GameManager", true)]
 public class GameManager : SingletonMonoBehaviour<GameManager>
 {
   public List<Survivor> SurvivorList = new List<Survivor>();
@@ -18,6 +18,11 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
     QualitySettings.vSyncCount = 0;
     Application.targetFrameRate = 60;
 
+    Init();
+  }
+
+  public void Init()
+  {
     SectorListManager.Instance.Init();
     var s = SceneChangerCaller.Instance;
   }
@@ -30,13 +35,5 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
           .Where(s => s.CurrentHealth.Value > 0)
           .ToList();
     }
-  }
-
-
-  public void NextScene()
-  {
-  }
-  public void TitleScene()
-  {
   }
 }
