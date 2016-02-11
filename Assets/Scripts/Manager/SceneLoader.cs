@@ -6,7 +6,7 @@ using UnityEngine.SceneManagement;
 using System;
 using DG.Tweening;
 
-public enum SceneName { Title, Lobby, SectorList, Level, Camp, Win, Lose, Result };
+public enum GameScene { Title, Lobby, SectorList, Level, Camp, Win, Lose, Result };
 
 [Prefab("SceneLoader")]
 public class SceneLoader : SingletonMonoBehaviour<SceneLoader> {
@@ -24,15 +24,16 @@ public class SceneLoader : SingletonMonoBehaviour<SceneLoader> {
     loadingBar.fillAmount = 0;
     loadingText.text = "";
 
+    Debug.Log("sl");
     DontDestroyOnLoad(gameObject);
 	}
 
-  public void LoadScene(SceneName sceneName)
+  public void LoadScene(GameScene sceneName)
   {
     StartCoroutine(loadSceneC(sceneName));
   }
 
-  IEnumerator loadSceneC(SceneName sceneName)
+  IEnumerator loadSceneC(GameScene sceneName)
   {
     var ao = SceneManager.LoadSceneAsync(sceneName.ToString(), LoadSceneMode.Single);
     while (!ao.isDone)

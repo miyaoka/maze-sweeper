@@ -1,11 +1,26 @@
-﻿using UnityEngine.UI;
+﻿using UnityEngine;
+using System.Collections;
+using UnityEngine.UI;
+using UniRx;
 
-public class LoadDebugSceneButtonPresenter : LoadSceneButtonPresenter
-{
-  protected override void Awake()
+[RequireComponent(typeof(Button))]
+public class LoadDebugSceneButtonPresenter : MonoBehaviour {
+
+  public ReactiveProperty<GameScene> SceneName = new ReactiveProperty<GameScene>();
+
+  protected virtual void Awake () {
+    var btn = GetComponent<Button>();
+    btn.OnClickAsObservable()
+      .Subscribe(_ =>
+        {
+          SceneLoader.Instance.LoadScene(SceneName.Value);
+        })
+      .AddTo(this);
+  }
+  void Start()
   {
-    base.Awake();
-    DontDestroyOnLoad(transform.root.gameObject);
-    GetComponentInChildren<Text>().text = sceneName.ToString();
+    var text = GetComponentInChildren<Text>();
+    SceneName
+      .SubscribeToText(text);
   }
 }

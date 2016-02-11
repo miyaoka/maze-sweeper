@@ -7,10 +7,9 @@ using UniRx;
 public class LoadSceneButtonPresenter : MonoBehaviour {
 
   [SerializeField]
-  protected SceneName sceneName;
+  GameScene sceneName;
 
   protected virtual void Awake () {
-    var gi = GameManager.Instance;
     var btn = GetComponent<Button>();
     btn.OnClickAsObservable()
       .Subscribe(_ =>
@@ -18,5 +17,5 @@ public class LoadSceneButtonPresenter : MonoBehaviour {
         SceneLoader.Instance.LoadScene(sceneName);
       })
       .AddTo(this);
-	}
+  }
 }

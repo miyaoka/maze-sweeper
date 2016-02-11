@@ -234,7 +234,7 @@ public class LevelManager : SingletonMonoBehaviour<LevelManager>
       "level cleared!",
       new List<DialogOptionDetails> {
           new DialogOptionDetails ("ok", () => {
-            SceneLoader.Instance.LoadScene(SceneName.Camp);
+            SceneLoader.Instance.LoadScene(GameScene.Camp);
           }),
       }
     );
@@ -252,7 +252,7 @@ public class LevelManager : SingletonMonoBehaviour<LevelManager>
       "You have died...",
       new List<DialogOptionDetails> {
           new DialogOptionDetails ("ok", () => {
-            SceneLoader.Instance.LoadScene(SceneName.Lose);
+            SceneLoader.Instance.LoadScene(GameScene.Lose);
           }),
       }
     );

@@ -19,6 +19,7 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
     Application.targetFrameRate = 60;
 
     SectorListManager.Instance.Init();
+    var s = SceneChangerCaller.Instance;
   }
 
   public List<Survivor> LivingList
