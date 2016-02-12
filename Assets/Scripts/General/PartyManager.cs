@@ -55,7 +55,7 @@ public class PartyManager : SingletonMonoBehaviour<PartyManager>
     if (!livingList.Any())
       return;
 
-    AudioManager.TimeoutDamage.Play();
+    AudioManager.Instance.Play(AudioName.TimeoutDamage);
     PlayerManager.Instance.ShowDamage(livingList.Count);
     livingList.ForEach(s => addDamage(s, eachDamage));
 

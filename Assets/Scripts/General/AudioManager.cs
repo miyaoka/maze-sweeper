@@ -1,17 +1,10 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+public enum AudioName { EnemyDetect, Door, Walk, Scream, Powerup, Breach, Damage, TimeoutAlert, TimeoutDamage, EnergyLow, EnergyCritial }
 public class AudioManager : SingletonMonoBehaviour<AudioManager>
 {
-  public static AudioSource EnemyDetect;
-  public static AudioSource Door;
-  public static AudioSource Walk;
-  public static AudioSource Scream;
-  public static AudioSource Powerup;
-  public static AudioSource Breach;
-  public static AudioSource Damage;
-  public static AudioSource TimeoutAlert;
-  public static AudioSource TimeoutDamage;
+  AudioSource[] audios;
 
   void Awake()
   {
@@ -20,20 +13,24 @@ public class AudioManager : SingletonMonoBehaviour<AudioManager>
       Destroy(this);
       return;
     }
-    AudioSource[] audios = GetComponents<AudioSource>();
-    EnemyDetect = audios[0];
-    Door = audios[1];
-    Walk = audios[2];
-    Damage = audios[3];
-    Powerup = audios[4];
-    Breach = audios[5];
-    Scream = audios[6];
-    TimeoutAlert = audios[8];
-    TimeoutDamage = audios[7];
+    audios = GetComponents<AudioSource>();
   }
-  public void PlayLoop(AudioSource au)
+  public void Play(AudioName an)
   {
-    if(!au.loop)
+    getAudio(an).Play();
+  }
+  public void Stop(AudioName an)
+  {
+    getAudio(an).Stop();
+  }
+  AudioSource getAudio(AudioName an)
+  {
+    return audios[(int)an];
+  }
+  public void PlayLoop(AudioName an)
+  {
+    var au = getAudio(an);
+    if (!au.loop)
     {
       au.loop = true;
       
@@ -44,9 +41,10 @@ public class AudioManager : SingletonMonoBehaviour<AudioManager>
       }
     }
   }
-  public void StopLoop(AudioSource au)
+  public void StopLoop(AudioName an)
   {
-     au.loop = false;
+    var au = getAudio(an);
+    au.loop = false;
 //     au.Stop();
   }
 

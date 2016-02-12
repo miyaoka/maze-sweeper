@@ -191,19 +191,19 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
   private void stopWalk()
   {
     player.GetComponentInChildren<Animator>().SetBool("IsWalking", false);
-    AudioManager.Instance.StopLoop(AudioManager.Walk);
+    AudioManager.Instance.StopLoop(AudioName.Walk);
   }
 
   private void startWalk()
   {
     //    AudioManager.door.Play();
     player.GetComponentInChildren<Animator>().SetBool("IsWalking", true);
-    AudioManager.Instance.PlayLoop(AudioManager.Walk);
+    AudioManager.Instance.PlayLoop(AudioName.Walk);
   }
 
   public void CreateDead(Survivor sv)
   {
-    AudioManager.Scream.Play();
+    AudioManager.Instance.Play(AudioName.Scream);
     //last one guy
     if (PartyManager.Instance.LivingList.Count == 0)
     {
@@ -292,7 +292,7 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
     seq.AppendCallback(() =>
     {
       startKnock();
-      AudioManager.Damage.Play();
+      AudioManager.Instance.Play(AudioName.Damage);
       CameraManager.Instance.shake();
       PartyManager.Instance.AddDamages(1);
     });

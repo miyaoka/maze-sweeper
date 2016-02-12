@@ -55,7 +55,7 @@ public class LevelManager : SingletonMonoBehaviour<LevelManager>
 
     AlertCount
       .Where(c => c > 0)
-      .Subscribe(_ => AudioManager.EnemyDetect.Play())
+      .Subscribe(_ => AudioManager.Instance.Play(AudioName.EnemyDetect))
       .AddTo(this);
 
     IsPassExit
@@ -149,14 +149,14 @@ public class LevelManager : SingletonMonoBehaviour<LevelManager>
     if (timeout)
     {
       timerStop();
-      AudioManager.TimeoutAlert.Play();
+      AudioManager.Instance.Play(AudioName.TimeoutAlert);
       LevelTimer.Value = 0;
       dangerTimerConnect = dangerTimerUpdate.Connect();
     }
     else if(dangerTimerConnect != null)
     {
       timerResume();
-      AudioManager.TimeoutAlert.Stop();
+      AudioManager.Instance.Stop(AudioName.TimeoutAlert);
       dangerTimerConnect.Dispose();
     }
   }
@@ -261,7 +261,7 @@ public class LevelManager : SingletonMonoBehaviour<LevelManager>
   void allTimerStop()
   {
     timerStop();
-    AudioManager.TimeoutAlert.Stop();
+    AudioManager.Instance.Stop(AudioName.TimeoutAlert);
     if(dangerTimerConnect != null)
     {
       dangerTimerConnect.Dispose();
@@ -281,7 +281,7 @@ public class LevelManager : SingletonMonoBehaviour<LevelManager>
 
   public void AddTime()
   {
-    AudioManager.Powerup.Play();
+    AudioManager.Instance.Play(AudioName.Powerup);
     LevelTimer.Value = Mathf.Min(LevelTimer.Value + 30f, LevelTimerMax.Value);
   }
   public void AllDead()

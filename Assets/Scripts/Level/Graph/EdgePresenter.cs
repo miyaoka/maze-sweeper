@@ -34,7 +34,7 @@ public class EdgePresenter : MonoBehaviour
             return;
           }
 
-          AudioManager.Door.Play();
+          AudioManager.Instance.Play(AudioName.Door);
 
           door.transform
           .DOLocalMoveY(-2, .3f)
@@ -60,7 +60,7 @@ public class EdgePresenter : MonoBehaviour
   }
   public void breach()
   {
-    AudioManager.Breach.Play();
+    AudioManager.Instance.Play(AudioName.Breach);
     var explosionObj = Instantiate(
       explosionPrefab
       ) as GameObject;

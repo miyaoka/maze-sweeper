@@ -45,6 +45,17 @@ public class LevelTimerPresenter : MonoBehaviour
       .Subscribe(b => timerText.color = b ? Color.red : Color.white)
       .AddTo(this);
 
+    wholeTimer
+      .Pairwise((a, b) => a > 30 && b <= 30)
+      .Where(b => b)
+      .Subscribe(_ => AudioManager.Instance.Play(AudioName.EnergyLow))
+      .AddTo(this);
+    wholeTimer
+      .Pairwise((a, b) => a > 0 && b <= 0)
+      .Where(b => b)
+      .Subscribe(_ => AudioManager.Instance.Play(AudioName.EnergyCritial))
+      .AddTo(this);
+
   }
   void Start()
   {
