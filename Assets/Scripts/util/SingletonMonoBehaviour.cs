@@ -65,6 +65,6 @@ public class SingletonMonoBehaviour<T> : MonoBehaviour where T : MonoBehaviour
     }
   }
 
-  private void OnDestroy() { _instantiated = false; }
+  protected virtual void OnDestroy() { _instantiated = false; }
 
 }

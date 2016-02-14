@@ -105,6 +105,8 @@ public class LevelManager : SingletonMonoBehaviour<LevelManager>
   }
   void Start()
   {
+    BGMManager.Instance.RandomPlay();
+
     var input = GetComponent<PlayerInput>();
     input
       .ToggleInput
@@ -208,6 +210,7 @@ public class LevelManager : SingletonMonoBehaviour<LevelManager>
         CurrentView.Value = ViewState.Normal;
         timerResume();
 
+          /*
         startText.enabled = true;
         Observable.Timer(System.TimeSpan.FromSeconds(1f)).Subscribe(s => {
           startText.enabled = false;
@@ -217,17 +220,22 @@ public class LevelManager : SingletonMonoBehaviour<LevelManager>
             guideText.enabled = false;
           });
         });
+        */
       });
   }
 
-  public void OnExit()
-  {
+  void endLevel(){
     allTimerStop();
 
-    CurrentView.Value = ViewState.Map;
     var input = GetComponent<PlayerInput>();
     input.IsMovable.Value = false;
     input.IsTogglable.Value = false;
+
+  }
+  public void OnExit()
+  {
+    CurrentView.Value = ViewState.Map;
+    endLevel();
 
     //      GraphManager.Instance.ShowAllNode();
     MenuManager.Instance.ModalDialog().Open(
@@ -242,11 +250,7 @@ public class LevelManager : SingletonMonoBehaviour<LevelManager>
 
   public void OnLose()
   {
-    allTimerStop();
-
-    var input = GetComponent<PlayerInput>();
-    input.IsMovable.Value = false;
-    input.IsTogglable.Value = false;
+    endLevel();
 
     MenuManager.Instance.ModalDialog().Open(
       "You have died...",
@@ -292,4 +296,10 @@ public class LevelManager : SingletonMonoBehaviour<LevelManager>
   {
     IsPassExit.Value = true;
   }
+  override protected void OnDestroy()
+  {
+    base.OnDestroy();
+    BGMManager.Instance.Stop();
+  }
+
 }
