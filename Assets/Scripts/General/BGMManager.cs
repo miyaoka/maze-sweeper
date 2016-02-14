@@ -6,6 +6,7 @@ using System.Linq;
 using UnityEngine.UI;
 using UniRx;
 using Random = UnityEngine.Random;
+using AssetBundles;
 
 [Prefab("BGMManager")]
 public class BGMManager : SingletonMonoBehaviour<BGMManager> {
@@ -41,9 +42,10 @@ public class BGMManager : SingletonMonoBehaviour<BGMManager> {
   public Button clearBtn;
   public Text titleText;
   ReactiveProperty<int> currentIndex = new ReactiveProperty<int>(-1);
+  bool inited = false;
+  string queue;
 
-  void Start() {
-    DontDestroyOnLoad(gameObject);
+  IEnumerator Start() {
     aus = GetComponent<AudioSource>();
 
     currentIndex
@@ -51,8 +53,7 @@ public class BGMManager : SingletonMonoBehaviour<BGMManager> {
       .Select(i => titleList[i])
       .Subscribe(t =>
       {
-          titleText.text = t;
-          StartCoroutine(DownloadAndCache("bgm", t));
+        play(t);
       })
       .AddTo(this);
     currentIndex
@@ -72,6 +73,48 @@ public class BGMManager : SingletonMonoBehaviour<BGMManager> {
       .OnClickAsObservable()
       .Subscribe(_ => StartCoroutine(ClearCache()))
       .AddTo(this);
+
+    yield return StartCoroutine(Initialize());
+    inited = true;
+    if (queue != null)
+    {
+      play(queue);
+    }
+
+  }
+  // Initialize the downloading url and AssetBundleManifest object.
+  protected IEnumerator Initialize()
+  {
+    // Don't destroy this gameObject as we depend on it to run the loading script.
+    DontDestroyOnLoad(gameObject);
+
+    // With this code, when in-editor or using a development builds: Always use the AssetBundle Server
+    // (This is very dependent on the production workflow of the project. 
+    // 	Another approach would be to make this configurable in the standalone player.)
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
+    AssetBundleManager.SetDevelopmentAssetBundleServer();
+#else
+		// Use the following code if AssetBundles are embedded in the project for example via StreamingAssets folder etc:
+		AssetBundleManager.SetSourceAssetBundleURL(Application.dataPath + "/");
+		// Or customize the URL based on your deployment or configuration
+		//AssetBundleManager.SetSourceAssetBundleURL("http://www.MyWebsite/MyAssetBundles");
+#endif
+
+    // Initialize AssetBundleManifest which loads the AssetBundleManifest object.
+    var request = AssetBundleManager.Initialize();
+    if (request != null)
+      yield return StartCoroutine(request);
+  }
+  void play(string bgmName)
+  {
+    if (!inited)
+    {
+      queue = bgmName;
+      return;
+    }
+    titleText.text = "- loading -";
+    StartCoroutine(InstantiateAssetAsync("bgm", bgmName));
+    titleText.text = bgmName;
   }
   public void Play(string bgmName)
   {
@@ -98,39 +141,24 @@ public class BGMManager : SingletonMonoBehaviour<BGMManager> {
     }
     Caching.CleanCache();
   }
-  IEnumerator DownloadAndCache (string bundleName, string assetName, int version = 1)
+  IEnumerator InstantiateAssetAsync(string assetBundleName, string assetName)
   {
-    // Wait for the Caching system to be ready
-    while (!Caching.ready)
-    {
-      yield return null;
-    }
-    var url = bundleBasePath + bundleName;
-    // Load the AssetBundle file from Cache if it exists with the same version or download and store it in the cache
-    using (WWW www = WWW.LoadFromCacheOrDownload(url, version))
-    {
-      yield return www;
-      if (www.error != null)
-      {
-        throw new Exception("WWW download had an error:" + www.error);
-      }
-      var bundle = www.assetBundle;
+    // This is simply to get the elapsed time for this phase of AssetLoading.
+    float startTime = Time.realtimeSinceStartup;
 
-//      bundle.GetAllAssetNames().ToList().ForEach(t => Debug.Log(t));
+    // Load asset from assetBundle.
+    AssetBundleLoadAssetOperation request = AssetBundleManager.LoadAssetAsync(assetBundleName, assetName, typeof(AudioClip));
+    if (request == null)
+      yield break;
+    yield return StartCoroutine(request);
 
-      // Load the object asynchronously
-      AssetBundleRequest request = bundle.LoadAssetAsync (assetName, typeof(AudioClip));
-      // Wait for completion
-      yield return request;
+    // Get the asset.
+    var asset = request.GetAsset<AudioClip>();
+    aus.clip = asset;
+    aus.Play();
 
-      aus.clip = request.asset as AudioClip;
-      aus.Play();
-
-      // Unload the AssetBundles compressed contents to conserve memory
-      bundle.Unload(false);
-
-      // Frees the memory from the web stream
-      www.Dispose();    
-    }
+    // Calculate and display the elapsed time.
+    float elapsedTime = Time.realtimeSinceStartup - startTime;
+    Debug.Log(assetName + (asset == null ? " was not" : " was") + " loaded successfully in " + elapsedTime + " seconds");
   }
 }
