@@ -103,6 +103,7 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
     }
     DestCoords.Value = dest;
     graph.ScanEnemies(node);
+    node.IsVisited.Value = true;
 
     //look-ahead
     /*
@@ -115,7 +116,7 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
       });
       */
 
-    if(node.EnemyCount.Value > 0)
+    if (node.EnemyCount.Value > 0)
     {
       gm.CurrentView.Value = ViewState.Battle;
     }

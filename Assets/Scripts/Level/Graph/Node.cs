@@ -13,6 +13,7 @@ public class Node
   public ReactiveProperty<int> AlertCount = new ReactiveProperty<int>(0);
   public ReactiveProperty<bool> HasView = new ReactiveProperty<bool>();
   public ReactiveProperty<bool> IsScanned = new ReactiveProperty<bool>();
+  public ReactiveProperty<bool> IsVisited = new ReactiveProperty<bool>();
   public ReactiveProperty<bool> OnHere = new ReactiveProperty<bool>();
   public ReactiveProperty<bool> OnDest = new ReactiveProperty<bool>();
   public ReactiveProperty<bool> isExit = new ReactiveProperty<bool>();
