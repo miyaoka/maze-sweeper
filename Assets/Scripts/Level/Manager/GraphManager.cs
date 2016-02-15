@@ -211,7 +211,7 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
 
     nodes.ForEach(n =>
     {
-      n.HasFire.Value = Random.value < .1f;
+      n.HasFire.Value = Random.value < .05f;
     });
 
   }

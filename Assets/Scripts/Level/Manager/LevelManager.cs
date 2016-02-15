@@ -35,7 +35,7 @@ public class LevelManager : SingletonMonoBehaviour<LevelManager>
   public ReactiveProperty<bool> IsSelectedSensor = new ReactiveProperty<bool>();
   public ReactiveProperty<bool> IsSelectedMedkit = new ReactiveProperty<bool>();
 
-  LevelConfigParam levelConf = new LevelConfigParam(15, 30, .1f, 3, 1000);
+  LevelConfigParam levelConf = new LevelConfigParam(15, 30, .1f, 3, 120);
 
   public ReactiveProperty<bool> IsAllDead = new ReactiveProperty<bool>();
   public ReactiveProperty<bool> IsPassExit = new ReactiveProperty<bool>();
