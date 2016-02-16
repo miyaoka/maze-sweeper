@@ -12,28 +12,29 @@ using AssetBundles;
 public class BGMManager : SingletonMonoBehaviour<BGMManager> {
   List<string> titleList = new List<string>() {
     "Aliens",
-    "Amnesia 2",
-    "Can You Really Fly",
-    "Da Mihi Factum 3",
-    "Deserted Land",
-    "Drown",
-    "Drown 2",
-    "End Of Time",
+    "Amnesia 2", //dance /mid
+    "Can You Really Fly", //ok /fast
+//    "Da Mihi Factum 3",
+//    "Deserted Land",
+//    "Drown",
+    "Drown 2", //dance /fast
+    "End Of Time",//@ 緊迫 /mid
     "Faded Photographs 2",
-    "Meteor",
+    "Meteor", //@ ホラー調、中盤から盛り上がり
     "Mysterious Universe",
     "Rise To The Top",
     "Running Wild",
     "Scramble",
     "Stand Firm",
-    "Taken",
-    "They Are Here",
-    "They're Coming For Us",
-    "Time Chasers",
-    "Triangulum",
-    "Walking On Sunshine",
-    "War Of The Planets",
-    "In the Rain"
+    "Taken", //勇ましい /mid
+//    "They Are Here", //ホラー調
+    "They're Coming For Us", //ok /mid
+    "Time Chasers",//緊迫 /fast
+    "Triangulum", //@ 緊迫 /fast
+//    "Walking On Sunshine", //陽気
+//    "War Of The Planets", //前半切る 派手すぎ
+    "Orion",
+    "Galactic Mission"
   };
 
   string bundleBasePath = "https://dl.dropboxusercontent.com/u/1030861/unity/elpis/AssetBundles/";
@@ -53,7 +54,7 @@ public class BGMManager : SingletonMonoBehaviour<BGMManager> {
       .Select(i => titleList[i])
       .Subscribe(t =>
       {
-        play(t);
+        Play(t);
       })
       .AddTo(this);
     currentIndex
@@ -78,7 +79,7 @@ public class BGMManager : SingletonMonoBehaviour<BGMManager> {
     inited = true;
     if (queue != null)
     {
-      play(queue);
+      Play(queue);
     }
 
   }
@@ -105,17 +106,19 @@ public class BGMManager : SingletonMonoBehaviour<BGMManager> {
     if (request != null)
       yield return StartCoroutine(request);
   }
-  void play(string bgmName)
+  public void Play(string bgmName, bool loop = true)
   {
     if (!inited)
     {
       queue = bgmName;
       return;
     }
+    aus.loop = loop;
     titleText.text = "- loading -";
     StartCoroutine(InstantiateAssetAsync("bgm", bgmName));
     titleText.text = bgmName;
   }
+  /*
   public void Play(string bgmName)
   {
     var i = titleList.IndexOf(bgmName);
@@ -125,6 +128,7 @@ public class BGMManager : SingletonMonoBehaviour<BGMManager> {
     }
     currentIndex.Value = i;
   }
+  */
   public void RandomPlay(){
     currentIndex.Value = (currentIndex.Value + Random.Range(1, titleList.Count)) % titleList.Count;
   }

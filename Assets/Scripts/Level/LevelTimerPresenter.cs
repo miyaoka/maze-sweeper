@@ -11,6 +11,8 @@ public class LevelTimerPresenter : MonoBehaviour
   [SerializeField]
   Image timerImage;
   [SerializeField]
+  Image timerIcon;
+  [SerializeField]
   Image dangerTimerImage;
   [SerializeField]
   Text dangerText;
@@ -42,10 +44,24 @@ public class LevelTimerPresenter : MonoBehaviour
       .SubscribeToText(timerText)
       .AddTo(this);
 
+    Tweener iconTween = null; 
 
     wholeTimer
       .Select(t => t <= 30)
-      .Subscribe(b => timerText.color = b ? Color.red : Color.white)
+      .DistinctUntilChanged()
+      .Subscribe(alert => {
+        timerText.color = alert ? Color.red : Color.white;
+
+        if (alert)
+        {
+          iconTween = timerIcon.DOFade(0, .5f).SetEase(Ease.InCubic).SetLoops(-1, LoopType.Yoyo);
+        }
+        else
+        {
+          iconTween.Kill();
+          timerIcon.DOFade(1, 0);
+        }
+      })
       .AddTo(this);
 
     wholeTimer
@@ -132,9 +148,9 @@ public class LevelTimerPresenter : MonoBehaviour
         {
           dangerSeq.Restart();
           noise.enabled = true;
-          noise.grainIntensityMax = .2f;
+          noise.grainIntensityMax = 0;
           noiseTween = DOTween
-            .To(() => noise.grainIntensityMax, x => noise.grainIntensityMax = x, 2f, 10f);
+            .To(() => noise.grainIntensityMax, x => noise.grainIntensityMax = x, 1.5f, 10f);
         }
         else
         {

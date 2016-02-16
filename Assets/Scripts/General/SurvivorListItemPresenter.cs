@@ -102,6 +102,7 @@ public class SurvivorListItemPresenter : MonoBehaviour
         .OnClickAsObservable()
         .Subscribe(_ =>
         {
+          AudioManager.Instance.Play(AudioName.Powerup);
           survivor.Heal();
           GameManager.Instance.MedkitCount.Value -= 1;
           LevelManager.Instance.IsSelectedMedkit.Value = false;

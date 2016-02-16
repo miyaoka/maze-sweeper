@@ -88,17 +88,17 @@ public class SectorListManager
   float colSizeBase = 12;
   float colSizePerLevel = 1;
   float rowSizeBase = 15;
-  float rowSizePerLevel = 5;
+  float rowSizePerLevel = 3;
   float maxEnemyCountBase = 1.5f;
   float maxEnemyCountPerLevel = .5f;
-  float rowSizePerFloor = 5f;
+  float additionalRowSizePerFloor = 5f;
 
   public LevelConfig Conf(Sector sector)
   {
 //    Debug.Log(sector.Type);
     var conf = new LevelConfig(
       Mathf.FloorToInt(sector.Level * colSizePerLevel + colSizeBase),
-      Mathf.FloorToInt((sector.Level * rowSizePerLevel + rowSizeBase) + (sector.FloorSize - 1) * rowSizePerFloor),
+      Mathf.FloorToInt((sector.Level * rowSizePerLevel + rowSizeBase) + (sector.FloorSize - 1) * additionalRowSizePerFloor),
       sector.Type.EnemyRate,
       Mathf.FloorToInt(sector.Level * maxEnemyCountPerLevel + maxEnemyCountBase)
       );

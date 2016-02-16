@@ -9,9 +9,9 @@ using UniRx;
 public class GameManager : SingletonMonoBehaviour<GameManager>
 {
   public List<Survivor> SurvivorList = new List<Survivor>();
-  public ReactiveProperty<int> BombCount = new ReactiveProperty<int>(3);
-  public ReactiveProperty<int> SensorCount = new ReactiveProperty<int>(10);
-  public ReactiveProperty<int> MedkitCount = new ReactiveProperty<int>(3);
+  public ReactiveProperty<int> BombCount = new ReactiveProperty<int>();
+  public ReactiveProperty<int> SensorCount = new ReactiveProperty<int>();
+  public ReactiveProperty<int> MedkitCount = new ReactiveProperty<int>();
 
   void Awake()
   {
@@ -25,6 +25,10 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
   {
     SectorListManager.Instance.Init();
     var s = SceneChangerCaller.Instance;
+
+    BombCount.Value = 3;
+    SensorCount.Value = 5;
+    MedkitCount.Value = 3;
   }
 
   public List<Survivor> LivingList
