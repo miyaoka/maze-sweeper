@@ -179,11 +179,38 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
     {
       LevelManager.Instance.onExit();
     }
-    if (node.HasItem.Value)
+    if (node.HasEnergy.Value)
     {
-      node.HasItem.Value = false;
+      node.HasEnergy.Value = false;
       LevelManager.Instance.AddTime();
       player.GetComponent<SurvivorPresenter>().ShowMsg("+30sec");
+    }
+    if (node.HasItem.Value)
+    {
+      AudioManager.Instance.Play(AudioName.Powerup);
+      node.HasItem.Value = false;
+      if (Random.value < .5f)
+      {
+        GameManager.Instance.SensorCount.Value += 1;
+        player.GetComponent<SurvivorPresenter>().ShowMsg("+Scanner");
+      }
+      else if (Random.value < .5f)
+      {
+        GameManager.Instance.MedkitCount.Value += 1;
+        player.GetComponent<SurvivorPresenter>().ShowMsg("+Medkit");
+      }
+      else
+      {
+        GameManager.Instance.BombCount.Value += 1;
+        player.GetComponent<SurvivorPresenter>().ShowMsg("+Bomb");
+      }
+    }
+    if (node.HasRescuee.Value)
+    {
+      AudioManager.Instance.Play(AudioName.Powerup);
+      node.HasRescuee.Value = false;
+      PartyManager.Instance.AddSurvivor();
+      player.GetComponent<SurvivorPresenter>().ShowMsg("+Survivor");
     }
 
 

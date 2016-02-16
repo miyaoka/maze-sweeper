@@ -90,4 +90,10 @@ public class PartyManager : SingletonMonoBehaviour<PartyManager>
     go.GetComponent<SurvivorListItemPresenter>().Survivor = s;
     go.transform.SetParent(SurvivorListContainer, false);
   }
+  public void AddSurvivor()
+  {
+    var s = new Survivor("name", 3);
+    SurvivorList.Add(s);
+    addView(s);
+  }
 }

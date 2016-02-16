@@ -22,7 +22,8 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
   [SerializeField]
   float deadEndReduceProb = .5f;
 
-  float itemsPerNode = .015f;
+  float energyPerNode = .015f;
+  float itemsPerNode = .01f;
   [SerializeField]
   bool showAll;
   [SerializeField]
@@ -189,20 +190,43 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
 
     nodes.Sort((a, b) => Random.value < .5f ? -1 : 1);
 
+    var energyCount = nodes.Count() * energyPerNode;
     var itemCount = nodes.Count() * itemsPerNode;
-    Debug.Log(nodes.Count());
-    Debug.Log(itemCount);
+    var rescueeCount = Random.Range(1, 3);
 
-    foreach (var n in nodes)
+    var i = 0;
+
+    for (; i < nodes.Count; i++)
     {
+      var n = nodes[i];
+      if (rescueeCount-- <= 0)
+      {
+        break;
+      }
+      n.HasRescuee.Value = true;
+      addNodeView(n);
+    }
+    for (; i < nodes.Count; i++)
+    {
+      var n = nodes[i];
+      if (energyCount-- <= 0)
+      {
+        break;
+      }
+      n.HasEnergy.Value = true;
+      addNodeView(n);
+    }
+    for (; i < nodes.Count; i++)
+    {
+      var n = nodes[i];
       if (itemCount-- <= 0)
       {
-        return;
+        break;
       }
       n.HasItem.Value = true;
       addNodeView(n);
-//      n.IsVisited.Value = true;
     }
+
   }
 
   void addFire()
