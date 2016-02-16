@@ -13,12 +13,14 @@ public class Node
   public ReactiveProperty<int> AlertCount = new ReactiveProperty<int>(0);
   public ReactiveProperty<bool> HasView = new ReactiveProperty<bool>();
   public ReactiveProperty<bool> IsScanned = new ReactiveProperty<bool>();
+  public ReactiveProperty<bool> IsVisited = new ReactiveProperty<bool>();
   public ReactiveProperty<bool> OnHere = new ReactiveProperty<bool>();
   public ReactiveProperty<bool> OnDest = new ReactiveProperty<bool>();
   public ReactiveProperty<bool> isExit = new ReactiveProperty<bool>();
-  public ReactiveProperty<bool> HasItem = new ReactiveProperty<bool>(false);
-  public ReactiveProperty<bool> HasFire = new ReactiveProperty<bool>(false);
+  public ReactiveProperty<bool> HasEnergy = new ReactiveProperty<bool>();
   public ReactiveProperty<bool> HasRescuee = new ReactiveProperty<bool>();
+  public ReactiveProperty<bool> HasItem = new ReactiveProperty<bool>();
+  public ReactiveProperty<bool> HasFire = new ReactiveProperty<bool>();
 
   public readonly Edge[] EdgeArray = new Edge[4];
 

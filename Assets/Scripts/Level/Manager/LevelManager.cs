@@ -21,6 +21,8 @@ public class LevelManager : SingletonMonoBehaviour<LevelManager>
   Text startText;
   [SerializeField]
   Text guideText;
+  [SerializeField]
+  Light directionalLight;
 
   public ReactiveProperty<int> AlertCount = new ReactiveProperty<int>();
   public ReactiveProperty<float> LevelTimer = new ReactiveProperty<float>(10);
@@ -35,7 +37,7 @@ public class LevelManager : SingletonMonoBehaviour<LevelManager>
   public ReactiveProperty<bool> IsSelectedSensor = new ReactiveProperty<bool>();
   public ReactiveProperty<bool> IsSelectedMedkit = new ReactiveProperty<bool>();
 
-  LevelConfigParam levelConf = new LevelConfigParam(15, 30, .1f, 3, 100);
+  LevelConfigParam levelConf = new LevelConfigParam(15, 30, .1f, 3, 120);
 
   public ReactiveProperty<bool> IsAllDead = new ReactiveProperty<bool>();
   public ReactiveProperty<bool> IsPassExit = new ReactiveProperty<bool>();
@@ -102,6 +104,7 @@ public class LevelManager : SingletonMonoBehaviour<LevelManager>
       .Select(c => (float)c.Y / (float)GraphManager.Instance.graph.MaxCoords.Y)
       .ToReactiveProperty();
 
+    directionalLight.color = Color.HSVToRGB(Random.value, Random.Range(.05f, .25f), .5f);
   }
   void Start()
   {
@@ -237,6 +240,8 @@ public class LevelManager : SingletonMonoBehaviour<LevelManager>
     CurrentView.Value = ViewState.Map;
     endLevel();
 
+    BGMManager.Instance.Play("Unknown Warrior", false);
+
     //      GraphManager.Instance.ShowAllNode();
     MenuManager.Instance.ModalDialog().Open(
       "level cleared!",
@@ -251,12 +256,15 @@ public class LevelManager : SingletonMonoBehaviour<LevelManager>
   public void OnLose()
   {
     endLevel();
+    GetComponent<PlayerInput>().IsScrollable.Value = true;
+
+    BGMManager.Instance.Play("Dawn of Time 7", false);
 
     MenuManager.Instance.ModalDialog().Open(
       "You have died...",
       new List<DialogOptionDetails> {
           new DialogOptionDetails ("ok", () => {
-            SceneLoader.Instance.LoadScene(GameScene.Lose);
+            SceneLoader.Instance.LoadScene(GameScene.Result);
           }),
       }
     );

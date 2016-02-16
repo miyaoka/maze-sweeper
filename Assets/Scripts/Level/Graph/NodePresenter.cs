@@ -40,6 +40,9 @@ public class NodePresenter : MonoBehaviour
   Color unvisitedFloorColor = new Color(.25f, .25f, .3f);
   float sensorTargetBtnHeight = 2f;
 
+  GameObject sv = null;
+
+
   void Awake()
   {
     roomLight.intensity = 0;
@@ -101,32 +104,49 @@ public class NodePresenter : MonoBehaviour
         })
         .AddTo(this);
 
-      var deadend =
-      node.Degree
-        .Select(d => d == 1)
-        .ToReactiveProperty();
-
       var hasEnemy =
         node.EnemyCount
         .Select(c => c > 0)
         .ToReactiveProperty();
+      var hasAlert =
+        node.AlertCount
+        .Select(c => c > 0)
+        .ToReactiveProperty();
 
+      var enemyColor = new Color(1, 0, 0);
+      var alertColor = new Color(.62f, .32f, .32f);
+      var energyColor = new Color(.0f, .6f, .0f);
+      var rescueeColor = new Color(1f, 1f, 1f);
+      var itemColor = new Color(.3f, .3f, .3f);
+      var noneColor = Color.black;
 
-      deadend
-        .CombineLatest(hasEnemy, node.AlertCount, node.IsScanned, (d, e, a, v) =>
-          new Color(!v ? 0 : e ? 1 : (a > 0 ? .2f : 0), 0, 0))
-        .CombineLatest(node.HasItem, (c, i) => i ? new Color(0,1,0) : c)
+      node.HasEnergy
+        .CombineLatest(node.HasItem, node.HasRescuee, (e, i, r) => e ? energyColor : i ? itemColor : r ? rescueeColor : noneColor)
+        .CombineLatest(node.IsScanned, hasEnemy, hasAlert, (i, s, e, a) =>
+        s ? (e ? enemyColor : i != noneColor ? i : (a ? alertColor : noneColor))
+        : i)
         .Subscribe(c =>
         {
           mt.SetColor("_EmissionColor", c);
         })
         .AddTo(this);
 
+      node.IsVisited
+        .Select(v => LayerMask.NameToLayer(v ? "Default" : "UnVisited"))
+        .Subscribe(l => floor.layer = l)
+        .AddTo(this);
+
+      node.IsVisited
+        .Select(v => v ? Color.white : Color.black)
+        .Subscribe(c => mt.color = c)
+        .AddTo(this);
+
+/*
       node.IsScanned
         .Select(v => v ? initFloorColor : unvisitedFloorColor)
         .Subscribe(c => mt.color = c)
         .AddTo(this);
-
+*/
 
       node.OnDest
         .Subscribe(b =>
@@ -178,7 +198,7 @@ public class NodePresenter : MonoBehaviour
         .Where(b => b)
         .Subscribe(_ =>
         {
-          var sv = Instantiate(survivorPrefab);
+          sv = Instantiate(survivorPrefab);
 
           //22.5deg-67.5deg
           var radian = (Random.Range(0, 1f/4f) + 1f/8f + Random.Range(0, 4) * .5f) * Mathf.PI;
@@ -191,6 +211,16 @@ public class NodePresenter : MonoBehaviour
           var sp = sv.GetComponent<SurvivorPresenter>();
           sp.body.transform.LookAt(transform);
 //          sp.GetComponentInChildren<Animator>().enabled = false;
+        })
+        .AddTo(this);
+
+      node.HasRescuee
+        .Subscribe(r =>
+        {
+          if (!r && sv != null)
+          {
+            Destroy(sv);
+          }
         })
         .AddTo(this);
 
@@ -283,6 +313,8 @@ public class NodePresenter : MonoBehaviour
     obj.transform.SetParent(interiorContainer, false);
     obj.transform.localScale = scale;
   }
+
+
   void modelDestoryHandler(object sender, EventArgs e)
   {
     Destroy(gameObject);
