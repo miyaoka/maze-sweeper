@@ -13,8 +13,8 @@ public class CameraManager : SingletonMonoBehaviour<CameraManager>
 
   Dictionary<ViewState, float> heightDict = new Dictionary<ViewState, float>()
   {
-    { ViewState.Normal, 35f },
-    { ViewState.Map, 125f },
+    { ViewState.Normal, 45f },
+    { ViewState.Map, 150f },
     { ViewState.Battle, 15f }
   };
   
