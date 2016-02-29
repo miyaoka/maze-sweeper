@@ -45,6 +45,7 @@ public class BGMManager : SingletonMonoBehaviour<BGMManager> {
   ReactiveProperty<int> currentIndex = new ReactiveProperty<int>(-1);
   bool inited = false;
   string queue;
+  string bundleName = "bgm";
 
   IEnumerator Start() {
     aus = GetComponent<AudioSource>();
@@ -115,7 +116,7 @@ public class BGMManager : SingletonMonoBehaviour<BGMManager> {
     }
     aus.loop = loop;
     titleText.text = "- loading -";
-    StartCoroutine(InstantiateAssetAsync("bgm", bgmName));
+    StartCoroutine(InstantiateAssetAsync(bundleName, bgmName));
     titleText.text = bgmName;
   }
   /*
