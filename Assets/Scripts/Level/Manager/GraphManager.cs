@@ -18,6 +18,8 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
   [SerializeField]
   GameObject gridWallPrefab;
   [SerializeField]
+  GameObject guideNodePrefab;
+  [SerializeField]
   float GridUnit = 10;
   [SerializeField]
   float deadEndReduceProb = .5f;
@@ -138,10 +140,20 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
   }
   public void ClearNodeEnemy(Node node)
   {
+    graph.Neighbors(node.Coords)
+      .Where(n => n.IsScanned.Value)
+      .ToList()
+      .ForEach(n =>
+      {
+        n.AlertCount.Value = Mathf.Max(0, n.AlertCount.Value - node.EnemyCount.Value);
+      });
+
+    /*  
     foreach (var n in graph.Neighbors(node.Coords))
     {
       n.AlertCount.Value = Mathf.Max(0, n.AlertCount.Value - node.EnemyCount.Value);
     }
+    */
     node.EnemyCount.Value = 0;
     ScanEnemies(node);
   }
@@ -267,10 +279,36 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
     if (node.HasView.Value)
       return;
 
+    node.HasView.Value = true;
+
     var go = Instantiate(gridNodePrefab, CoordsToVec3(node.Coords), Quaternion.identity) as GameObject;
     AddToView(go);
     go.GetComponent<NodePresenter>().Node = node;
     go.name = "node_" + coordsToObjectName(node.Coords);
+
+    //add guide
+    neighborNodeList(node)
+    .ForEach(addGuideNodeView);
+  }
+  void addGuideNodeView(Node node)
+  {
+    if (node.HasGuideView.Value)
+      return;
+
+    node.HasGuideView.Value = true;
+    node.SetNeighborList(neighborNodeList(node));
+
+    var go = Instantiate(guideNodePrefab, CoordsToVec3(node.Coords), Quaternion.identity) as GameObject;
+    AddToView(go);
+    go.GetComponent<GuideNodePresenter>().Node = node;
+    go.name = "guide_node_" + coordsToObjectName(node.Coords);
+  }
+  List<Node> neighborNodeList(Node node)
+  {
+    return
+      graph.NeighborCoords(node.Coords, true)
+      .Select(nc => graph.GetOrCreateNode(nc))
+      .ToList();
   }
   void addEdgeView(Edge edge, int dir, bool explode = false)
   {

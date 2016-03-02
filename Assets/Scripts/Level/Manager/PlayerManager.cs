@@ -163,7 +163,6 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
       StartCoroutine( enemyAttacks(ec, ()=>
       {
         graph.ClearNodeEnemy(node);
-        graph.ScanEnemies(node);
 
         ShowDamage(ec);
 

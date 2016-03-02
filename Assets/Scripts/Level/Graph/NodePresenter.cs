@@ -15,8 +15,6 @@ public class NodePresenter : MonoBehaviour
   [SerializeField]
   Text enemyCountText;
   [SerializeField]
-  Transform wallContainer;
-  [SerializeField]
   Transform interiorContainer;
   [SerializeField]
   GameObject tiles;
@@ -57,7 +55,8 @@ public class NodePresenter : MonoBehaviour
     set
     {
       this.node = value;
-      node.HasView.Value = true;
+      node.OnDestroy += modelDestoryHandler;
+
       var graph = GraphManager.Instance;
 
       var mt = floor.GetComponent<Renderer>().material;
@@ -71,7 +70,6 @@ public class NodePresenter : MonoBehaviour
           addInterior(i);
         }
       }
-
 
       node.IsScanned
         .Subscribe(s =>
@@ -246,29 +244,6 @@ public class NodePresenter : MonoBehaviour
         })
         .AddTo(this);
 
-      /*
-      node.Degree
-        .Subscribe(_ =>
-        {
-          foreach(Transform t in wallContainer)
-          {
-            Destroy(t.gameObject);
-          }
-          for (var i = 0; i < 4; i++)
-          {
-            var e = node.EdgeArray[i];
-            if (e == null)
-            {
-              var w = addWall(i);
-              w.Dir = i;
-              w.NodeModel = node;
-            }
-          }
-        }).AddTo(this);
-        */
-
-
-      node.OnDestroy += modelDestoryHandler;
     }
     get { return this.node; }
   }

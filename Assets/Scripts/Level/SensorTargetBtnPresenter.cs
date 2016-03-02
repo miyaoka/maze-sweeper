@@ -17,7 +17,7 @@ public class SensorTargetBtnPresenter : MonoBehaviour
       .Subscribe(_ =>
       {
         AudioManager.Instance.Play(AudioName.Powerup);
-        graph.graph.CreateNode(Coords, true);
+        graph.graph.GetOrCreateNode(Coords);
         var n = graph.ShowNode(Coords);
         graph.ScanEnemies(n);
         n.IsVisited.Value = true;

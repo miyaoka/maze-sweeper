@@ -12,6 +12,7 @@ public class Graph
   public static readonly IntVector2[] DirCoords = { new IntVector2(1, 0), new IntVector2(0, 1), new IntVector2(-1, 0), new IntVector2(0, -1) };
 
   IntVector2 maxCoords;
+
   public IntVector2 MaxCoords
   {
     get
@@ -24,20 +25,23 @@ public class Graph
   }
   Dictionary<IntVector2, Node> nodeDict = new Dictionary<IntVector2, Node>();
 
-  public Node CreateNode(IntVector2 coords, bool ifNotExist = false)
+  public Node GetOrCreateNode(IntVector2 coords)
   {
-    if(ifNotExist && nodeDict.ContainsKey(coords))
+    if(nodeDict.ContainsKey(coords))
     {
       return nodeDict[coords];
     }
+
     var n = new Node(coords);
     nodeDict.Add(coords, n);
+
     return n;
   }
+
   public Edge CreateEdge(IntVector2 coords0, IntVector2 coords1)
   {
-    var n0 = CreateNode(coords0, true);
-    var n1 = CreateNode(coords1, true);
+    var n0 = GetOrCreateNode(coords0);
+    var n1 = GetOrCreateNode(coords1);
     var edge = new Edge(n0, n1);
     return edge;
   }
@@ -65,6 +69,13 @@ public class Graph
     }
   }
   public List<Node> NodeList
+  {
+    get
+    {
+      return nodeDict.Values.Where(n => n.Degree.Value > 0).ToList();
+    }
+  }
+  public List<Node> AllNodeList
   {
     get
     {
@@ -106,21 +117,39 @@ public class Graph
     }
     return count;
   }
-  public List<Node> Neighbors(IntVector2 coords)
+  public List<Node> Neighbors(IntVector2 coords, bool ignoreSelf = false)
   {
     var list = new List<Node>();
-    for(var x = -1; x <= 1; x++)
-    {
-      for(var y = -1; y <= 1; y++)
+
+    NeighborCoords(coords)
+      .ForEach(c =>
       {
-        var neighbor = GetNode(coords + new IntVector2(x, y));
-        if(neighbor != null)
+        var neighbor = GetNode(c);
+
+        if (neighbor != null)
         {
           list.Add(neighbor);
         }
+      });
+    return list;
+  }
+  public List<IntVector2> NeighborCoords(IntVector2 coords, bool ignoreSelf = false)
+  {
+    var nCoords = new List<IntVector2>();
+    for (var x = -1; x <= 1; x++)
+    {
+      for (var y = -1; y <= 1; y++)
+      {
+        nCoords.Add(new IntVector2(x, y));
       }
     }
-    return list;
+    if (ignoreSelf)
+    {
+      nCoords.Remove(IntVector2.Zero);
+    }
+    return nCoords
+      .Select(c => c + coords)
+      .ToList();
   }
   public void CreateMaze(Rect rect)
   {
