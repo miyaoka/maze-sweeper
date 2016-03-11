@@ -13,6 +13,8 @@ public class EdgePresenter : MonoBehaviour
   GameObject brokenWall;
   [SerializeField]
   GameObject explosionPrefab;
+  [SerializeField]
+  GameObject walls;
 
   void Awake()
   {
@@ -26,6 +28,13 @@ public class EdgePresenter : MonoBehaviour
       this.edge = value;
 
       edge
+        .noWall
+        .Subscribe(b =>
+        {
+          walls.SetActive(!b);
+        });
+
+      edge
         .isOpened
         .Subscribe(b => {
           if (!b)
@@ -34,7 +43,10 @@ public class EdgePresenter : MonoBehaviour
             return;
           }
 
-          AudioManager.Instance.Play(AudioName.Door);
+          if(!edge.noWall.Value)
+          {
+            AudioManager.Instance.Play(AudioName.Door);
+          }
 
           door.transform
           .DOLocalMoveY(-2, .3f)

@@ -16,12 +16,12 @@ public class SectorListManager
 
   List<SectorType> SectorTypeList = new List<SectorType>()
   {
-    new SectorType("Engine", new Color(.8f, .4f, .4f), .12f),
-    new SectorType("Armory", new Color(.8f, .4f, .8f), .11f),
-    new SectorType("Lab", new Color(.5f, .7f, .9f), .1f),
-    new SectorType("System", new Color(.8f, .8f, 0), .1f),
-    new SectorType("Living", new Color(.5f, .9f, .5f), .09f),
-    new SectorType("Cargo", new Color(.7f, .7f, .7f), .08f)
+    new SectorType("Engine", new Color(.8f, .4f, .4f), .15f),
+    new SectorType("Armory", new Color(.8f, .4f, .8f), .14f),
+    new SectorType("Lab", new Color(.5f, .7f, .9f), .13f),
+    new SectorType("System", new Color(.8f, .8f, 0), .12f),
+    new SectorType("Living", new Color(.5f, .9f, .5f), .11f),
+    new SectorType("Cargo", new Color(.7f, .7f, .7f), .1f)
   };
 
   private static SectorListManager instance;
@@ -40,7 +40,7 @@ public class SectorListManager
   public void Init()
   {
     SectorList.Clear();
-    CurrentSector.Value = new Sector(floorCount, 0, 0);
+//    CurrentSector.Value = new Sector(floorCount, 0, 0);
 
     for (var i = 0; i < sectorCount; i++)
     {
@@ -51,7 +51,7 @@ public class SectorListManager
       new SectorType("Shuttle", Color.black, .13f))
     });
 
-    CurrentSector.Value = SectorList[0][0];
+    CurrentSector.Value = SectorList[3][0];
 
     Update.Value += 1;
 
@@ -85,10 +85,10 @@ public class SectorListManager
     return list;
   }
 
-  float colSizeBase = 12;
-  float colSizePerLevel = 1;
-  float rowSizeBase = 15;
-  float rowSizePerLevel = 3;
+  float colSizeBase = 16;
+  float colSizePerLevel = 4;
+  float rowSizeBase = 20;
+  float rowSizePerLevel = 4;
   float maxEnemyCountBase = 1.5f;
   float maxEnemyCountPerLevel = .5f;
   float additionalRowSizePerFloor = 5f;

@@ -92,7 +92,7 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
 
     edge.isOpened.Value = true;
 
-    MovePos(CurrentCoords.Value + Graph.DirCoords[(int)dir]);
+    MovePos(CurrentCoords.Value + Graph.NextGridCoords[(int)dir]);
   }
   public void MovePos(IntVector2 dest, bool noAnim = false)
   {
@@ -102,8 +102,6 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
       return;
     }
     DestCoords.Value = dest;
-    graph.ScanEnemies(node);
-    node.IsVisited.Value = true;
 
     //look-ahead
     /*

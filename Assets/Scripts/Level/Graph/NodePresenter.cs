@@ -33,7 +33,7 @@ public class NodePresenter : MonoBehaviour
 
   Node node;
   Tweener lightTw;
-  float lightMax = 1.8f;
+  float lightMax = 2.5f;
   float lightMin = 0f;
   Color unvisitedFloorColor = new Color(.25f, .25f, .3f);
   float sensorTargetBtnHeight = 2f;
@@ -135,7 +135,8 @@ public class NodePresenter : MonoBehaviour
         .AddTo(this);
 
       node.IsVisited
-        .Select(v => v ? Color.white : Color.black)
+        .CombineLatest(node.IsCombinedRoom, (v, r) => v ? (r ? 1f : .6f) : 0)
+        .Select(v => Color.HSVToRGB(0,0,v))
         .Subscribe(c => mt.color = c)
         .AddTo(this);
 
@@ -229,11 +230,13 @@ public class NodePresenter : MonoBehaviour
         .Where(b => b)
         .Subscribe(_ =>
         {
-          Graph.DirCoords.ToList().ForEach(c =>
+          Graph.NextGridCoords
+          .ToList()
+          .ForEach(c =>
           {
             var coords = node.Coords + c;
             var n = graph.graph.GetNode(coords);
-            if(n == null || !n.IsScanned.Value)
+            if(n == null || true) //!n.IsScanned.Value)
             {
               var btn = Instantiate(sensorTargetBtnPrefab);
               btn.transform.localPosition = graph.CoordsToVec3(coords) + new Vector3(0, sensorTargetBtnHeight, 0);

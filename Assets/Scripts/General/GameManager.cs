@@ -27,7 +27,7 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
     var s = SceneChangerCaller.Instance;
 
     BombCount.Value = 3;
-    SensorCount.Value = 5;
+    SensorCount.Value = 50;
     MedkitCount.Value = 3;
   }
 

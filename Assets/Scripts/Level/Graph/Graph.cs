@@ -9,7 +9,7 @@ public class Graph
   int divideMargin = 1;
   float connectRatio = .6f;
   //E,N,W,S
-  public static readonly IntVector2[] DirCoords = { new IntVector2(1, 0), new IntVector2(0, 1), new IntVector2(-1, 0), new IntVector2(0, -1) };
+  public static readonly IntVector2[] NextGridCoords = { new IntVector2(1, 0), new IntVector2(0, 1), new IntVector2(-1, 0), new IntVector2(0, -1) };
 
   IntVector2 maxCoords;
 
@@ -43,6 +43,9 @@ public class Graph
     var n0 = GetOrCreateNode(coords0);
     var n1 = GetOrCreateNode(coords1);
     var edge = new Edge(n0, n1);
+    n0.AddEdge(edge);
+    n1.AddEdge(edge);
+
     return edge;
   }
   public Node GetNode(IntVector2 coords)
@@ -72,7 +75,7 @@ public class Graph
   {
     get
     {
-      return nodeDict.Values.Where(n => n.Degree.Value > 0).ToList();
+      return nodeDict.Values.Where(n => n.EdgeList.Count > 0).ToList();
     }
   }
   public List<Node> AllNodeList
@@ -86,7 +89,7 @@ public class Graph
   {
     get
     {
-      return NodeList.Where(n => n.Degree.Value == 1).ToList();
+      return NodeList.Where(n => n.EdgeList.Count == 1).ToList();
     }
   }
   public List<Node> ShuffledNodeList
@@ -111,17 +114,18 @@ public class Graph
   public int ScanEnemies(IntVector2 coords)
   {
     var count = 0;
-    foreach(var n in Neighbors(coords))
-    {
-      count += n.EnemyCount.Value;
-    }
+    Neighbors(coords, true)
+      .ForEach(n =>
+      {
+        count += n.EnemyCount.Value;
+      });
     return count;
   }
-  public List<Node> Neighbors(IntVector2 coords, bool ignoreSelf = false)
+  public List<Node> Neighbors(IntVector2 coords, bool withSelf = false)
   {
     var list = new List<Node>();
 
-    NeighborCoords(coords)
+    NeighborCoords(coords, withSelf)
       .ForEach(c =>
       {
         var neighbor = GetNode(c);
@@ -133,7 +137,7 @@ public class Graph
       });
     return list;
   }
-  public List<IntVector2> NeighborCoords(IntVector2 coords, bool ignoreSelf = false)
+  public List<IntVector2> NeighborCoords(IntVector2 coords, bool withSelf = false)
   {
     var nCoords = new List<IntVector2>();
     for (var x = -1; x <= 1; x++)
@@ -143,7 +147,7 @@ public class Graph
         nCoords.Add(new IntVector2(x, y));
       }
     }
-    if (ignoreSelf)
+    if (!withSelf)
     {
       nCoords.Remove(IntVector2.Zero);
     }
@@ -251,7 +255,7 @@ public class Graph
         : new IntVector2(connectPoint, 0);
       var connectDir = isVerticalDivide ? Dir.East : Dir.North;
       var sourceCoords = baseCoords + connectCoords;
-      var targetCoords = sourceCoords + DirCoords[(int)connectDir];
+      var targetCoords = sourceCoords + NextGridCoords[(int)connectDir];
       CreateEdge(sourceCoords, targetCoords);
     }
   }

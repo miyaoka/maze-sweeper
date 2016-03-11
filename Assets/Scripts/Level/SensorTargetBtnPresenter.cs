@@ -19,8 +19,7 @@ public class SensorTargetBtnPresenter : MonoBehaviour
         AudioManager.Instance.Play(AudioName.Powerup);
         graph.graph.GetOrCreateNode(Coords);
         var n = graph.ShowNode(Coords);
-        graph.ScanEnemies(n);
-        n.IsVisited.Value = true;
+        graph.ClearNodeEnemy(n);
         LevelManager.Instance.IsSelectedSensor.Value = false;
         GameManager.Instance.SensorCount.Value -= 1;
       })

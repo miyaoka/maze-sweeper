@@ -12,6 +12,8 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
   [SerializeField]
   public GameObject exitZone;
   [SerializeField]
+  public GameObject dangerZone;
+  [SerializeField]
   GameObject gridNodePrefab;
   [SerializeField]
   GameObject gridEdgePrefab;
@@ -71,17 +73,24 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
       .ToList<Node>();
     addEnemies(list, roundConf.EnemyRate, roundConf.MaxEnemyCount);
 
+    combineRoom();
+
     //exit zone
     exitZone.transform.localPosition = new Vector3(
       graph.MaxCoords.X * .5f * GridUnit,
       exitZone.transform.localPosition.y, 
       (graph.MaxCoords.Y -.5f) * GridUnit);
 
+    dangerZone.transform.localPosition = new Vector3(
+      graph.MaxCoords.X * .5f * GridUnit,
+      dangerZone.transform.localPosition.y,
+      (0 - .5f) * GridUnit);
+
     //items
     addItems();
 
     //fire
-    addFire();
+//    addFire();
 
 //    addResucuee();
 
@@ -91,56 +100,127 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
   public void ShowAllNode()
   {
     var t = System.DateTime.Now;
-    foreach (var n in graph.NodeList)
-    {
-      addNodeView(n);
-      n.AlertCount.Value = graph.ScanEnemies(n.Coords);
-      n.IsScanned.Value = true;
-      addEdgeViews(n);
-    }
+    graph.NodeList
+      .ForEach(addNodeAndEdgeView);
+
     var t2 = System.DateTime.Now;
     Debug.Log("Instantiate: " + (t2 - t));
   }
+  void addNodeAndEdgeView(Node n)
+  {
+    n.IsScanned.Value = true;
+    addNodeView(n);
+    addEdgeViews(n);
+  }
 
+  void combineRoom()
+  {
+    var nodeList = graph.NodeList;
+    nodeList
+      .ForEach(n =>
+      {
+        n.AlertCount.Value = graph.ScanEnemies(n.Coords);
+      });
+
+
+    nodeList
+      .Where(n => n.AlertCount.Value == 0)
+      .ToList()
+      .ForEach(noAlertNode =>
+      {
+        var nNodeList = new List<Node>();
+        noAlertNode.ReachableNeighborNodeList(noAlertNode, nNodeList);
+
+        if (nNodeList.Count != 9)
+        {
+          return;
+        }
+        nNodeList.ForEach(n =>
+        {
+          n.IsCombinedRoom.Value = true;
+          Graph.NextGridCoords
+          .Select((v, i) => new { Value = v, Index = i })
+          .ToList()
+          .ForEach(nc =>
+          {
+            var nextCoords = n.Coords + nc.Value;
+            if (!nNodeList.Contains(graph.GetNode(nextCoords)))
+            {
+              return;
+            }
+            var e = n.EdgeArray[nc.Index];
+            if (e == null)
+            {
+              e = graph.CreateEdge(n.Coords, nextCoords);
+            }
+            e.noWall.Value = true;
+          });
+        });
+      });
+
+    nodeList
+      .Where(n => n.IsCombinedRoom.Value)
+      .ToList()
+      .ForEach(n => {
+        //        n.IsVisited.Value = true;
+        n.AlertCount.Value = -1;
+        addNodeAndEdgeView(n);
+        n.IsScanned.Value = false;
+      });
+  }
 
   /// <summary>
-  /// add node view with edge
+  /// add node view and visit
   /// </summary>
-  /// <param name="coord"></param>
-  /// <param name="visit"></param>
+  /// <param name="coords"></param>
   /// <returns></returns>
-  public Node ShowNode(IntVector2 coord, bool visit = true)
+  public Node ShowNode(IntVector2 coords)
   {
-    var n = graph.GetNode(coord);
+    var n = showNode(coords, new List<Node>());
+    if (n != null)
+    {
+      LevelManager.Instance.AlertCount.Value = n.AlertCount.Value;
+    }
+    return n;
+  }
+  Node showNode(IntVector2 coords, List<Node> seeked)
+  {
+    var n = graph.GetNode(coords);
     if (n == null)
     {
       return null;
     }
-    n.IsScanned.Value = visit || n.IsScanned.Value;
+    if(n.IsVisited.Value)
+    {
+      return n;
+    }
+    n.IsVisited.Value = true;
+    n.AlertCount.Value = graph.ScanEnemies(n.Coords);
 
-    addNodeView(n);
-    addEdgeViews(n);
+    if (seeked.Contains(n))
+    {
+      return n;
+    }
+    seeked.Add(n);
+
+    addNodeAndEdgeView(n);
+
+
+    n.EdgeList
+      .Where(e => e.noWall.Value)
+      .Select(e => e.OppositeNode(n).Coords)
+      .ToList()
+      .ForEach(c =>
+      {
+        var nn = showNode(c, seeked);
+      });
+
     return n;
   }
-  void addEdgeViews(Node node)
-  {
-    node.EdgeArray
-      .Select((v, i) => new { Value = v, Index = i })
-      .ToList()
-      .ForEach(e => {
-        if(e.Value == null)
-        {
-          addWallView(node.Coords, e.Index);
-        }
-        else
-        {
-          addEdgeView(e.Value, e.Index);
-        }
-      });
-  }
+
   public void ClearNodeEnemy(Node node)
   {
-    graph.Neighbors(node.Coords)
+    graph.Neighbors(node.Coords, true)
       .Where(n => n.IsScanned.Value)
       .ToList()
       .ForEach(n =>
@@ -148,19 +228,8 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
         n.AlertCount.Value = Mathf.Max(0, n.AlertCount.Value - node.EnemyCount.Value);
       });
 
-    /*  
-    foreach (var n in graph.Neighbors(node.Coords))
-    {
-      n.AlertCount.Value = Mathf.Max(0, n.AlertCount.Value - node.EnemyCount.Value);
-    }
-    */
     node.EnemyCount.Value = 0;
-    ScanEnemies(node);
-  }
-
-  public void ScanEnemies(Node node)
-  {
-    LevelManager.Instance.AlertCount.Value = node.AlertCount.Value = graph.ScanEnemies(node.Coords);
+//    ScanEnemies(node);
   }
 
   void addEnemies(List<Node> list, float enemyRatio, int maxEnemyCount)
@@ -173,7 +242,7 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
       var enemyCount = Mathf.Min(restEnemyCount, Random.Range(1, maxEnemyCount + 1));
       n.EnemyCount.Value = enemyCount;
       restEnemyCount -= 1;
-      //enemyCount;
+
       if (restEnemyCount <= 0)
       {
         break;
@@ -287,7 +356,7 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
     go.name = "node_" + coordsToObjectName(node.Coords);
 
     //add guide
-    neighborNodeList(node)
+    getOrCreateNeighborNodeList(node)
     .ForEach(addGuideNodeView);
   }
   void addGuideNodeView(Node node)
@@ -296,19 +365,36 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
       return;
 
     node.HasGuideView.Value = true;
-    node.SetNeighborList(neighborNodeList(node));
+    node.SetNeighborList(getOrCreateNeighborNodeList(node));
 
     var go = Instantiate(guideNodePrefab, CoordsToVec3(node.Coords), Quaternion.identity) as GameObject;
     AddToView(go);
     go.GetComponent<GuideNodePresenter>().Node = node;
     go.name = "guide_node_" + coordsToObjectName(node.Coords);
   }
-  List<Node> neighborNodeList(Node node)
+  List<Node> getOrCreateNeighborNodeList(Node node)
   {
     return
-      graph.NeighborCoords(node.Coords, true)
+      graph.NeighborCoords(node.Coords)
       .Select(nc => graph.GetOrCreateNode(nc))
       .ToList();
+  }
+
+  void addEdgeViews(Node node)
+  {
+    node.EdgeArray
+      .Select((v, i) => new { Value = v, Index = i })
+      .ToList()
+      .ForEach(e => {
+        if (e.Value == null)
+        {
+          addWallView(node.Coords, e.Index);
+        }
+        else
+        {
+          addEdgeView(e.Value, e.Index);
+        }
+      });
   }
   void addEdgeView(Edge edge, int dir, bool explode = false)
   {

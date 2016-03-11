@@ -12,13 +12,12 @@ public class Edge
   public ReactiveProperty<int> Type = new ReactiveProperty<int>();
   public bool HasView = false;
   public ReactiveProperty<bool> isOpened = new ReactiveProperty<bool>();
+  public ReactiveProperty<bool> noWall = new ReactiveProperty<bool>();
 
   public Edge(Node sourceNode, Node targetNode)
   {
     this.SourceNode = sourceNode;
     this.TargetNode = targetNode;
-    sourceNode.AddEdge(this);
-    targetNode.AddEdge(this);
     Coords = (Vector2)(sourceNode.Coords + targetNode.Coords) * .5f;
 
     Angle = getAngle(sourceNode, targetNode);
@@ -48,6 +47,7 @@ public class Edge
     var targetNode = OppositeNode(sourceNode);
     return getAngle(sourceNode, targetNode);
   }
+  //0,90,180,270
   float getAngle(Node sourceNode, Node targetNode)
   {
     var Vector = targetNode.Coords - sourceNode.Coords;
