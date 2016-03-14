@@ -94,7 +94,7 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
 
 //    addResucuee();
 
-    return pickupPlayerPos(graph.NodeList.Where(n => n.Coords.Y == 0).ToList<Node>());
+    return pickupPlayerPos();
   }
 
   public void ShowAllNode()
@@ -331,16 +331,19 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
     });
   }
 
-  Node pickupPlayerPos(List<Node> list)
+  Node pickupPlayerPos()
   {
-    foreach (Node n in list)
+    var list = graph
+      .NodeList
+      .Where(n => n.Coords.Y == 0)
+      .Where(n => graph.ScanEnemies(n.Coords) == 0)
+      .ToList<Node>();
+    if(list.Count == 0)
     {
-      if (graph.ScanEnemies(n.Coords) == 0)
-      {
-        return n;
-      }
+      throw new UnityException("No deployable node.");
     }
-    throw new UnityException("No deployable node.");
+
+    return list[Random.Range(0, list.Count)];
   }
 
   void addNodeView(Node node)
