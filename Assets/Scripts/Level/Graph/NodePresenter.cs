@@ -61,7 +61,7 @@ public class NodePresenter : MonoBehaviour
 
       var mt = floor.GetComponent<Renderer>().material;
       mt.EnableKeyword("_EMISSION");
-      var initFloorColor = mt.color;
+      mt.color = Color.clear;
 
       for (var i = 0; i < 4; i++)
       {
@@ -111,21 +111,70 @@ public class NodePresenter : MonoBehaviour
         .Select(c => c > 0)
         .ToReactiveProperty();
 
+
+      //emission colors
       var enemyColor = new Color(1, 0, 0);
       var alertColor = new Color(.62f, .32f, .32f);
       var energyColor = new Color(.0f, .6f, .0f);
       var rescueeColor = new Color(1f, 1f, 1f);
       var itemColor = new Color(.3f, .3f, .3f);
-      var noneColor = Color.black;
+      var noneColor = Color.clear;
 
+      Tween textScaleTw = null;
+      node.AlertCount
+        .Where(c => c > 0)
+        .Subscribe(c =>
+        {
+          alertCountText.transform.localScale = Vector3.zero;
+
+          if(textScaleTw != null)
+          {
+            textScaleTw.Kill();
+          }
+          textScaleTw = alertCountText.transform
+          .DOScale(Vector3.one, 1f)
+          .SetEase(Ease.OutElastic)
+          .SetDelay(.2f);
+        })
+         .AddTo(this);
+
+      Tween emitColorTw = null; 
+      //floor alert color
       node.HasEnergy
         .CombineLatest(node.HasItem, node.HasRescuee, (e, i, r) => e ? energyColor : i ? itemColor : r ? rescueeColor : noneColor)
         .CombineLatest(node.IsScanned, hasEnemy, hasAlert, (i, s, e, a) =>
         s ? (e ? enemyColor : i != noneColor ? i : (a ? alertColor : noneColor))
         : i)
+        .Subscribe(endColor =>
+        {
+          var isClear = endColor == Color.clear;
+          var c = mt.GetColor("_EmissionColor");
+          if (emitColorTw != null)
+          {
+            emitColorTw.Kill();
+          }
+          emitColorTw = DOTween
+          .To(() => c, x => c = x, endColor, isClear ? .5f : 1f)
+          .SetEase(isClear ? Ease.OutQuad : Ease.InQuad)
+          .SetDelay(.2f)
+          .OnUpdate(() => mt.SetColor("_EmissionColor", c));
+          
+        })
+        .AddTo(this);
+
+      Tween floorColorTw = null;
+
+      //floor color
+      node.IsVisited
+        .CombineLatest(node.IsCombinedRoom, (v, r) => v ? (r ? .94f : .6f) : 0)
+        .Select(v => Color.HSVToRGB(0, 0, v))
         .Subscribe(c =>
         {
-          mt.SetColor("_EmissionColor", c);
+          if(floorColorTw != null)
+          {
+            floorColorTw.Kill();
+          }
+          floorColorTw = mt.DOColor(c, 1f).SetEase(Ease.OutQuad);
         })
         .AddTo(this);
 
@@ -134,11 +183,7 @@ public class NodePresenter : MonoBehaviour
         .Subscribe(l => floor.layer = l)
         .AddTo(this);
 
-      node.IsVisited
-        .CombineLatest(node.IsCombinedRoom, (v, r) => v ? (r ? 1f : .6f) : 0)
-        .Select(v => Color.HSVToRGB(0,0,v))
-        .Subscribe(c => mt.color = c)
-        .AddTo(this);
+
 
 /*
       node.IsScanned
