@@ -16,12 +16,12 @@ public class SectorListManager
 
   List<SectorType> SectorTypeList = new List<SectorType>()
   {
-    new SectorType("Engine", new Color(.8f, .4f, .4f), .15f),
-    new SectorType("Armory", new Color(.8f, .4f, .8f), .14f),
-    new SectorType("Lab", new Color(.5f, .7f, .9f), .13f),
-    new SectorType("System", new Color(.8f, .8f, 0), .12f),
-    new SectorType("Living", new Color(.5f, .9f, .5f), .11f),
-    new SectorType("Cargo", new Color(.7f, .7f, .7f), .1f)
+    new SectorType("Engine", new Color(.8f, .4f, .4f), .130f),
+    new SectorType("Armory", new Color(.8f, .4f, .8f), .125f),
+    new SectorType("Lab", new Color(.5f, .7f, .9f), .120f),
+    new SectorType("System", new Color(.8f, .8f, 0), .115f),
+    new SectorType("Living", new Color(.5f, .9f, .5f), .110f),
+    new SectorType("Cargo", new Color(.7f, .7f, .7f), .100f)
   };
 
   private static SectorListManager instance;
@@ -85,8 +85,8 @@ public class SectorListManager
     return list;
   }
 
-  float colSizeBase = 16;
-  float colSizePerLevel = 4;
+  float colSizeBase = 20;
+  float colSizePerLevel = 3;
   float rowSizeBase = 20;
   float rowSizePerLevel = 4;
   float maxEnemyCountBase = 1.5f;
