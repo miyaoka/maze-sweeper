@@ -216,14 +216,16 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
   private void stopWalk()
   {
     player.GetComponentInChildren<Animator>().SetBool("IsWalking", false);
-    AudioManager.Instance.StopLoop(AudioName.Walk);
+    //    AudioManager.Instance.StopLoop(AudioName.Walk);
+    AudioManager.Instance.StopFootStep();
   }
 
   private void startWalk()
   {
     //    AudioManager.door.Play();
     player.GetComponentInChildren<Animator>().SetBool("IsWalking", true);
-    AudioManager.Instance.PlayLoop(AudioName.Walk);
+//    AudioManager.Instance.PlayLoop(AudioName.Walk);
+    AudioManager.Instance.PlayFootstep();
   }
 
   public void CreateDead(Survivor sv)
