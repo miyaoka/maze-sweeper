@@ -27,7 +27,7 @@ public class NodePresenter : MonoBehaviour
   [SerializeField]
   GameObject firePrefab;
   [SerializeField]
-  GameObject sensorTargetBtnPrefab;
+  GameObject grenadeTargetBtnPrefab;
   [SerializeField]
   GameObject survivorPrefab;
 
@@ -36,7 +36,7 @@ public class NodePresenter : MonoBehaviour
   float lightMax = 2.5f;
   float lightMin = 0f;
   Color unvisitedFloorColor = new Color(.25f, .25f, .3f);
-  float sensorTargetBtnHeight = 2f;
+  float grenadeTargetBtnHeight = 2f;
 
   GameObject sv = null;
 
@@ -271,21 +271,24 @@ public class NodePresenter : MonoBehaviour
 
       //sensor btn
       node.OnDest
-        .CombineLatest(LevelManager.Instance.IsSelectedSensor, (l, r) => l && r)
+        .CombineLatest(LevelManager.Instance.IsSelectedGrenade, (l, r) => l && r)
         .Where(b => b)
         .Subscribe(_ =>
         {
-          Graph.NextGridCoords
+          node.EdgeArray
+          .Select((v, i) => new { Value = v, Index = i })
           .ToList()
-          .ForEach(c =>
+          .Where(e => e.Value != null)
+          .ToList()
+          .ForEach(e =>
           {
-            var coords = node.Coords + c;
-            var n = graph.graph.GetNode(coords);
-            if(n == null || true) //!n.IsScanned.Value)
+            var coords = node.Coords + Graph.NextGridCoords[e.Index];
+            var nn = graph.graph.GetNode(coords);
+            if(!nn.IsScanned.Value)
             {
-              var btn = Instantiate(sensorTargetBtnPrefab);
-              btn.transform.localPosition = graph.CoordsToVec3(coords) + new Vector3(0, sensorTargetBtnHeight, 0);
-              btn.GetComponent<SensorTargetBtnPresenter>().Coords = coords;
+              var btn = Instantiate(grenadeTargetBtnPrefab);
+              btn.transform.localPosition = graph.CoordsToVec3(coords) + new Vector3(0, grenadeTargetBtnHeight, 0);
+              btn.GetComponent<GrenadeTargetBtnPresenter>().Coords = coords;
               graph.AddToView(btn);
             }
           });

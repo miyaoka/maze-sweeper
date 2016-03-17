@@ -12,6 +12,7 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
   public ReactiveProperty<int> BombCount = new ReactiveProperty<int>();
   public ReactiveProperty<int> SensorCount = new ReactiveProperty<int>();
   public ReactiveProperty<int> MedkitCount = new ReactiveProperty<int>();
+  public ReactiveProperty<int> GrenadeCount = new ReactiveProperty<int>();
 
   void Awake()
   {
@@ -29,6 +30,7 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
     BombCount.Value = 3;
     SensorCount.Value = 50;
     MedkitCount.Value = 3;
+    GrenadeCount.Value = 10;
   }
 
   public List<Survivor> LivingList

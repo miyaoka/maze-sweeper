@@ -36,6 +36,7 @@ public class LevelManager : SingletonMonoBehaviour<LevelManager>
   public ReactiveProperty<bool> IsSelectedBomb = new ReactiveProperty<bool>();
   public ReactiveProperty<bool> IsSelectedSensor = new ReactiveProperty<bool>();
   public ReactiveProperty<bool> IsSelectedMedkit = new ReactiveProperty<bool>();
+  public ReactiveProperty<bool> IsSelectedGrenade = new ReactiveProperty<bool>();
 
   LevelConfigParam levelConf = new LevelConfigParam(15, 30, .1f, 3, 1200);
 
@@ -147,6 +148,7 @@ public class LevelManager : SingletonMonoBehaviour<LevelManager>
     IsSelectedBomb.Value = false;
     IsSelectedSensor.Value = false;
     IsSelectedMedkit.Value = false;
+    IsSelectedGrenade.Value = false;
   }
   void setTimeout(bool timeout)
   {

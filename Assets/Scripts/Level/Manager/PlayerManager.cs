@@ -186,6 +186,10 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
     {
       AudioManager.Instance.Play(AudioName.Powerup);
       node.HasItem.Value = false;
+
+      GameManager.Instance.GrenadeCount.Value += 1;
+      player.GetComponent<SurvivorPresenter>().ShowMsg("+Bomb");
+      /*
       if (Random.value < .5f)
       {
         GameManager.Instance.SensorCount.Value += 1;
@@ -201,6 +205,7 @@ public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
         GameManager.Instance.BombCount.Value += 1;
         player.GetComponent<SurvivorPresenter>().ShowMsg("+Bomb");
       }
+      */
     }
     if (node.HasRescuee.Value)
     {

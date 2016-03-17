@@ -231,7 +231,16 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
     node.EnemyCount.Value = 0;
 //    ScanEnemies(node);
   }
-
+  public void BreachNode(IntVector2 coords)
+  {
+    var n = showNode(coords, new List<Node>());
+    ClearNodeEnemy(n);
+//    addNodeAndEdgeView(n);
+    AudioManager.Instance.Play(AudioName.Breach);
+    var explosionObj = Instantiate(explosionPrefab, CoordsToVec3(coords), Quaternion.identity) as GameObject;
+    AddToView(explosionObj);
+    Destroy(explosionObj, 3f);
+  }
   void addEnemies(List<Node> list, float enemyRatio, int maxEnemyCount)
   {
     var restEnemyCount = Mathf.FloorToInt(graph.NodeCount * enemyRatio);
