@@ -105,7 +105,7 @@ public class LevelManager : SingletonMonoBehaviour<LevelManager>
       .Select(c => (float)c.Y / (float)GraphManager.Instance.graph.MaxCoords.Y)
       .ToReactiveProperty();
 
-    directionalLight.color = Color.HSVToRGB(Random.value, Random.Range(.05f, .25f), .5f);
+    directionalLight.color = Color.HSVToRGB(Random.value, Random.Range(.20f, .35f), .95f);
   }
   void Start()
   {

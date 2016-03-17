@@ -108,7 +108,8 @@ public class PlayerInput : MonoBehaviour
       h => Lean.LeanTouch.OnFingerTap -= h)
       .TimeInterval()
       .Buffer(2, 1)
-      .Where(t => t[0].Interval.TotalMilliseconds > doubleTapInterval && t[1].Interval.TotalMilliseconds <= doubleTapInterval)
+      .Where(t => t[0].Interval.TotalMilliseconds > doubleTapInterval)
+      .Where(t => t[1].Interval.TotalMilliseconds <= doubleTapInterval)
       .Select(_ => Unit.Default)
       .Publish();
 

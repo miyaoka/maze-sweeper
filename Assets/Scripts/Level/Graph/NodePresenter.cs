@@ -5,6 +5,7 @@ using UnityEngine.UI;
 using System;
 using System.Linq;
 using Random = UnityEngine.Random;
+using System.Collections.Generic;
 
 public class NodePresenter : MonoBehaviour
 {
@@ -30,13 +31,17 @@ public class NodePresenter : MonoBehaviour
   GameObject grenadeTargetBtnPrefab;
   [SerializeField]
   GameObject survivorPrefab;
+  [SerializeField]
+  Image alertFloor;
 
   Node node;
   Tweener lightTw;
-  float lightMax = 2.5f;
+  float lightMaxRoom = 2f;
+  float lightMaxPassage = 2.5f;
   float lightMin = 0f;
   Color unvisitedFloorColor = new Color(.25f, .25f, .3f);
   float grenadeTargetBtnHeight = 2f;
+  float alertFloorAlpha = .7f;
 
   GameObject sv = null;
 
@@ -48,6 +53,10 @@ public class NodePresenter : MonoBehaviour
     roomLight.enabled = false;
 
     tiles.SetActive(false);
+
+    var c = alertFloor.color;
+    c.a = 0;
+    alertFloor.color = c;
   }
 
   public Node Node
@@ -63,13 +72,31 @@ public class NodePresenter : MonoBehaviour
       mt.EnableKeyword("_EMISSION");
       mt.color = Color.clear;
 
-      for (var i = 0; i < 4; i++)
-      {
-        if (Random.value < .3f)
+      node
+        .HasItem
+        .Subscribe(item =>
         {
-          addInterior(i);
-        }
-      }
+          if(!item)
+          {
+            foreach(Transform t in interiorContainer)
+            {
+              Destroy(t.gameObject);
+            }
+            return;
+          }
+          addItemInterior();
+          /*
+          var dirList = new List<int>{ 0, 1, 2, 3};
+          dirList.Sort((a, b) => Random.value < .5f ? -1 : 1);
+
+          dirList
+          .Take(Random.Range(1, dirList.Count))
+          .ToList()
+          .ForEach(i => addInterior(i));
+          */
+
+        });
+
 
       node.IsScanned
         .Subscribe(s =>
@@ -83,6 +110,23 @@ public class NodePresenter : MonoBehaviour
         .Select(c => c == 0 ? "" : c.ToString())
         .SubscribeToText(alertCountText)
         .AddTo(this);
+
+      Tween alertFloorTw = null;
+      node.AlertCount
+        .CombineLatest(node.EnemyCount, (a, e) => e > 0 ? 0 : a)
+        .Select(c => c > 0)
+        .Subscribe(exist =>
+        {
+          if(alertFloorTw != null)
+          {
+            alertFloorTw.Kill();
+          }
+
+          alertFloorTw =
+          alertFloor.DOFade(exist ? alertFloorAlpha : 0, 1f)
+          .SetEase(exist ? Ease.InQuad : Ease.OutQuad);
+
+        });
 
       node.EnemyCount
         .CombineLatest(node.OnDest, (e, d) => d ? 0 : e)
@@ -114,7 +158,7 @@ public class NodePresenter : MonoBehaviour
 
       //emission colors
       var enemyColor = new Color(1, 0, 0);
-      var alertColor = new Color(.62f, .32f, .32f);
+      var alertColor = new Color(.5f, .2f, .2f);
       var energyColor = new Color(.0f, .6f, .0f);
       var rescueeColor = new Color(1f, 1f, 1f);
       var itemColor = new Color(.3f, .3f, .3f);
@@ -138,6 +182,7 @@ public class NodePresenter : MonoBehaviour
         })
          .AddTo(this);
 
+      /*
       Tween emitColorTw = null; 
       //floor alert color
       node.HasEnergy
@@ -161,12 +206,16 @@ public class NodePresenter : MonoBehaviour
           
         })
         .AddTo(this);
+        */
 
       Tween floorColorTw = null;
 
+      var roomFloorColorValue = .9f;
+      var passageFloorColorValue = .6f;
+
       //floor color
       node.IsVisited
-        .CombineLatest(node.IsCombinedRoom, (v, r) => v ? (r ? .94f : .6f) : 0)
+        .Select(v => v ? (node.IsRoom ? roomFloorColorValue : passageFloorColorValue) : 0)
         .Select(v => Color.HSVToRGB(0, 0, v))
         .Subscribe(c =>
         {
@@ -199,7 +248,7 @@ public class NodePresenter : MonoBehaviour
           {
             roomLight.enabled = true;
             lightTw.Kill();
-            lightTw = roomLight.DOIntensity(lightMax, Random.Range(.4f, .6f)).SetEase(Ease.InQuad);
+            lightTw = roomLight.DOIntensity(node.IsRoom ? lightMaxRoom : lightMaxPassage, Random.Range(.4f, .6f)).SetEase(Ease.InQuad);
           }
           else
           {
@@ -338,6 +387,15 @@ public class NodePresenter : MonoBehaviour
     var obj = Instantiate(interiorPrefab, pos, Quaternion.identity) as GameObject;
     obj.transform.SetParent(interiorContainer, false);
     obj.transform.localScale = scale;
+  }
+  void addItemInterior()
+  {
+    var scale = new Vector3(Random.Range(1f, 3f), Random.Range(1f, 4f), Random.Range(1f, 3f));
+    var pos = new Vector3(0, scale.y * .5f, 2f);
+    var obj = Instantiate(interiorPrefab, pos, Quaternion.identity) as GameObject;
+    obj.transform.SetParent(interiorContainer, false);
+    obj.transform.localScale = scale;
+
   }
 
 
