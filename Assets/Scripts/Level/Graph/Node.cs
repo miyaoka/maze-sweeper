@@ -21,8 +21,11 @@ public class Node
   public ReactiveProperty<bool> HasRescuee = new ReactiveProperty<bool>();
   public ReactiveProperty<bool> HasItem = new ReactiveProperty<bool>();
   public ReactiveProperty<bool> HasFire = new ReactiveProperty<bool>();
-  public ReactiveProperty<bool> IsCombinedRoom = new ReactiveProperty<bool>();
   public ReadOnlyReactiveProperty<int> ScannedAlertCount;
+
+  public bool IsRoom;
+  public bool IsRoomCenter;
+  public IntVector2? RoomRootCoords = null;
 
 
   public readonly Edge[] EdgeArray = new Edge[4];
@@ -105,8 +108,14 @@ public class Node
     //normalize degree to 0 - 3
     return ((int)e.GetAngleFromNode(this) + 360) % 360 / 90;
   }
+  public List<Node> ReachableNeighborNodeList()
+  {
+    var neighborNodes = new List<Node>();
+    reachableNeighborNodeList(this, neighborNodes);
+    return neighborNodes;
+  }
 
-  public void ReachableNeighborNodeList(Node startNode, List<Node> seeked)
+  public void reachableNeighborNodeList(Node startNode, List<Node> seeked)
   {
     if(!isNeighbor(startNode) || seeked.Contains(this) )
     {
@@ -117,7 +126,7 @@ public class Node
     connectedNodeList
       .ForEach(n =>
       {
-        n.ReachableNeighborNodeList(startNode, seeked);
+        n.reachableNeighborNodeList(startNode, seeked);
       });
   }
   List<Node> connectedNodeList

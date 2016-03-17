@@ -87,7 +87,7 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
       (0 - .5f) * GridUnit);
 
     //items
-    addItems();
+//    addItems();
 
     //fire
 //    addFire();
@@ -116,35 +116,40 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
   void combineRoom()
   {
     var nodeList = graph.NodeList;
+
+    //prescan all node
     nodeList
       .ForEach(n =>
       {
         n.AlertCount.Value = graph.ScanEnemies(n.Coords);
       });
 
-
+    //each no alert node
     nodeList
       .Where(n => n.AlertCount.Value == 0)
       .ToList()
       .ForEach(noAlertNode =>
       {
-        var nNodeList = new List<Node>();
-        noAlertNode.ReachableNeighborNodeList(noAlertNode, nNodeList);
+        var neighborNodes = noAlertNode.ReachableNeighborNodeList();
 
-        if (nNodeList.Count != 9)
+        //has enemy in 3x3
+        if (neighborNodes.Count != 9)
         {
           return;
         }
-        nNodeList.ForEach(n =>
+
+        //combine nodes
+        noAlertNode.IsRoomCenter = true;
+        neighborNodes.ForEach(n =>
         {
-          n.IsCombinedRoom.Value = true;
+          n.IsRoom = true;
           Graph.NextGridCoords
           .Select((v, i) => new { Value = v, Index = i })
           .ToList()
           .ForEach(nc =>
           {
             var nextCoords = n.Coords + nc.Value;
-            if (!nNodeList.Contains(graph.GetNode(nextCoords)))
+            if (!neighborNodes.Contains(graph.GetNode(nextCoords)))
             {
               return;
             }
@@ -158,8 +163,51 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
         });
       });
 
+    //set rooms
+    var roomList = new List<IntVector2>();
     nodeList
-      .Where(n => n.IsCombinedRoom.Value)
+      .Where(n => n.IsRoom)
+      .ToList()
+      .ForEach(roomNode =>
+      {
+        if(roomNode.RoomRootCoords.HasValue)
+        {
+          return;
+        }
+        setRoom(roomNode, roomNode.Coords);
+        roomList.Add(roomNode.Coords);
+      });
+
+
+    var maxItemPerRoom = 2;
+    roomList
+      .ForEach(r =>
+      {
+        var roomCenterNodeList =
+        nodeList
+        .Where(n => n.RoomRootCoords == r)
+        .Where(n => n.IsRoomCenter)
+        .ToList();
+
+        var c = Random.Range(1, Mathf.Min(roomCenterNodeList.Count, maxItemPerRoom) + 1);
+
+        roomCenterNodeList.Sort((a, b) => Random.value < .5f ? -1 : 1);
+
+        roomCenterNodeList
+        .ForEach(n =>
+        {
+          if (c-- <= 0)
+          {
+            return;
+          }
+          n.HasItem.Value = true;
+        });
+
+      });
+
+    //create view
+    nodeList
+      .Where(n => n.IsRoom)
       .ToList()
       .ForEach(n => {
         //        n.IsVisited.Value = true;
@@ -167,6 +215,24 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
         addNodeAndEdgeView(n);
         n.IsScanned.Value = false;
       });
+  }
+
+  void setRoom(Node n, IntVector2 rootCoords)
+  {
+    if(n.RoomRootCoords.HasValue || !n.IsRoom)
+    {
+      return;
+    }
+    n.RoomRootCoords = rootCoords;
+
+    n.EdgeList
+    .Where(e => e.noWall.Value)
+    .Select(e => e.OppositeNode(n))
+    .ToList()
+    .ForEach(nn =>
+    {
+      setRoom(nn, rootCoords);
+    });
   }
 
   /// <summary>
