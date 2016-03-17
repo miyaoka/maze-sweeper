@@ -26,10 +26,7 @@ public class PartyManager : SingletonMonoBehaviour<PartyManager>
     clearView();
     SurvivorList.Clear();
 
-    SurvivorList.Add(new Survivor("Andy", 3));
-    SurvivorList.Add(new Survivor("Brian", 3));
-    SurvivorList.Add(new Survivor("Charles", 2));
-    SurvivorList.Add(new Survivor("David", 2));
+    SurvivorList.Add(new Survivor("player", 5));
 
     SurvivorList
       .ForEach(s => addView(s));
