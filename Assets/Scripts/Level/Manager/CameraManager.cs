@@ -13,9 +13,9 @@ public class CameraManager : SingletonMonoBehaviour<CameraManager>
 
   Dictionary<ViewState, float> heightDict = new Dictionary<ViewState, float>()
   {
-    { ViewState.Normal, 45f },
-    { ViewState.Map, 150f },
-    { ViewState.Battle, 15f }
+    { ViewState.Normal, 25f },
+    { ViewState.Map, 100f },
+    { ViewState.Battle, 10f }
   };
   
   float baseRatio = 16f / 9f;
@@ -42,7 +42,8 @@ public class CameraManager : SingletonMonoBehaviour<CameraManager>
       .CombineLatest(aspect, (v, a) => heightDict[v] * Mathf.Pow(baseRatio / a, .5f))
       .Subscribe(f =>
       {
-        changeHeight(f);
+          changeOrthoSize(f);
+//        changeHeight(f);
       })
       .AddTo(this);
 
@@ -66,9 +67,14 @@ public class CameraManager : SingletonMonoBehaviour<CameraManager>
       })
       .AddTo(this);
   }
+  void changeOrthoSize(float size)
+  {
+    mainCam.DOOrthoSize(size, .2f);
+  }
   //keep rot and go backward
   void changeHeight(float height)
   {
+
     var pos = mainCam.transform.forward * -height;
     mainCam.transform
       .DOLocalMove(pos, .2f)

@@ -281,6 +281,15 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
         var nn = showNode(c, seeked);
       });
 
+    n.EdgeList
+      .Where(e => !e.noWall.Value)
+      .Select(e => e.OppositeNode(n))
+      .ToList()
+      .ForEach(nn =>
+      {
+          addNodeView(nn);
+      });
+
     return n;
   }
 
@@ -433,9 +442,11 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
     go.GetComponent<NodePresenter>().Node = node;
     go.name = "node_" + coordsToObjectName(node.Coords);
 
+    /*
     //add guide
     getOrCreateNeighborNodeList(node)
     .ForEach(addGuideNodeView);
+    */
   }
   void addGuideNodeView(Node node)
   {
@@ -478,6 +489,8 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
   {
     if (edge.HasView)
       return;
+
+    return;
     var go = Instantiate(gridEdgePrefab, CoordsToVec3(edge.Coords), Quaternion.Euler(new Vector3(0, dir * -90, 0))) as GameObject;
     AddToView(go);
     var ep = go.GetComponent<EdgePresenter>();
@@ -499,7 +512,7 @@ public class GraphManager : SingletonMonoBehaviour<GraphManager>
     }
     wallDict[key] = wall;
     var go = Instantiate(gridWallPrefab, CoordsToVec3(wall.Coords), Quaternion.Euler(new Vector3(0, dir * -90, 0))) as GameObject;
-    go.GetComponent<WallPresenter>().Wall = wall;
+//    go.GetComponent<WallPresenter>().Wall = wall;
     go.name = "wall_" + key;
     AddToView(go);
   }
